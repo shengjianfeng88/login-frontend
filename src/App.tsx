@@ -2,6 +2,8 @@ import { Route, BrowserRouter as Router, Routes } from "react-router-dom";
 import { Suspense } from "react";
 import PageNotFound from "./pages/PageNotFound";
 import SignIn from "./pages/SignIn";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 import { Provider } from "react-redux";
 import { store } from "./store/store";
 import { GoogleOAuthProvider } from "@react-oauth/google";
@@ -24,7 +26,12 @@ function App() {
             <Routes>
               <Route path="/signin" element={<SignIn />} />
               <Route path="/signup" element={<SignUp />} />
-              <Route path="/done" element={<Done />} /> 
+              <Route path="/done" element={<Done />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route
+                path="/reset-password/:token"
+                element={<ResetPassword />}
+              />
               <Route path="/tryon-history" element={<History />} />
               <Route path="*" element={<PageNotFound />} />
             </Routes>

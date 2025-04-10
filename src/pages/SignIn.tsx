@@ -239,12 +239,18 @@ const SignIn = () => {
                       Remember me
                     </label>
                   </div>
-                  <a
+                  {/* <a
                     href="#"
                     className="text-[14px] font-bold text-[#2F2F2F] underline absolute right-0 top-0"
                   >
                     Forgot your password?
-                  </a>
+                  </a> */}
+                  <Link
+                    to="/forgot-password"
+                    className="text-[14px] font-bold text-[#2F2F2F] underline absolute right-0 top-0"
+                  >
+                    Forgot your password?
+                  </Link>
                 </div>
 
                 {/* Login button */}
@@ -329,7 +335,6 @@ const SignIn = () => {
                 </div>
               </div>
 
-              {/* Center focused image */}
               {/* Center focused image */}
               <div className="relative z-10 transition-all duration-300 hover:scale-105">
                 <div className="w-96 h-[576px] rounded-3xl overflow-hidden shadow-xl transition-all duration-300 hover:shadow-2xl">
