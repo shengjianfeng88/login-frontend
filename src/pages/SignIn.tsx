@@ -65,7 +65,6 @@ const SignIn = () => {
     [isTransitioning]
   );
 
-
   // Set up autoplay for carousel
   useEffect(() => {
     const interval = setInterval(() => {
@@ -208,7 +207,7 @@ const SignIn = () => {
                     type="email"
                     name="email"
                     placeholder="Email"
-                    className="w-[130%] h-[50px] border border-[#DADCE0] rounded-[10px] px-5 text-[17.6px]"
+                    className="w-[400px] h-[50px] border border-[#DADCE0] rounded-[10px] px-5 text-[17.6px]"
                   />
                 </div>
 
@@ -218,12 +217,12 @@ const SignIn = () => {
                     type="password"
                     name="password"
                     placeholder="Password"
-                    className="w-[130%] h-[45px] border border-[#DADCE0] rounded-[10px] px-5"
+                    className="w-[400px] h-[45px] border border-[#DADCE0] rounded-[10px] px-5"
                   />
                 </div>
 
                 {/* Remember me and Forgot password */}
-                <div className="relative mb-6" style={{ width: "130%" }}>
+                <div className="relative mb-6" style={{ width: "400px" }}>
                   <div className="flex items-center">
                     <input
                       type="checkbox"
@@ -264,7 +263,10 @@ const SignIn = () => {
               </form>
 
               {/* Or divider */}
-              <div className="flex items-center my-6" style={{ width: "130%" }}>
+              <div
+                className="flex items-center my-6"
+                style={{ width: "400px" }}
+              >
                 <div className="flex-grow h-px bg-[#2E2E2E]"></div>
                 <span className="mx-4 text-[17px] font-medium text-[#2E2E2E]">
                   or
@@ -273,7 +275,7 @@ const SignIn = () => {
               </div>
 
               {/* Google login */}
-              <div className="mb-6" style={{ width: "130%" }}>
+              <div className="mb-6" style={{ width: "400px" }}>
                 <GoogleLogin
                   shape="circle"
                   onSuccess={handleGoogleLoginSuccess}
