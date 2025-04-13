@@ -11,6 +11,7 @@ import SignUp from "./pages/SignUp";
 import Done from "./pages/Done";
 import History from "./pages/History";
 
+
 function App() {
   const googleClientId =
     "261406484674-gi5ric620ka8oijufm3bp6ng6jeuvdn1.apps.googleusercontent.com";
@@ -26,12 +27,9 @@ function App() {
             <Routes>
               <Route path="/signin" element={<SignIn />} />
               <Route path="/signup" element={<SignUp />} />
-              <Route path="/done" element={<Done />} />
+              <Route path="/done" element={<Done />} /> 
               <Route path="/forgot-password" element={<ForgotPassword />} />
-              <Route
-                path="/reset-password/:token"
-                element={<ResetPassword />}
-              />
+              <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/tryon-history" element={<History />} />
               <Route path="*" element={<PageNotFound />} />
             </Routes>

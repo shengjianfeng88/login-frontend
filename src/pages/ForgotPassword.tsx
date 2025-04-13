@@ -1,104 +1,68 @@
 import React, { useState } from "react";
-import { z } from "zod";
-import axios from "axios";
-import { Link } from "react-router-dom";
-
-const forgotPasswordSchema = z.object({
-  email: z.string().email("Please enter a valid email address"),
-});
+import { useNavigate } from "react-router-dom";
+import axiosInstance from "@/utils/axiosInstance";
 
 const ForgotPassword = () => {
+  const navigate = useNavigate();
   const [email, setEmail] = useState("");
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
+  const [isSent, setIsSent] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setError("");
-    setSuccess("");
-    setIsLoading(true);
+
+    if (!email) {
+      alert("Please enter your email");
+      return;
+    }
 
     try {
-      // Validate email
-      forgotPasswordSchema.parse({ email });
-
-      const apiUrl = "https://api-auth.faishion.ai";
-      await axios.post(apiUrl + "/api/auth/forgot-password", { email });
-
-      setSuccess(
-        "If an account exists with this email, you will receive password reset instructions."
-      );
-      setEmail(""); 
-    } catch (err) {
-      if (err instanceof z.ZodError) {
-        setError(err.errors[0].message);
-      } else {
-        // Still show success even if there's an error to prevent email enumeration
-        setSuccess(
-          "If an account exists with this email, you will receive password reset instructions."
-        );
-      }
+      setIsLoading(true);
+      await axiosInstance.post("/auth/forgot-password", { email });
+      setIsSent(true);
+    } catch (error: any) {
+      alert(error.response?.data?.message || "Failed to send reset link");
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <main>
-      <div className="flex justify-center items-center h-screen">
-        <div className="w-full max-w-md p-8">
-          <Link to="/" className="mb-8 flex items-center">
-            <div className="w-9 h-9 rounded-full bg-blue-200 flex items-center justify-center"></div>
-            <span className="ml-3 font-bold text-xl text-gray-800">
-              fAIshion.AI
-            </span>
-          </Link>
+    <main className="w-screen h-screen p-10 flex items-center justify-center">
+      <div className="w-full max-w-md bg-white p-8 rounded-lg shadow">
+        <h2 className="text-2xl font-bold mb-6">Forgot Password</h2>
 
-          <div className="mb-8">
-            <h1 className="font-semibold text-3xl text-[#2F2F2F]">
-              Reset your password
-            </h1>
-            <p className="font-normal text-[15.4px] text-[#A6A6A6] mt-2">
-              Enter your email address and we'll send you instructions to reset
-              your password.
+        {isSent ? (
+          <div>
+            <p className="mb-4 text-green-600">
+              Reset link sent! Please check your email.
             </p>
+            <button
+              className="w-full btn-primary"
+              onClick={() => navigate("/signin")}
+            >
+              Back to Sign In
+            </button>
           </div>
-
-          {error && (
-            <div className="text-red-500 text-[15.4px] mb-4">{error}</div>
-          )}
-
-          {success && (
-            <div className="text-green-500 text-[15.4px] mb-4">{success}</div>
-          )}
-
-          <form onSubmit={handleSubmit}>
-            <div className="mb-4">
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="Email"
-                className="w-full h-[50px] border border-[#DADCE0] rounded-[10px] px-5 text-[17.6px]"
-              />
-            </div>
-
+        ) : (
+          <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+            <input
+              type="email"
+              placeholder="Your Email*"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="border w-full p-2"
+              required
+            />
             <button
               type="submit"
+              className="w-full btn-primary"
               disabled={isLoading}
-              className="w-full h-[45px] bg-[#2F2F2F] rounded-[10px] text-white font-bold text-base flex items-center justify-center"
             >
-              {isLoading ? "Sending..." : "SEND RESET INSTRUCTIONS"}
+              {isLoading ? "Sending..." : "Send Reset Link"}
             </button>
           </form>
-
-          <div className="mt-4 text-center">
-            <Link to="/signin" className="text-[14px] font-bold text-[#2F2F2F]">
-              Back to sign in
-            </Link>
-          </div>
-        </div>
+        )}
       </div>
     </main>
   );
