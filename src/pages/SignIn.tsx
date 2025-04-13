@@ -44,12 +44,6 @@ const SignIn = () => {
   //Google remember me password
   const [rememberMe, setRememberMe] = useState(false);
 
-  // // Inside your SignIn component, add this hook:
-  // const login = useGoogleLogin({
-  //   onSuccess: handleGoogleLoginSuccess,
-  //   onError: handleError,
-  // });
-
   const changeSlide = useCallback(
     (index: number) => {
       if (!isTransitioning) {
@@ -64,7 +58,6 @@ const SignIn = () => {
     },
     [isTransitioning]
   );
-
 
   // Set up autoplay for carousel
   useEffect(() => {
@@ -163,18 +156,17 @@ const SignIn = () => {
   };
 
   return (
-    <main>
+    <main className="min-h-screen">
       {/* Left side page (for the form) */}
 
-      <div className="flex h-screen">
+      <div className="flex flex-col md:flex-row h-screen">
         {/* Left side (for the form) */}
-        <div className="w-[45%]">
-          <div className="p-10 flex flex-col h-full">
+        <div className="w-full md:w-1/2 lg:w-[45%] overflow-auto">
+          <div className="p-4 md:p-8 flex flex-col h-full">
             {/* Logo area */}
-
             <Link
               to="https://www.faishion.ai/"
-              className="mb-16 flex items-center"
+              className="mb-8 md:mb-16 flex items-center"
             >
               <div className="w-9 h-9 rounded-full bg-blue-200 flex items-center justify-center"></div>
               <span className="ml-3 font-bold text-xl text-gray-800">
@@ -183,47 +175,46 @@ const SignIn = () => {
             </Link>
 
             {/* Form content */}
-            <div
-              className="max-w-lg mx-auto mt-20"
-              style={{ marginLeft: "25%" }}
-            >
+            <div className="w-full max-w-xs mx-auto">
               {/* Welcome text */}
-              <div className="mb-10">
-                <h1 className="font-semibold text-[44px] text-[#2F2F2F]">
+              <div className="mb-5">
+                <h1 className="font-semibold text-2xl md:text-3xl text-[#2F2F2F]">
                   Welcome back
                 </h1>
-                <p className="font-normal text-[15.4px] text-[#A6A6A6] mt-2">
+                <p className="font-normal text-xs text-[#A6A6A6] mt-1">
                   Choose one of the options to go.
                 </p>
               </div>
 
               {error && (
-                <div className="text-red-500 text-[15.4px] mb-4">{error}</div>
+                <div className="text-red-500 text-xs mb-3">{error}</div>
               )}
 
-              <form onSubmit={handleSubmit}>
+              <form onSubmit={handleSubmit} className="w-[90%]">
                 {/* Email input */}
-                <div className="mb-4">
+                <div className="mb-3">
                   <input
                     type="email"
                     name="email"
                     placeholder="Email"
-                    className="w-[130%] h-[50px] border border-[#DADCE0] rounded-[10px] px-5 text-[17.6px]"
+                    className="w-full h-10 border border-[#DADCE0] rounded-lg px-4 text-sm"
+                    autoComplete="email"
                   />
                 </div>
 
                 {/* Password input */}
-                <div className="mb-4">
+                <div className="mb-3">
                   <input
                     type="password"
                     name="password"
                     placeholder="Password"
-                    className="w-[130%] h-[45px] border border-[#DADCE0] rounded-[10px] px-5"
+                    className="w-full h-10 border border-[#DADCE0] rounded-lg px-4 text-sm"
+                    autoComplete="current-password"
                   />
                 </div>
 
                 {/* Remember me and Forgot password */}
-                <div className="relative mb-6" style={{ width: "130%" }}>
+                <div className="relative mb-4 w-full">
                   <div className="flex items-center">
                     <input
                       type="checkbox"
@@ -234,20 +225,14 @@ const SignIn = () => {
                     />
                     <label
                       htmlFor="remember"
-                      className="ml-2 text-[14px] font-medium text-[#A6A6A6]"
+                      className="ml-2 text-xs font-medium text-[#A6A6A6]"
                     >
                       Remember me
                     </label>
                   </div>
-                  {/* <a
-                    href="#"
-                    className="text-[14px] font-bold text-[#2F2F2F] underline absolute right-0 top-0"
-                  >
-                    Forgot your password?
-                  </a> */}
                   <Link
                     to="/forgot-password"
-                    className="text-[14px] font-bold text-[#2F2F2F] underline absolute right-0 top-0"
+                    className="text-xs font-bold text-[#2F2F2F] underline absolute right-0 top-0"
                   >
                     Forgot your password?
                   </Link>
@@ -257,29 +242,28 @@ const SignIn = () => {
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className="w-[130%] h-[45px] bg-[#2F2F2F] rounded-[10px] text-white font-bold text-base flex items-center justify-center"
+                  className="w-full h-10 bg-[#2F2F2F] rounded-lg text-white font-bold text-sm flex items-center justify-center"
                 >
                   {isLoading ? "Signing in..." : "LOGIN"}
                 </button>
               </form>
 
               {/* Or divider */}
-              <div className="flex items-center my-6" style={{ width: "130%" }}>
+              <div className="flex items-center my-4 w-[90%]">
                 <div className="flex-grow h-px bg-[#2E2E2E]"></div>
-                <span className="mx-4 text-[17px] font-medium text-[#2E2E2E]">
+                <span className="mx-3 text-sm font-medium text-[#2E2E2E]">
                   or
                 </span>
                 <div className="flex-grow h-px bg-[#2E2E2E]"></div>
               </div>
 
-              {/* Google login */}
-              <div className="mb-6" style={{ width: "130%" }}>
+              <div className="mb-4 w-[90%]">
                 <GoogleLogin
                   shape="circle"
                   onSuccess={handleGoogleLoginSuccess}
                   onError={handleError}
                   text="continue_with"
-                  width="130%"
+                  width="100%"
                   theme="outline"
                   logo_alignment="left"
                   type="standard"
@@ -287,14 +271,8 @@ const SignIn = () => {
               </div>
 
               {/* Sign up link */}
-              <div
-                style={{
-                  width: "130%",
-                  display: "flex",
-                  justifyContent: "center",
-                }}
-              >
-                <p className="text-[14px] text-[#A6A6A6]">
+              <div className="w-[90%] flex justify-center">
+                <p className="text-xs text-[#A6A6A6]">
                   Don't have an account?{" "}
                   <Link to="/signup" className="font-bold text-[#2F2F2F]">
                     Sign up
@@ -307,7 +285,7 @@ const SignIn = () => {
 
         {/* Right side (for the picture and other stuff) */}
         <div
-          className="w-[55%] relative"
+          className="hidden md:block w-1/2 lg:w-[55%] relative"
           style={{
             backgroundImage: `url(${backgroundImage})`,
             backgroundSize: "cover",
@@ -315,16 +293,16 @@ const SignIn = () => {
           }}
         >
           {/* Carousel container */}
-          <div className="absolute top-[40%] left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+          <div className="absolute top-[40%] left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full max-w-[85%] md:max-w-[90%] lg:max-w-5xl">
             <div
               ref={carouselRef}
-              className="flex items-center"
+              className="flex items-center justify-center scale-90 md:scale-95 lg:scale-100"
               onMouseEnter={() => setIsPaused(true)}
               onMouseLeave={() => setIsPaused(false)}
             >
               {/* Left blurred image */}
-              <div className="relative -mr-16 z-0">
-                <div className="w-[280px] h-[422px] rounded-3xl overflow-hidden opacity-70 blur-[2px]">
+              <div className="relative -mr-2 xs:-mr-3 sm:-mr-4 md:-mr-8 lg:-mr-16 z-0">
+                <div className="w-16 xs:w-20 sm:w-28 md:w-36 lg:w-48 h-32 xs:h-40 sm:h-48 md:h-60 lg:h-72 rounded-3xl overflow-hidden opacity-70 blur-[2px]">
                   <img
                     src={images[activeSlide].left}
                     alt="Fashion model left"
@@ -337,19 +315,19 @@ const SignIn = () => {
 
               {/* Center focused image */}
               <div className="relative z-10 transition-all duration-300 hover:scale-105">
-                <div className="w-96 h-[576px] rounded-3xl overflow-hidden shadow-xl transition-all duration-300 hover:shadow-2xl">
+                <div className="w-28 xs:w-36 sm:w-44 md:w-56 lg:w-72 h-44 xs:h-56 sm:h-64 md:h-80 lg:h-96 rounded-3xl overflow-hidden shadow-xl transition-all duration-300 hover:shadow-2xl">
                   <img
                     src={images[activeSlide].center}
                     alt="Fashion model center"
                     className={`w-full h-full object-cover transition-opacity duration-300 ease-in-out 
-      ${isTransitioning ? "opacity-70" : "opacity-100"}`}
+                    ${isTransitioning ? "opacity-70" : "opacity-100"}`}
                   />
                 </div>
               </div>
 
               {/* Right blurred image */}
-              <div className="relative -ml-16 z-0">
-                <div className="w-[280px] h-[422px] rounded-3xl overflow-hidden opacity-70 blur-[2px]">
+              <div className="relative -ml-2 xs:-ml-3 sm:-ml-4 md:-ml-8 lg:-ml-16 z-0">
+                <div className="w-16 xs:w-20 sm:w-28 md:w-36 lg:w-48 h-32 xs:h-40 sm:h-48 md:h-60 lg:h-72 rounded-3xl overflow-hidden opacity-70 blur-[2px]">
                   <img
                     src={images[activeSlide].right}
                     alt="Fashion model right"
@@ -362,42 +340,42 @@ const SignIn = () => {
             </div>
           </div>
 
-          {/* Bottom text content - Modified to align text left and shifted right */}
-          <div className="absolute bottom-20 px-24 w-full text-left">
-            <div className="ml-8">
+          {/* Bottom text content - positioned at the very bottom */}
+          <div className="absolute bottom-0 px-4 md:px-8 lg:px-16 w-full text-left">
+            <div className="ml-0 md:ml-4 lg:ml-8 pb-4 scale-[0.85] md:scale-90 lg:scale-100 origin-bottom-left">
               <h2 className="mb-1">
-                <span className="text-4xl font-bold text-gray-800 block">
+                <span className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-gray-800 block">
                   Welcome to
                 </span>
-                <span className="text-7xl font-bold text-gray-800 block">
+                <span className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-gray-800 block">
                   fAIshion.AI
                 </span>
               </h2>
-              <p className="text-gray-600 max-w-lg">
+              <p className="text-xs sm:text-xs md:text-sm text-gray-600 max-w-lg">
                 Your AI shopping assistant for all apparel brands—try on
                 virtually, find your perfect size, and grab the best deals!
               </p>
             </div>
 
-            {/* Pagination dots - keeping these centered */}
-            <div className="flex justify-center mt-8 space-x-3">
+            {/* Pagination dots */}
+            <div className="flex justify-center pb-4 md:pb-6 space-x-2">
               <button
                 onClick={() => changeSlide(0)}
-                className={`w-2.5 h-2.5 rounded-full transition-colors duration-300 ${
+                className={`w-1.5 h-1.5 md:w-2 md:h-2 rounded-full transition-colors duration-300 ${
                   activeSlide === 0 ? "bg-gray-800" : "bg-gray-400"
                 }`}
                 aria-label="Show slide 1"
               ></button>
               <button
                 onClick={() => changeSlide(1)}
-                className={`w-2.5 h-2.5 rounded-full transition-colors duration-300 ${
+                className={`w-1.5 h-1.5 md:w-2 md:h-2 rounded-full transition-colors duration-300 ${
                   activeSlide === 1 ? "bg-gray-800" : "bg-gray-400"
                 }`}
                 aria-label="Show slide 2"
               ></button>
               <button
                 onClick={() => changeSlide(2)}
-                className={`w-2.5 h-2.5 rounded-full transition-colors duration-300 ${
+                className={`w-1.5 h-1.5 md:w-2 md:h-2 rounded-full transition-colors duration-300 ${
                   activeSlide === 2 ? "bg-gray-800" : "bg-gray-400"
                 }`}
                 aria-label="Show slide 3"
