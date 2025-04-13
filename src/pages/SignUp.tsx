@@ -5,7 +5,7 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import axios from "axios";
 import { z } from "zod";
 import { jwtDecode } from "jwt-decode";
-import { GoogleLogin } from "@react-oauth/google";
+import { useGoogleLogin } from "@react-oauth/google";
 import { CredentialResponse } from "@react-oauth/google";
 import { useDispatch } from "react-redux";
 import { setUser } from "@/store/features/userSlice";
@@ -15,6 +15,7 @@ import backgroundImage from "@/assets/Background.png";
 import image1 from "@/assets/image_1.jpg";
 import image2 from "@/assets/image_2.jpg";
 import image3 from "@/assets/image_3.jpg";
+import googleLogo from "@/assets/g-logo.png";
 
 const SignUp = () => {
   const navigate = useNavigate();
@@ -197,31 +198,44 @@ const SignUp = () => {
     console.log("Google Sign-In was unsuccessful. Try again later.");
   };
 
+  const login = useGoogleLogin({
+    flow: "implicit",
+    onSuccess: async (tokenResponse) => {
+      const fakeCredentialResponse: CredentialResponse = {
+        credential: tokenResponse.access_token,
+        select_by: "auto",
+        clientId: "",
+      };
+      await handleGoogleLoginSuccess(fakeCredentialResponse);
+    },
+    onError: handleError,
+  });
+
   return (
     <main className="min-h-screen">
       <div className="flex flex-col md:flex-row h-screen">
         {/* Left side (for the form) */}
-        <div className="w-full md:w-1/2 lg:w-[45%] overflow-auto">
-          <div className="p-4 md:p-8 flex flex-col h-full">
-            {/* Logo area */}
-            <Link
-              to="https://www.faishion.ai/"
-              className="mb-8 md:mb-16 flex items-center"
-            >
-              <div className="w-9 h-9 rounded-full bg-blue-200 flex items-center justify-center"></div>
-              <span className="ml-3 font-bold text-xl text-gray-800">
-                fAIshion.AI
-              </span>
-            </Link>
+        <div className="w-full md:w-[40%] lg:w-[35%] overflow-auto relative">
+          {/* Logo area */}
+          <Link
+            to="https://www.faishion.ai/"
+            className="flex items-center absolute top-8 left-8"
+          >
+            <div className="w-9 h-9 rounded-full bg-blue-200 flex items-center justify-center"></div>
+            <span className="ml-3 font-bold text-xl text-gray-800">
+              fAIshion.AI
+            </span>
+          </Link>
 
+          <div className="p-4 md:p-6 lg:p-8 flex flex-col w-full h-full justify-center pt-16">
             {/* Form content */}
-            <div className="w-full max-w-xs mx-auto">
+            <div className="w-full max-w-[90%] mx-auto">
               {/* Welcome text */}
               <div className="mb-5">
                 <h1 className="font-semibold text-2xl md:text-3xl text-[#2F2F2F]">
                   Sign Up
                 </h1>
-                <div className="w-[90%]">
+                <div className="w-full">
                   <p className="font-normal text-xs text-[#A6A6A6] mt-1">
                     By signing up, you agree to Final Round's Terms of Service
                     and Privacy Policy. Your privacy is our top priority. Learn
@@ -231,10 +245,10 @@ const SignUp = () => {
               </div>
 
               {error && (
-                <div className="text-red-500 text-xs mb-3 w-[90%]">{error}</div>
+                <div className="text-red-500 text-xs mb-3 w-full">{error}</div>
               )}
 
-              <form onSubmit={handleSubmit} className="w-[90%]">
+              <form onSubmit={handleSubmit} className="w-full">
                 {/* Email input */}
                 <div className="mb-3">
                   <input
@@ -300,7 +314,7 @@ const SignUp = () => {
               </form>
 
               {/* Or divider */}
-              <div className="flex items-center my-4 w-[90%]">
+              <div className="flex items-center my-4 w-full">
                 <div className="flex-grow h-px bg-[#2E2E2E]"></div>
                 <span className="mx-3 text-sm font-medium text-[#2E2E2E]">
                   or
@@ -308,22 +322,19 @@ const SignUp = () => {
                 <div className="flex-grow h-px bg-[#2E2E2E]"></div>
               </div>
 
-              {/* Google login */}
-              <div className="mb-4 w-[90%]">
-                <GoogleLogin
-                  shape="circle"
-                  onSuccess={handleGoogleLoginSuccess}
-                  onError={handleError}
-                  text="continue_with"
-                  width="100%"
-                  theme="outline"
-                  logo_alignment="left"
-                  type="standard"
-                />
+              {/* Google button */}
+              <div className="mb-4 w-full">
+                <button
+                  onClick={() => login()}
+                  className="w-full h-10 bg-white border border-[#DADCE0] rounded-lg text-sm font-medium flex items-center justify-center gap-2 text-[#2F2F2F] hover:bg-gray-100"
+                >
+                  <img src={googleLogo} alt="Google" className="w-5 h-5" />
+                  <span>Sign up with Google</span>
+                </button>
               </div>
 
               {/* Sign in link */}
-              <div className="w-[90%] flex justify-center">
+              <div className="w-full flex justify-center">
                 <p className="text-xs text-[#A6A6A6]">
                   Already have an account?{" "}
                   <Link to="/signin" className="font-bold text-[#2F2F2F]">
@@ -337,7 +348,7 @@ const SignUp = () => {
 
         {/* Right side (for the picture and other stuff) */}
         <div
-          className="hidden md:block w-1/2 lg:w-[55%] relative"
+          className="hidden md:block md:w-[60%] lg:w-[65%] relative"
           style={{
             backgroundImage: `url(${backgroundImage})`,
             backgroundSize: "cover",
@@ -345,16 +356,16 @@ const SignUp = () => {
           }}
         >
           {/* Carousel container */}
-          <div className="absolute top-[40%] left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full max-w-[85%] md:max-w-[90%] lg:max-w-5xl">
+          <div className="absolute top-[42%] left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full max-w-[90%] md:max-w-[95%] lg:max-w-[90%]">
             <div
               ref={carouselRef}
-              className="flex items-center justify-center scale-90 md:scale-95 lg:scale-100"
+              className="flex items-center justify-center scale-[0.65] md:scale-[0.8] lg:scale-95"
               onMouseEnter={() => setIsPaused(true)}
               onMouseLeave={() => setIsPaused(false)}
             >
               {/* Left blurred image */}
-              <div className="relative -mr-2 xs:-mr-3 sm:-mr-4 md:-mr-8 lg:-mr-16 z-0">
-                <div className="w-16 xs:w-20 sm:w-28 md:w-36 lg:w-48 h-32 xs:h-40 sm:h-48 md:h-60 lg:h-72 rounded-3xl overflow-hidden opacity-70 blur-[2px]">
+              <div className="relative -mr-2 xs:-mr-3 sm:-mr-4 md:-mr-12 lg:-mr-24 z-0">
+                <div className="w-24 xs:w-28 sm:w-36 md:w-52 lg:w-72 h-44 xs:h-56 sm:h-64 md:h-80 lg:h-[28rem] rounded-3xl overflow-hidden opacity-60 blur-[3px]">
                   <img
                     src={images[activeSlide].left}
                     alt="Fashion model left"
@@ -367,19 +378,19 @@ const SignUp = () => {
 
               {/* Center focused image */}
               <div className="relative z-10 transition-all duration-300 hover:scale-105">
-                <div className="w-28 xs:w-36 sm:w-44 md:w-56 lg:w-72 h-44 xs:h-56 sm:h-64 md:h-80 lg:h-96 rounded-3xl overflow-hidden shadow-xl transition-all duration-300 hover:shadow-2xl">
+                <div className="w-44 xs:w-52 sm:w-64 md:w-80 lg:w-[30rem] h-64 xs:h-72 sm:h-96 md:h-[28rem] lg:h-[36rem] rounded-3xl overflow-hidden shadow-2xl transition-all duration-300 hover:shadow-2xl">
                   <img
                     src={images[activeSlide].center}
-                    alt="Fashion model center"
-                    className={`w-full h-full object-cover transition-opacity duration-300 ease-in-out 
+                    className={`w-full h-full object-cover object-center transition-opacity duration-300 ease-in-out 
                     ${isTransitioning ? "opacity-70" : "opacity-100"}`}
+                    alt="Fashion model center"
                   />
                 </div>
               </div>
 
               {/* Right blurred image */}
-              <div className="relative -ml-2 xs:-ml-3 sm:-ml-4 md:-ml-8 lg:-ml-16 z-0">
-                <div className="w-16 xs:w-20 sm:w-28 md:w-36 lg:w-48 h-32 xs:h-40 sm:h-48 md:h-60 lg:h-72 rounded-3xl overflow-hidden opacity-70 blur-[2px]">
+              <div className="relative -ml-2 xs:-ml-3 sm:-ml-4 md:-ml-12 lg:-ml-24 z-0">
+                <div className="w-24 xs:w-28 sm:w-36 md:w-52 lg:w-72 h-44 xs:h-56 sm:h-64 md:h-80 lg:h-[28rem] rounded-3xl overflow-hidden opacity-60 blur-[3px]">
                   <img
                     src={images[activeSlide].right}
                     alt="Fashion model right"
@@ -410,7 +421,7 @@ const SignUp = () => {
             </div>
 
             {/* Pagination dots */}
-            <div className="flex justify-center pb-4 md:pb-6 space-x-2">
+            <div className="flex justify-center pb-4 md:pb-6 space-x-3 md:space-x-4 lg:space-x-5">
               <button
                 onClick={() => changeSlide(0)}
                 className={`w-1.5 h-1.5 md:w-2 md:h-2 rounded-full transition-colors duration-300 ${
