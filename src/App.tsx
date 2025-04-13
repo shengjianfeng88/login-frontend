@@ -2,14 +2,15 @@ import { Route, BrowserRouter as Router, Routes } from "react-router-dom";
 import { Suspense } from "react";
 import PageNotFound from "./pages/PageNotFound";
 import SignIn from "./pages/SignIn";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 import { Provider } from "react-redux";
 import { store } from "./store/store";
 import { GoogleOAuthProvider } from "@react-oauth/google";
 import SignUp from "./pages/SignUp";
 import Done from "./pages/Done";
 import History from "./pages/History";
-import ForgotPassword from "./pages/ForgotPassword";
-import ResetPassword from "./pages/ResetPassword";
+
 
 function App() {
   const googleClientId =
