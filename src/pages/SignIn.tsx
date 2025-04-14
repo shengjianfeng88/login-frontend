@@ -6,12 +6,16 @@ import axiosInstance from "@/utils/axiosInstance";
 import { jwtDecode } from "jwt-decode";
 import { GoogleLogin } from '@react-oauth/google';
 import { CredentialResponse } from '@react-oauth/google';
-import { Link, useNavigate } from "react-router-dom";
-import { sendMessageToExtension } from "@/utils/utils";
+import { Link, useNavigate } from 'react-router-dom';
+import { sendMessageToExtension } from '@/utils/utils';
+import backgroundImage from '@/assets/Background.png';
+import image1 from '@/assets/image_1.jpg';
+import image2 from '@/assets/image_2.jpg';
+import image3 from '@/assets/image_3.jpg';
 
 const signInSchema = z.object({
-  email: z.string().email("Please enter a valid email address"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
+  email: z.string().email('Please enter a valid email address'),
+  password: z.string().min(6, 'Password must be at least 6 characters'),
 });
 
 const SignIn = () => {
@@ -22,12 +26,13 @@ const SignIn = () => {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setError("");
+    setError('');
     setIsLoading(true);
     const formData = new FormData(e.currentTarget);
     const data = {
-      email: formData.get("email"),
-      password: formData.get("password"),
+      email: formData.get('email'),
+      password: formData.get('password'),
+      rememberMe: rememberMe,
     };
 
     try {
