@@ -10,6 +10,7 @@ import Done from "./pages/Done";
 import History from "./pages/History";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
+import VerifyEmail from "./pages/VerifyEmail";  // 【新增】
 
 function App() {
   const googleClientId =
@@ -30,6 +31,7 @@ function App() {
               <Route path="/forgot-password" element={<ForgotPassword />} />
               <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/tryon-history" element={<History />} />
+              <Route path="/verify-email" element={<VerifyEmail />} />  {/* 【新增】 */}
               <Route path="*" element={<PageNotFound />} />
             </Routes>
           </Suspense>
