@@ -3,10 +3,10 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 // import google from "@/public/auth/google.svg";
 // import linkedin from "@/public/auth/linkedin.svg";
 // import twitter from "@/public/auth/twitter.svg";
+// import axios from "axios";
+// import { jwtDecode } from "jwt-decode";
 import { z } from "zod";
-import axios from "axios";
-import { jwtDecode } from "jwt-decode";
-
+import axiosInstance from "@/utils/axiosInstance";
 import { useGoogleLogin } from "@react-oauth/google";
 import { CredentialResponse } from "@react-oauth/google";
 import { Link, useNavigate } from "react-router-dom";
@@ -17,13 +17,6 @@ import image2 from "@/assets/image_2.jpg";
 import image3 from "@/assets/image_3.jpg";
 import googleLogo from "@/assets/g-logo.png";
 
-// Add this type declaration at the top of the file, after the imports
-declare global {
-  interface Window {
-    chrome: typeof chrome;
-  }
-}
-
 const signInSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
   password: z.string().min(6, "Password must be at least 6 characters"),
@@ -31,8 +24,11 @@ const signInSchema = z.object({
 
 const SignIn = () => {
   const [error, setError] = useState("");
-  const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
+  const navigate = useNavigate();
+
+  //Image carrousel
   const [activeSlide, setActiveSlide] = useState<number>(0);
   const images = [
     { left: image3, center: image1, right: image2 },
@@ -42,9 +38,6 @@ const SignIn = () => {
   const carouselRef = useRef<HTMLDivElement>(null);
   const [isTransitioning, setIsTransitioning] = useState<boolean>(false);
   const [isPaused, setIsPaused] = useState<boolean>(false);
-
-  //Google remember me password
-  const [rememberMe, setRememberMe] = useState(false);
 
   const changeSlide = useCallback(
     (index: number) => {
@@ -85,40 +78,58 @@ const SignIn = () => {
     };
 
     try {
-      // Validate form data
       const validatedData = signInSchema.parse(data);
-      const apiUrl = "https://api-auth.faishion.ai";
+      // <<<<<<< HEAD
+      //       const apiUrl = "https://api-auth.faishion.ai";
 
-      // Call login API using axios
-      const response = await axios.post(
-        apiUrl + "/api/auth/login",
-        validatedData
-      );
+      //       // Call login API using axios
+      //       const response = await axios.post(
+      //         apiUrl + "/api/auth/login",
+      //         validatedData
+      //       );
 
-      if (response.data) {
-        const accessToken = response.data.accessToken;
-        // Store token in localStorage
-        localStorage.setItem("accessToken", accessToken);
+      //       if (response.data) {
+      //         const accessToken = response.data.accessToken;
+      //         // Store token in localStorage
+      //         localStorage.setItem("accessToken", accessToken);
 
-        // Decode token and log the contents
-        const decodedToken = jwtDecode(accessToken);
-        console.log("Decoded token:", decodedToken);
+      //         // Decode token and log the contents
+      //         const decodedToken = jwtDecode(accessToken);
+      //         console.log("Decoded token:", decodedToken);
 
-        sendMessageToExtension({
-          email: "",
-          picture: "",
-          accessToken: accessToken,
-        });
+      //         sendMessageToExtension({
+      //           email: "",
+      //           picture: "",
+      //           accessToken: accessToken,
+      //         });
 
-        navigate("/done");
-      }
-    } catch (err) {
+      //         navigate("/done");
+      //       }
+      //     } catch (err) {
+      //       if (err instanceof z.ZodError) {
+      //         setError(err.errors[0].message);
+      //       } else if (axios.isAxiosError(err)) {
+      //         setError(err.response?.data?.message || "Invalid email or password");
+      //       } else {
+      //         setError("An error occurred. Please try again.");
+      // =======
+      const res = await axiosInstance.post("/auth/login", {
+        ...validatedData,
+        rememberMe,
+      });
+      localStorage.setItem("accessToken", res.data.accessToken);
+      localStorage.setItem("userId", res.data.userId);
+      sendMessageToExtension({
+        email: "",
+        picture: "",
+        accessToken: res.data.accessToken,
+      });
+      navigate("/done");
+    } catch (err: any) {
       if (err instanceof z.ZodError) {
         setError(err.errors[0].message);
-      } else if (axios.isAxiosError(err)) {
-        setError(err.response?.data?.message || "Invalid email or password");
       } else {
-        setError("An error occurred. Please try again.");
+        setError(err.response?.data?.message || "Login failed");
       }
     } finally {
       setIsLoading(false);
@@ -128,27 +139,15 @@ const SignIn = () => {
   const handleGoogleLoginSuccess = async (response: CredentialResponse) => {
     try {
       const token = response.credential;
-      const apiUrl = "https://api-auth.faishion.ai";
-      const res = await axios.post(apiUrl + "/api/auth/google-auth", {
-        token,
-        rememberMe: rememberMe,
+      const res = await axiosInstance.post("/auth/google-auth", { token });
+      localStorage.setItem("accessToken", res.data.accessToken);
+      sendMessageToExtension({
+        email: "",
+        picture: "",
+        accessToken: res.data.accessToken,
       });
-
-      if (res.data) {
-        const accessToken = res.data.accessToken;
-        // Store token in localStorage
-        localStorage.setItem("accessToken", accessToken);
-
-        sendMessageToExtension({
-          email: "",
-          picture: "",
-          accessToken: accessToken,
-        });
-
-        navigate("/done");
-      }
+      navigate("/done");
     } catch (error) {
-      console.error("Google authentication failed:", error);
       setError("Google authentication failed. Please try again.");
     }
   };

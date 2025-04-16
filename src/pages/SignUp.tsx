@@ -1,7 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
-// import google from "@/public/auth/google.svg";
-// import linkedin from "@/public/auth/linkedin.svg";
-// import twitter from "@/public/auth/twitter.svg";
+import axiosInstance from "@/utils/axiosInstance";
 import axios from "axios";
 import { z } from "zod";
 import { jwtDecode } from "jwt-decode";
@@ -17,43 +15,50 @@ import image2 from "@/assets/image_2.jpg";
 import image3 from "@/assets/image_3.jpg";
 import googleLogo from "@/assets/g-logo.png";
 
+//This user schema does not include the confimPassword, I stick to the original userSchema
+// const signUpSchema = z.object({
+//   email: z.string().email("Please enter a valid email address"),
+//   password: z.string().min(6, "Password must be at least 6 characters"),
+// });
+
+const userSchema = z
+  .object({
+    email: z.string().email("Invalid email format"),
+    password: z.string().min(6, "Password must be at least 6 characters"),
+    confirmPassword: z.string(),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords don't match",
+    path: ["confirmPassword"],
+  });
+
 const SignUp = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     email: "",
     password: "",
     confirmPassword: "",
   });
+
   const [errors, setErrors] = useState({
     email: "",
     password: "",
     confirmPassword: "",
   });
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState("");
 
-  // Carousel related states
+  // Carousel state
   const [activeSlide, setActiveSlide] = useState<number>(0);
+  const [isTransitioning, setIsTransitioning] = useState<boolean>(false);
+  const [isPaused, setIsPaused] = useState<boolean>(false);
+  const carouselRef = useRef<HTMLDivElement>(null);
   const images = [
     { left: image3, center: image1, right: image2 },
     { left: image1, center: image2, right: image3 },
     { left: image2, center: image3, right: image1 },
   ];
-  const carouselRef = useRef<HTMLDivElement>(null);
-  const [isTransitioning, setIsTransitioning] = useState<boolean>(false);
-  const [isPaused, setIsPaused] = useState<boolean>(false);
-
-  const userSchema = z
-    .object({
-      email: z.string().email("Invalid email format"),
-      password: z.string().min(6, "Password must be at least 6 characters"),
-      confirmPassword: z.string(),
-    })
-    .refine((data) => data.password === data.confirmPassword, {
-      message: "Passwords don't match",
-      path: ["confirmPassword"],
-    });
 
   const changeSlide = useCallback(
     (index: number) => {
@@ -61,47 +66,35 @@ const SignUp = () => {
         setIsTransitioning(true);
         setTimeout(() => {
           setActiveSlide(index);
-          setTimeout(() => {
-            setIsTransitioning(false);
-          }, 50);
+          setTimeout(() => setIsTransitioning(false), 50);
         }, 200);
       }
     },
     [isTransitioning]
   );
 
-  // Set up autoplay for carousel
   useEffect(() => {
     const interval = setInterval(() => {
-      if (!isTransitioning && !isPaused) {
+      if (!isPaused && !isTransitioning) {
         changeSlide((activeSlide + 1) % 3);
       }
     }, 3000);
 
-    // Clean up the interval on component unmount
     return () => clearInterval(interval);
-  }, [activeSlide, isTransitioning, isPaused, changeSlide]);
+  }, [activeSlide, isPaused, isTransitioning, changeSlide]);
 
   const validateForm = () => {
     try {
       userSchema.parse(formData);
-      setErrors({
-        email: "",
-        password: "",
-        confirmPassword: "",
-      });
+      setErrors({ email: "", password: "", confirmPassword: "" });
       setError("");
       return true;
     } catch (err) {
       if (err instanceof z.ZodError) {
-        const newErrors = {
-          email: "",
-          password: "",
-          confirmPassword: "",
-        };
-        err.errors.forEach((error) => {
-          const field = error.path[0] as keyof typeof newErrors;
-          newErrors[field] = error.message;
+        const newErrors = { email: "", password: "", confirmPassword: "" };
+        err.errors.forEach((e) => {
+          const field = e.path[0] as keyof typeof newErrors;
+          newErrors[field] = e.message;
         });
         setErrors(newErrors);
       }
@@ -109,22 +102,28 @@ const SignUp = () => {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-
+    // setError(""); //TODO:Look back later what this for?
     if (!validateForm()) return;
-
     setIsLoading(true);
+
     try {
-      const apiUrl = "https://api-auth.faishion.ai";
-      const response = await axios.post(apiUrl + "/api/auth/register", {
+      // const formData = new FormData(e.currentTarget); Removed this because using useState.
+
+      const response = await axiosInstance.post("/auth/register", {
         email: formData.email,
         password: formData.password,
       });
+
+      // const data = {
+      //   email: formData.email,
+      //   password: formData.password,
+      // };
+
       if (response.data) {
         localStorage.setItem("accessToken", response.data.accessToken);
         const accessToken = response.data.accessToken;
-        localStorage.setItem("accessToken", accessToken);
 
         const decodedToken = jwtDecode(accessToken);
         const userData = decodedToken as {
@@ -153,7 +152,7 @@ const SignUp = () => {
       } else if (axios.isAxiosError(err)) {
         setError(err.response?.data?.message || "Invalid email or password");
       } else {
-        setError("An error occurred. Please try again.");
+        setError("An error occured. Please try again");
       }
     } finally {
       setIsLoading(false);
@@ -173,7 +172,8 @@ const SignUp = () => {
       const token = response.credential;
       const apiUrl = "https://api-auth.faishion.ai";
 
-      const res = await axios.post(apiUrl + "/api/auth/google-auth", { token });
+      // Use axiosInstance instead of axios 
+      const res = await axiosInstance.post(apiUrl + "/api/auth/google-auth", { token });
 
       if (res.data) {
         const accessToken = res.data.accessToken;
