@@ -102,8 +102,11 @@ const SignUp = () => {
     }
   };
 
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    console.log("VITE_API_URL:", import.meta.env.VITE_API_URL);
+
     // setError(""); //TODO:Look back later what this for?
     if (!validateForm()) return;
     setIsLoading(true);
