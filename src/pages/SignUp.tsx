@@ -171,7 +171,7 @@ const SignUp = () => {
   const handleGoogleLoginSuccess = async (response: CredentialResponse) => {
     try {
       const token = response.credential;
-      const apiUrl = "https://api-auth.faishion.ai";
+   
 
       // Use axiosInstance instead of axios
       const res = await axiosInstance.post("/auth/google-auth", { token });
