@@ -10,12 +10,22 @@ import axiosInstance from "@/utils/axiosInstance";
 import { useGoogleLogin } from "@react-oauth/google";
 import { CredentialResponse } from "@react-oauth/google";
 import { Link, useNavigate } from "react-router-dom";
-import { sendMessageToExtension } from "@/utils/utils";
+import { sendMessageToExtension, sendDataToExtension } from "@/utils/utils";
 import backgroundImage from "@/assets/Background.png";
 import image1 from "@/assets/image_1.jpg";
 import image2 from "@/assets/image_2.jpg";
 import image3 from "@/assets/image_3.jpg";
 import googleLogo from "@/assets/g-logo.png";
+import { useDispatch } from "react-redux";
+import { setUser } from "@/store/features/userSlice";
+import { jwtDecode } from "jwt-decode";
+
+interface DecodedToken {
+  email: string;
+  userId: string;
+  iat: number;
+  exp: number;
+}
 
 const signInSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
@@ -27,6 +37,7 @@ const SignIn = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
   //Image carrousel
   const [activeSlide, setActiveSlide] = useState<number>(0);
@@ -72,64 +83,72 @@ const SignIn = () => {
     setIsLoading(true);
     const formData = new FormData(e.currentTarget);
     const data = {
-      email: formData.get("email"),
-      password: formData.get("password"),
+      email: formData.get("email")?.toString() || "",
+      password: formData.get("password")?.toString() || "",
       rememberMe: rememberMe,
     };
 
+    console.log("Form data being sent:", {
+      email: data.email,
+      password: data.password ? "***" : "missing",
+      rememberMe: data.rememberMe,
+    });
+
     try {
       const validatedData = signInSchema.parse(data);
-      // <<<<<<< HEAD
-      //       const apiUrl = "https://api-auth.faishion.ai";
+      console.log(
+        "Making login request to:",
+        `${import.meta.env.VITE_API_URL}/auth/login`
+      );
+      console.log("With data:", { ...validatedData, rememberMe });
 
-      //       // Call login API using axios
-      //       const response = await axios.post(
-      //         apiUrl + "/api/auth/login",
-      //         validatedData
-      //       );
-
-      //       if (response.data) {
-      //         const accessToken = response.data.accessToken;
-      //         // Store token in localStorage
-      //         localStorage.setItem("accessToken", accessToken);
-
-      //         // Decode token and log the contents
-      //         const decodedToken = jwtDecode(accessToken);
-      //         console.log("Decoded token:", decodedToken);
-
-      //         sendMessageToExtension({
-      //           email: "",
-      //           picture: "",
-      //           accessToken: accessToken,
-      //         });
-
-      //         navigate("/done");
-      //       }
-      //     } catch (err) {
-      //       if (err instanceof z.ZodError) {
-      //         setError(err.errors[0].message);
-      //       } else if (axios.isAxiosError(err)) {
-      //         setError(err.response?.data?.message || "Invalid email or password");
-      //       } else {
-      //         setError("An error occurred. Please try again.");
-      // =======
       const res = await axiosInstance.post("/auth/login", {
         ...validatedData,
         rememberMe,
       });
-      localStorage.setItem("accessToken", res.data.accessToken);
-      localStorage.setItem("userId", res.data.userId);
-      sendMessageToExtension({
-        email: "",
+
+      console.log("Login response:", res.data);
+
+      const accessToken = res.data.accessToken;
+      localStorage.setItem("accessToken", accessToken);
+
+      // Decode token to get user info
+      const decodedToken = jwtDecode(accessToken) as DecodedToken;
+      const email = decodedToken.email || validatedData.email;
+
+      // Save to localStorage
+      localStorage.setItem("email", email);
+      if (res.data.userId) {
+        localStorage.setItem("userId", res.data.userId);
+      }
+
+      // Update Redux store
+      dispatch(setUser({ email, picture: "" }));
+
+      // Send to extension
+      sendDataToExtension({
+        email,
         picture: "",
-        accessToken: res.data.accessToken,
+        accessToken,
       });
+
+      sendMessageToExtension({
+        email,
+        picture: "",
+        accessToken,
+      });
+
       navigate("/done");
-    } catch (err: any) {
+    } catch (err: unknown) {
       if (err instanceof z.ZodError) {
         setError(err.errors[0].message);
+      } else if (err && typeof err === "object" && "response" in err) {
+        const axiosError = err as {
+          response?: { data?: { message?: string } };
+        };
+        setError(axiosError.response?.data?.message || "Login failed");
       } else {
-        setError(err.response?.data?.message || "Login failed");
+        setError("Login failed");
       }
     } finally {
       setIsLoading(false);
@@ -140,14 +159,36 @@ const SignIn = () => {
     try {
       const token = response.credential;
       const res = await axiosInstance.post("/auth/google-auth", { token });
-      localStorage.setItem("accessToken", res.data.accessToken);
-      sendMessageToExtension({
-        email: "",
+
+      const accessToken = res.data.accessToken;
+      localStorage.setItem("accessToken", accessToken);
+
+      // Decode token to get user info
+      const decodedToken = jwtDecode(accessToken) as DecodedToken;
+      const email = decodedToken.email;
+
+      // Save to localStorage
+      localStorage.setItem("email", email);
+
+      // Update Redux store
+      dispatch(setUser({ email, picture: "" }));
+
+      // Send to extension
+      sendDataToExtension({
+        email,
         picture: "",
-        accessToken: res.data.accessToken,
+        accessToken,
       });
+
+      sendMessageToExtension({
+        email,
+        picture: "",
+        accessToken,
+      });
+
       navigate("/done");
     } catch (error) {
+      console.error("Google authentication failed:", error);
       setError("Google authentication failed. Please try again.");
     }
   };
