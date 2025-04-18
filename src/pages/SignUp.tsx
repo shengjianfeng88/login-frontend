@@ -124,6 +124,7 @@ const SignUp = () => {
       if (response.data) {
         localStorage.setItem("accessToken", response.data.accessToken);
         const accessToken = response.data.accessToken;
+        localStorage.setItem("email", formData.email);
 
         const decodedToken = jwtDecode(accessToken);
         const userData = decodedToken as {
@@ -139,7 +140,7 @@ const SignUp = () => {
         );
 
         sendMessageToExtension({
-          email: userData.email,
+          email: formData.email,
           picture: userData.picture || "",
           accessToken: accessToken,
         });
@@ -172,17 +173,21 @@ const SignUp = () => {
       const token = response.credential;
       const apiUrl = "https://api-auth.faishion.ai";
 
-      // Use axiosInstance instead of axios 
-      const res = await axiosInstance.post(apiUrl + "/api/auth/google-auth", { token });
+      // Use axiosInstance instead of axios
+      const res = await axiosInstance.post("/auth/google-auth", { token });
 
       if (res.data) {
         const accessToken = res.data.accessToken;
         // Store token in localStorage
         localStorage.setItem("accessToken", accessToken);
 
+        // Get and store email
+        const email = res.data.email;
+        localStorage.setItem("email", email);
+
         sendMessageToExtension({
-          email: "",
-          picture: "",
+          email: email,
+          picture: res.data.picture || "",
           accessToken: accessToken,
         });
 
