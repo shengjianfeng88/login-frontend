@@ -11,6 +11,7 @@ import SignUp from "./pages/SignUp";
 import Done from "./pages/Done";
 import History from "./pages/History";
 import VerifyEmail from "./pages/VerifyEmail";  // 【新增】
+import ConfirmRegister from "@/pages/ConfirmRegister";
 
 
 
@@ -36,6 +37,7 @@ function App() {
               <Route path="/tryon-history" element={<History />} />
               <Route path="/verify-email" element={<VerifyEmail />} />  {/* 【新增】 */}
               <Route path="*" element={<PageNotFound />} />
+              <Route path="/confirm-register" element={<ConfirmRegister />} />
             </Routes>
           </Suspense>
         </Router>

@@ -102,62 +102,25 @@ const SignUp = () => {
     }
   };
 
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    // setError(""); //TODO:Look back later what this for?
     if (!validateForm()) return;
     setIsLoading(true);
-
+  
     try {
-      // const formData = new FormData(e.currentTarget); Removed this because using useState.
-
-      const response = await axiosInstance.post("/auth/register", {
+      await axiosInstance.post("/auth/request-register", {
         email: formData.email,
         password: formData.password,
       });
-
-      // const data = {
-      //   email: formData.email,
-      //   password: formData.password,
-      // };
-
-      if (response.data) {
-        localStorage.setItem("accessToken", response.data.accessToken);
-        const accessToken = response.data.accessToken;
-
-        const decodedToken = jwtDecode(accessToken);
-        const userData = decodedToken as {
-          email: string;
-          picture?: string;
-        };
-
-        dispatch(
-          setUser({
-            email: userData.email,
-            picture: userData.picture || "",
-          })
-        );
-
-        sendMessageToExtension({
-          email: userData.email,
-          picture: userData.picture || "",
-          accessToken: accessToken,
-        });
-
-        navigate("/done");
-      }
+      alert("Verification email sent! Check your inbox.");
     } catch (err) {
-      if (err instanceof z.ZodError) {
-        setError(err.errors[0].message);
-      } else if (axios.isAxiosError(err)) {
-        setError(err.response?.data?.message || "Invalid email or password");
-      } else {
-        setError("An error occured. Please try again");
-      }
+      setError("Registration failed");
     } finally {
       setIsLoading(false);
     }
   };
+  
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
