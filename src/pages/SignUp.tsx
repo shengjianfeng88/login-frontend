@@ -1,12 +1,10 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import axiosInstance from "@/utils/axiosInstance";
-import axios from "axios";
 import { z } from "zod";
-import { jwtDecode } from "jwt-decode";
 import { useGoogleLogin } from "@react-oauth/google";
 import { CredentialResponse } from "@react-oauth/google";
 import { useDispatch } from "react-redux";
-import { setUser } from "@/store/features/userSlice";
+
 import { Link, useNavigate } from "react-router-dom";
 import { sendMessageToExtension } from "@/utils/utils";
 import backgroundImage from "@/assets/Background.png";
@@ -34,7 +32,6 @@ const userSchema = z
 
 const SignUp = () => {
   const navigate = useNavigate();
-  const dispatch = useDispatch();
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
