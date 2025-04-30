@@ -120,8 +120,8 @@ const SignIn = () => {
       localStorage.setItem("accessToken", res.data.accessToken);
       localStorage.setItem("userId", res.data.userId);
       sendMessageToExtension({
-        email: "",
-        picture: "",
+        email: res.data.email,
+        picture: res.data.picture,
         accessToken: res.data.accessToken,
       });
       navigate("/done");
@@ -142,8 +142,8 @@ const SignIn = () => {
       const res = await axiosInstance.post("/auth/google-auth", { token });
       localStorage.setItem("accessToken", res.data.accessToken);
       sendMessageToExtension({
-        email: "",
-        picture: "",
+        email: res.data.email,
+        picture: res.data.picture,
         accessToken: res.data.accessToken,
       });
       navigate("/done");
