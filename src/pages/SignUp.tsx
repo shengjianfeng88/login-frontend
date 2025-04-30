@@ -141,9 +141,9 @@ const SignUp = () => {
         localStorage.setItem("accessToken", accessToken);
 
         sendMessageToExtension({
-          email: "",
-          picture: "",
-          accessToken: accessToken,
+          email: res.data.email,
+          picture: res.data.picture,
+          accessToken: res.data.accessToken,
         });
 
         navigate("/done");
