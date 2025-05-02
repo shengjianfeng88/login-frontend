@@ -9,7 +9,7 @@ import { z } from "zod";
 import axiosInstance from "@/utils/axiosInstance";
 import { useGoogleLogin } from "@react-oauth/google";
 import { CredentialResponse } from "@react-oauth/google";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { sendMessageToExtension } from "@/utils/utils";
 import backgroundImage from "@/assets/Background.png";
 import image1 from "@/assets/image_1.jpg";
@@ -26,7 +26,6 @@ const SignIn = () => {
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
-  const navigate = useNavigate();
 
   //Image carrousel
   const [activeSlide, setActiveSlide] = useState<number>(0);
@@ -124,7 +123,7 @@ const SignIn = () => {
         picture: res.data.picture,
         accessToken: res.data.accessToken,
       });
-      navigate("/done");
+      window.location.href = "https://www.faishion.ai/howitworks";
     } catch (err: any) {
       if (err instanceof z.ZodError) {
         setError(err.errors[0].message);
@@ -146,7 +145,7 @@ const SignIn = () => {
         picture: res.data.picture,
         accessToken: res.data.accessToken,
       });
-      navigate("/done");
+      window.location.href = "https://www.faishion.ai/howitworks";
     } catch (error) {
       setError("Google authentication failed. Please try again.");
     }
