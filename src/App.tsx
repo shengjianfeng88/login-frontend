@@ -18,8 +18,8 @@ import ConfirmRegister from "@/pages/ConfirmRegister";
 
 function App() {
   const googleClientId =
-    // "1010861766216-t171avne79kbtqkoh3obfgk7a848fkmi.apps.googleusercontent.com";
-    "1010861766216-t171avne79kbtqkoh3obfgk7a848fkmi.apps.googleusercontent.com"
+    "1010861766216-t171avne79kbtqkoh3obfgk7a848fkmi.apps.googleusercontent.com";
+  // "1010861766216-t171avne79kbtqkoh3obfgk7a848fkmi.apps.googleusercontent.com"
   return (
     <Provider store={store}>
       <GoogleOAuthProvider clientId={googleClientId!}>
