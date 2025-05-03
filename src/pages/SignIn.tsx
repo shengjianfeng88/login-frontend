@@ -317,9 +317,8 @@ const SignIn = () => {
                   <img
                     src={images[activeSlide].left}
                     alt="Fashion model left"
-                    className={`w-full h-full object-cover transition-opacity duration-200 ease-in-out ${
-                      isTransitioning ? "opacity-60" : "opacity-100"
-                    }`}
+                    className={`w-full h-full object-cover transition-opacity duration-200 ease-in-out ${isTransitioning ? "opacity-60" : "opacity-100"
+                      }`}
                   />
                 </div>
               </div>
@@ -342,9 +341,8 @@ const SignIn = () => {
                   <img
                     src={images[activeSlide].right}
                     alt="Fashion model right"
-                    className={`w-full h-full object-cover transition-opacity duration-200 ease-in-out ${
-                      isTransitioning ? "opacity-60" : "opacity-100"
-                    }`}
+                    className={`w-full h-full object-cover transition-opacity duration-200 ease-in-out ${isTransitioning ? "opacity-60" : "opacity-100"
+                      }`}
                   />
                 </div>
               </div>
@@ -372,23 +370,20 @@ const SignIn = () => {
             <div className="flex justify-center pb-4 md:pb-6 space-x-3 md:space-x-4 lg:space-x-5">
               <button
                 onClick={() => changeSlide(0)}
-                className={`w-1.5 h-1.5 md:w-2 md:h-2 rounded-full transition-colors duration-300 ${
-                  activeSlide === 0 ? "bg-gray-800" : "bg-gray-400"
-                }`}
+                className={`w-1.5 h-1.5 md:w-2 md:h-2 rounded-full transition-colors duration-300 ${activeSlide === 0 ? "bg-gray-800" : "bg-gray-400"
+                  }`}
                 aria-label="Show slide 1"
               ></button>
               <button
                 onClick={() => changeSlide(1)}
-                className={`w-1.5 h-1.5 md:w-2 md:h-2 rounded-full transition-colors duration-300 ${
-                  activeSlide === 1 ? "bg-gray-800" : "bg-gray-400"
-                }`}
+                className={`w-1.5 h-1.5 md:w-2 md:h-2 rounded-full transition-colors duration-300 ${activeSlide === 1 ? "bg-gray-800" : "bg-gray-400"
+                  }`}
                 aria-label="Show slide 2"
               ></button>
               <button
                 onClick={() => changeSlide(2)}
-                className={`w-1.5 h-1.5 md:w-2 md:h-2 rounded-full transition-colors duration-300 ${
-                  activeSlide === 2 ? "bg-gray-800" : "bg-gray-400"
-                }`}
+                className={`w-1.5 h-1.5 md:w-2 md:h-2 rounded-full transition-colors duration-300 ${activeSlide === 2 ? "bg-gray-800" : "bg-gray-400"
+                  }`}
                 aria-label="Show slide 3"
               ></button>
             </div>
