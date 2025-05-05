@@ -29,6 +29,7 @@ export const sendMessageToExtension = (userData: {
   picture?: string;
   accessToken: string;
 }) => {
+  console.log('Full userData object:', userData);
   console.log('Sending message to extension with email:', userData.email);
   // Send a message to the content script
   window.postMessage({ type: "FROM_PAGE", payload: userData }, "*");
