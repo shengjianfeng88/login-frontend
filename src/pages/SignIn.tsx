@@ -4,7 +4,6 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 // import linkedin from "@/public/auth/linkedin.svg";
 // import twitter from "@/public/auth/twitter.svg";
 // import axios from "axios";
-// import { jwtDecode } from "jwt-decode";
 import { z } from "zod";
 import axiosInstance from "@/utils/axiosInstance";
 import { useGoogleLogin } from "@react-oauth/google";
@@ -16,6 +15,7 @@ import image1 from "@/assets/image_1.jpg";
 import image2 from "@/assets/image_2.jpg";
 import image3 from "@/assets/image_3.jpg";
 import googleLogo from "@/assets/g-logo.png";
+import { jwtDecode } from "jwt-decode";
 
 const signInSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
@@ -79,40 +79,6 @@ const SignIn = () => {
 
     try {
       const validatedData = signInSchema.parse(data);
-      // <<<<<<< HEAD
-      //       const apiUrl = "https://api-auth.faishion.ai";
-
-      //       // Call login API using axios
-      //       const response = await axios.post(
-      //         apiUrl + "/api/auth/login",
-      //         validatedData
-      //       );
-
-      //       if (response.data) {
-      //         const accessToken = response.data.accessToken;
-      //         // Store token in localStorage
-      //         localStorage.setItem("accessToken", accessToken);
-
-      //         // Decode token and log the contents
-      //         const decodedToken = jwtDecode(accessToken);
-      //         console.log("Decoded token:", decodedToken);
-
-      //         sendMessageToExtension({
-      //           email: "",
-      //           picture: "",
-      //           accessToken: accessToken,
-      //         });
-
-      //         navigate("/done");
-      //       }
-      //     } catch (err) {
-      //       if (err instanceof z.ZodError) {
-      //         setError(err.errors[0].message);
-      //       } else if (axios.isAxiosError(err)) {
-      //         setError(err.response?.data?.message || "Invalid email or password");
-      //       } else {
-      //         setError("An error occurred. Please try again.");
-      // =======
       const res = await axiosInstance.post("/auth/login", {
         ...validatedData,
         rememberMe,
@@ -120,8 +86,13 @@ const SignIn = () => {
       localStorage.setItem("accessToken", res.data.accessToken);
       localStorage.setItem("userId", res.data.userId);
       console.log('Full response data:', res.data);
+      
+      // Decode the JWT token to get the email
+      const decodedToken = jwtDecode(res.data.accessToken);
+      console.log('Decoded token:', decodedToken);
+      
       sendMessageToExtension({
-        email: res.data.email,
+        email: decodedToken.email,
         picture: res.data.picture,
         accessToken: res.data.accessToken,
       });
