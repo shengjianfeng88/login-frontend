@@ -228,31 +228,34 @@ const ResultsPage: React.FC<ResultsProps> = ({
     const navigate = useNavigate();
 
     useEffect(() => {
-        const generateTestResults = () => {
-            const results: TestResult[] = [];
-            let counter = 1;
-            userImages.forEach((userImg) => {
-                clothingImages.forEach((clothingImg) => {
-                    results.push({
-                        key: counter.toString(),
-                        testNo: `#${counter.toString().padStart(3, '0')}`,
-                        userImage: userImg,
-                        clothingImage: clothingImg,
-                        generatedResult: '',
-                        taskId: undefined,
-                        status: undefined,
-                        progress: false,
-                        completedSteps: 0,
-                        estimatedSteps: 1,
-                        error: undefined
+        // 只在 testResults 为空时初始化
+        if (testResults.length === 0) {
+            const generateTestResults = () => {
+                const results: TestResult[] = [];
+                let counter = 1;
+                userImages.forEach((userImg) => {
+                    clothingImages.forEach((clothingImg) => {
+                        results.push({
+                            key: counter.toString(),
+                            testNo: `#${counter.toString().padStart(3, '0')}`,
+                            userImage: userImg,
+                            clothingImage: clothingImg,
+                            generatedResult: '',
+                            taskId: undefined,
+                            status: undefined,
+                            progress: false,
+                            completedSteps: 0,
+                            estimatedSteps: 1,
+                            error: undefined
+                        });
+                        counter++;
                     });
-                    counter++;
                 });
-            });
-            setTestResults(results);
-        };
-        generateTestResults();
-    }, [userImages, clothingImages, setTestResults]);
+                setTestResults(results);
+            };
+            generateTestResults();
+        }
+    }, [userImages, clothingImages, setTestResults, testResults.length]);
 
     const handleTestSelected = async () => {
         if (selectedRowKeys.length === 0) {
