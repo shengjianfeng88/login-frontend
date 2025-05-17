@@ -1,11 +1,17 @@
 import React, { useState } from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import UploadPage from './Upload';
 import ResultsPage from './Results';
+import HistoryPage from './History';
+import { TestResult } from './Results';
 
 const AutoTest: React.FC = () => {
     const [userImages, setUserImages] = useState<string[]>([]);
     const [clothingImages, setClothingImages] = useState<string[]>([]);
+    const [testResults, setTestResults] = useState<TestResult[]>([]);
+    const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
+    const [loading, setLoading] = useState(false);
+    const [processingTasks, setProcessingTasks] = useState<Set<string>>(new Set());
 
     const handleImagesSelected = (newUserImages: string[], newClothingImages: string[]) => {
         setUserImages(newUserImages);
@@ -13,35 +19,51 @@ const AutoTest: React.FC = () => {
     };
 
     return (
-        <Routes>
-            <Route
-                path="/"
-                element={<Navigate to="/auto-test/upload" replace />}
-            />
-            <Route
-                path="/upload"
-                element={
-                    <UploadPage onImagesSelected={handleImagesSelected} />
-                }
-            />
-            <Route
-                path="/results"
-                element={
-                    userImages.length > 0 && clothingImages.length > 0 ? (
-                        <ResultsPage
-                            userImages={userImages}
-                            clothingImages={clothingImages}
-                        />
-                    ) : (
-                        <Navigate to="/auto-test/upload" replace />
-                    )
-                }
-            />
-            <Route
-                path="*"
-                element={<Navigate to="/auto-test/upload" replace />}
-            />
-        </Routes>
+        <div className="min-h-screen bg-gray-50">
+            <div className="max-w-7xl mx-auto px-4 py-6">
+                <Routes>
+                    <Route
+                        path="/"
+                        element={<Navigate to="/auto-test/upload" replace />}
+                    />
+                    <Route
+                        path="/upload"
+                        element={
+                            <UploadPage onImagesSelected={handleImagesSelected} />
+                        }
+                    />
+                    <Route
+                        path="/results"
+                        element={
+                            userImages.length > 0 && clothingImages.length > 0 ? (
+                                <ResultsPage
+                                    userImages={userImages}
+                                    clothingImages={clothingImages}
+                                    testResults={testResults}
+                                    setTestResults={setTestResults}
+                                    selectedRowKeys={selectedRowKeys}
+                                    setSelectedRowKeys={setSelectedRowKeys}
+                                    loading={loading}
+                                    setLoading={setLoading}
+                                    processingTasks={processingTasks}
+                                    setProcessingTasks={setProcessingTasks}
+                                />
+                            ) : (
+                                <Navigate to="/auto-test/upload" replace />
+                            )
+                        }
+                    />
+                    <Route
+                        path="/history"
+                        element={<HistoryPage />}
+                    />
+                    <Route
+                        path="/*"
+                        element={<Navigate to="/auto-test/upload" replace />}
+                    />
+                </Routes>
+            </div>
+        </div>
     );
 };
 

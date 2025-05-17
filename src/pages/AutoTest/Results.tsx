@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Button, Table, Checkbox, Dropdown, Menu, Rate, Typography, Card, Progress, message, Image } from 'antd';
-import { UploadOutlined, EditOutlined, FilterOutlined, CaretDownOutlined } from '@ant-design/icons';
+import { UploadOutlined, EditOutlined, FilterOutlined, CaretDownOutlined, HistoryOutlined, SaveOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import * as echarts from 'echarts';
 import { useNavigate } from 'react-router-dom';
@@ -8,7 +8,7 @@ import { tryonApi } from '../../api/tryon';
 
 const { Title, Text } = Typography;
 
-interface TestResult {
+export interface TestResult {
     key: string;
     testNo: string;
     userImage: string;
@@ -33,45 +33,17 @@ interface TestHistory {
     score: number;
 }
 
-interface ResultsProps {
-    userImages: string[];
-    clothingImages: string[];
+export interface TestResultsTableProps {
+    testResults: TestResult[];
+    selectedRowKeys: React.Key[];
+    onSelectChange: (newSelectedRowKeys: React.Key[]) => void;
 }
 
-const ResultsPage: React.FC<ResultsProps> = ({ userImages, clothingImages }) => {
-    const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
-    const [testResults, setTestResults] = useState<TestResult[]>([]);
-    const [loading, setLoading] = useState(false);
-    const [processingTasks, setProcessingTasks] = useState<Set<string>>(new Set());
-    const navigate = useNavigate();
-
-    useEffect(() => {
-        const generateTestResults = () => {
-            const results: TestResult[] = [];
-            let counter = 1;
-            userImages.forEach((userImg) => {
-                clothingImages.forEach((clothingImg) => {
-                    results.push({
-                        key: counter.toString(),
-                        testNo: `#${counter.toString().padStart(3, '0')}`,
-                        userImage: userImg,
-                        clothingImage: clothingImg,
-                        generatedResult: '',
-                        taskId: undefined,
-                        status: undefined,
-                        progress: false,
-                        completedSteps: 0,
-                        estimatedSteps: 1,
-                        error: undefined
-                    });
-                    counter++;
-                });
-            });
-            setTestResults(results);
-        };
-        generateTestResults();
-    }, [userImages, clothingImages]);
-
+export const TestResultsTable: React.FC<TestResultsTableProps> = ({
+    testResults,
+    selectedRowKeys,
+    onSelectChange,
+}) => {
     const columns: ColumnsType<TestResult> = [
         {
             title: 'TEST NO.',
@@ -202,6 +174,85 @@ const ResultsPage: React.FC<ResultsProps> = ({ userImages, clothingImages }) => 
             },
         },
     ];
+
+    const rowSelection = {
+        selectedRowKeys,
+        onChange: onSelectChange,
+    };
+
+    return (
+        <div className="bg-white rounded-lg shadow-md p-6">
+            <div className="flex justify-between items-center mb-4">
+                <Checkbox onChange={(e) => e.target.checked ? onSelectChange(testResults.map(item => item.key)) : onSelectChange([])}>
+                    Select All
+                </Checkbox>
+            </div>
+            <Table
+                rowSelection={rowSelection}
+                columns={columns}
+                dataSource={testResults}
+                pagination={false}
+                rowKey="key"
+                className="test-results-table"
+            />
+        </div>
+    );
+};
+
+export interface ResultsProps {
+    userImages: string[];
+    clothingImages: string[];
+    testResults: TestResult[];
+    setTestResults: React.Dispatch<React.SetStateAction<TestResult[]>>;
+    selectedRowKeys: React.Key[];
+    setSelectedRowKeys: React.Dispatch<React.SetStateAction<React.Key[]>>;
+    loading: boolean;
+    setLoading: React.Dispatch<React.SetStateAction<boolean>>;
+    processingTasks: Set<string>;
+    setProcessingTasks: React.Dispatch<React.SetStateAction<Set<string>>>;
+}
+
+const ResultsPage: React.FC<ResultsProps> = ({
+    userImages,
+    clothingImages,
+    testResults,
+    setTestResults,
+    selectedRowKeys,
+    setSelectedRowKeys,
+    loading,
+    setLoading,
+    processingTasks,
+    setProcessingTasks
+}) => {
+    const [saving, setSaving] = useState(false);
+    const navigate = useNavigate();
+
+    useEffect(() => {
+        const generateTestResults = () => {
+            const results: TestResult[] = [];
+            let counter = 1;
+            userImages.forEach((userImg) => {
+                clothingImages.forEach((clothingImg) => {
+                    results.push({
+                        key: counter.toString(),
+                        testNo: `#${counter.toString().padStart(3, '0')}`,
+                        userImage: userImg,
+                        clothingImage: clothingImg,
+                        generatedResult: '',
+                        taskId: undefined,
+                        status: undefined,
+                        progress: false,
+                        completedSteps: 0,
+                        estimatedSteps: 1,
+                        error: undefined
+                    });
+                    counter++;
+                });
+            });
+            setTestResults(results);
+        };
+        generateTestResults();
+    }, [userImages, clothingImages, setTestResults]);
 
     const handleTestSelected = async () => {
         if (selectedRowKeys.length === 0) {
@@ -348,11 +399,6 @@ const ResultsPage: React.FC<ResultsProps> = ({ userImages, clothingImages }) => 
         setSelectedRowKeys(newSelectedRowKeys);
     };
 
-    const rowSelection = {
-        selectedRowKeys,
-        onChange: onSelectChange,
-    };
-
     useEffect(() => {
         const chartDom = document.getElementById('improvement-chart');
         if (chartDom) {
@@ -405,6 +451,60 @@ const ResultsPage: React.FC<ResultsProps> = ({ userImages, clothingImages }) => 
         }
     }, []);
 
+    const handleSaveResults = async () => {
+        if (testResults.length === 0) {
+            message.warning('没有可保存的测试结果');
+            return;
+        }
+
+        // 检查是否所有任务都已完成
+        const hasUnfinishedTasks = testResults.some(
+            result => result.status && ['IN_PROGRESS', 'IN_QUEUE', 'EXECUTING'].includes(result.status)
+        );
+
+        if (hasUnfinishedTasks) {
+            message.warning('请等待所有测试任务完成后再保存');
+            return;
+        }
+
+        setSaving(true);
+        try {
+            // 准备要保存的数据
+            const resultsToSave = testResults.map(result => ({
+                testNo: result.testNo,
+                userImage: result.userImage,
+                clothingImage: result.clothingImage,
+                generatedResult: result.generatedResult,
+                taskId: result.taskId,
+                status: result.status,
+                completedSteps: result.completedSteps,
+                estimatedSteps: result.estimatedSteps,
+                executionTime: result.executionTime,
+                delayTime: result.delayTime,
+                cost: result.cost,
+                error: result.error
+            }));
+
+            // 调用保存接口
+            await tryonApi.saveTestResults(resultsToSave);
+            message.success('测试结果保存成功');
+        } catch (error) {
+            console.error('保存测试结果失败:', error);
+            message.error('保存测试结果失败');
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    const handleViewHistory = () => {
+        navigate('/auto-test/history');
+    };
+
+    // 检查是否所有任务都已完成
+    const allTasksCompleted = testResults.length > 0 && testResults.every(
+        result => result.status === 'COMPLETED' || result.status === 'FAILED'
+    );
+
     return (
         <div className="min-h-screen bg-gray-50">
             <div className="max-w-7xl mx-auto px-4 py-6">
@@ -427,6 +527,25 @@ const ResultsPage: React.FC<ResultsProps> = ({ userImages, clothingImages }) => 
                         >
                             {loading ? 'Processing...' : 'Test Selected'}
                         </Button>
+                        <Button
+                            type="primary"
+                            icon={<HistoryOutlined />}
+                            onClick={handleViewHistory}
+                            className="!rounded-button whitespace-nowrap"
+                        >
+                            查看历史记录
+                        </Button>
+                        {allTasksCompleted && (
+                            <Button
+                                type="primary"
+                                icon={<SaveOutlined />}
+                                loading={saving}
+                                onClick={handleSaveResults}
+                                className="!rounded-button whitespace-nowrap"
+                            >
+                                保存结果
+                            </Button>
+                        )}
                     </div>
                 </div>
                 {/* <div className="bg-white rounded-lg shadow-md p-6 mb-6">
@@ -455,21 +574,11 @@ const ResultsPage: React.FC<ResultsProps> = ({ userImages, clothingImages }) => 
                 </div> */}
                 <div className="flex gap-6">
                     <div className="flex-grow">
-                        <div className="bg-white rounded-lg shadow-md p-6">
-                            <div className="flex justify-between items-center mb-4">
-                                <Checkbox onChange={(e) => e.target.checked ? setSelectedRowKeys(testResults.map(item => item.key)) : setSelectedRowKeys([])}>
-                                    Select All
-                                </Checkbox>
-                            </div>
-                            <Table
-                                rowSelection={rowSelection}
-                                columns={columns}
-                                dataSource={testResults}
-                                pagination={false}
-                                rowKey="key"
-                                className="test-results-table"
-                            />
-                        </div>
+                        <TestResultsTable
+                            testResults={testResults}
+                            selectedRowKeys={selectedRowKeys}
+                            onSelectChange={onSelectChange}
+                        />
                     </div>
                 </div>
             </div>

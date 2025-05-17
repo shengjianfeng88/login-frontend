@@ -10,12 +10,12 @@ import { GoogleOAuthProvider } from "@react-oauth/google";
 import SignUp from "./pages/SignUp";
 import Done from "./pages/Done";
 import History from "./pages/History";
-import VerifyEmail from "./pages/VerifyEmail";  // 【新增】
+import VerifyEmail from "./pages/VerifyEmail";
 import ConfirmRegister from "@/pages/ConfirmRegister";
 import AutoTest from "./pages/AutoTest/index";
-
-
-
+import Results from './pages/AutoTest/Results';
+import Upload from './pages/AutoTest/Upload';
+import AutoTestHistory from './pages/AutoTest/History';
 
 function App() {
   const googleClientId =
@@ -36,7 +36,7 @@ function App() {
               <Route path="/forgot-password" element={<ForgotPassword />} />
               <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/tryon-history" element={<History />} />
-              <Route path="/verify-email" element={<VerifyEmail />} />  {/* 【新增】 */}
+              <Route path="/verify-email" element={<VerifyEmail />} />
               <Route path="*" element={<PageNotFound />} />
               <Route path="/confirm-register" element={<ConfirmRegister />} />
               <Route path="/auto-test/*" element={<AutoTest />} />

@@ -35,6 +35,22 @@ export interface TaskStatusResponse {
     error?: string;
 }
 
+export interface TestHistoryResponse {
+    id: string;
+    userImage: string;
+    clothingImage: string;
+    generatedResult: string;
+    taskId: string;
+    status: string;
+    completedSteps: number;
+    estimatedSteps: number;
+    executionTime: number;
+    delayTime: number;
+    cost: number;
+    error?: string;
+    createdAt: string;
+}
+
 // 辅助函数：将图片 URL 转换为 base64
 const getBase64FromUrl = async (url: string): Promise<string> => {
     try {
@@ -113,5 +129,28 @@ export const tryonApi = {
             console.error('获取任务状态失败:', error);
             throw error;
         }
-    }
+    },
+
+    // 获取测试历史记录
+    getTestHistory: async (): Promise<TestHistoryResponse[]> => {
+        const response = await fetch('/api/test-history');
+        if (!response.ok) {
+            throw new Error('获取测试历史记录失败');
+        }
+        return response.json();
+    },
+
+    // 保存测试结果
+    saveTestResults: async (results: any[]): Promise<void> => {
+        const response = await fetch('/api/test-results', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(results),
+        });
+        if (!response.ok) {
+            throw new Error('保存测试结果失败');
+        }
+    },
 }; 
