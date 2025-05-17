@@ -12,6 +12,7 @@ import Done from "./pages/Done";
 import History from "./pages/History";
 import VerifyEmail from "./pages/VerifyEmail";  // 【新增】
 import ConfirmRegister from "@/pages/ConfirmRegister";
+import AutoTest from "./pages/AutoTest";
 
 
 
@@ -31,13 +32,15 @@ function App() {
             <Routes>
               <Route path="/signin" element={<SignIn />} />
               <Route path="/signup" element={<SignUp />} />
-              <Route path="/done" element={<Done />} /> 
+              <Route path="/done" element={<Done />} />
               <Route path="/forgot-password" element={<ForgotPassword />} />
               <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/tryon-history" element={<History />} />
               <Route path="/verify-email" element={<VerifyEmail />} />  {/* 【新增】 */}
               <Route path="*" element={<PageNotFound />} />
               <Route path="/confirm-register" element={<ConfirmRegister />} />
+              <Route path="/auto-test" element={<AutoTest />} />
+
             </Routes>
           </Suspense>
         </Router>
