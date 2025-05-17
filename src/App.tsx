@@ -13,9 +13,6 @@ import History from "./pages/History";
 import VerifyEmail from "./pages/VerifyEmail";
 import ConfirmRegister from "@/pages/ConfirmRegister";
 import AutoTest from "./pages/AutoTest/index";
-import Results from './pages/AutoTest/Results';
-import Upload from './pages/AutoTest/Upload';
-import AutoTestHistory from './pages/AutoTest/History';
 
 function App() {
   const googleClientId =
