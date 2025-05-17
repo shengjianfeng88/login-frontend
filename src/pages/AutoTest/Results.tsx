@@ -429,7 +429,7 @@ const ResultsPage: React.FC<ResultsProps> = ({ userImages, clothingImages }) => 
                         </Button>
                     </div>
                 </div>
-                <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+                {/* <div className="bg-white rounded-lg shadow-md p-6 mb-6">
                     <div className="flex justify-between items-center mb-4">
                         <Text strong>Test Progress</Text>
                         <div className="grid grid-cols-3 gap-8">
@@ -452,7 +452,7 @@ const ResultsPage: React.FC<ResultsProps> = ({ userImages, clothingImages }) => 
                         <Text type="secondary">5/5 Completed</Text>
                         <div className="h-6 w-32" id="improvement-chart"></div>
                     </div>
-                </div>
+                </div> */}
                 <div className="flex gap-6">
                     <div className="flex-grow">
                         <div className="bg-white rounded-lg shadow-md p-6">
