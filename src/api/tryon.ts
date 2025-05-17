@@ -31,6 +31,8 @@ export interface TaskStatusResponse {
     video_urls: string[];
     execution_time: number;
     error_message?: string;
+    cost?: number;
+    error?: string;
 }
 
 // 辅助函数：将图片 URL 转换为 base64

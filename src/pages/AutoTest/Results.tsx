@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Button, Table, Checkbox, Dropdown, Menu, Rate, Typography, Card, Progress, message } from 'antd';
+import { Button, Table, Checkbox, Dropdown, Menu, Rate, Typography, Card, Progress, message, Image } from 'antd';
 import { UploadOutlined, EditOutlined, FilterOutlined, CaretDownOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import * as echarts from 'echarts';
@@ -14,12 +14,15 @@ interface TestResult {
     userImage: string;
     clothingImage: string;
     generatedResult: string;
-    rating: number;
-    previousResult: string;
-    previousRating: string;
+    taskId?: string;
+    status?: string;
     progress?: boolean;
     completedSteps?: number;
     estimatedSteps?: number;
+    error?: string;
+    executionTime?: number;
+    delayTime?: number;
+    cost?: number;
 }
 
 interface TestHistory {
@@ -37,8 +40,6 @@ interface ResultsProps {
 
 const ResultsPage: React.FC<ResultsProps> = ({ userImages, clothingImages }) => {
     const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
-    const [filterRating, setFilterRating] = useState<number | null>(null);
-    const [dropdownVisible, setDropdownVisible] = useState(false);
     const [testResults, setTestResults] = useState<TestResult[]>([]);
     const [loading, setLoading] = useState(false);
     const [processingTasks, setProcessingTasks] = useState<Set<string>>(new Set());
@@ -55,10 +56,13 @@ const ResultsPage: React.FC<ResultsProps> = ({ userImages, clothingImages }) => 
                         testNo: `#${counter.toString().padStart(3, '0')}`,
                         userImage: userImg,
                         clothingImage: clothingImg,
-                        generatedResult: `https://readdy.ai/api/search-image?query=person%20wearing%20fashionable%20clothing%2C%20full%20body%20shot%2C%20neutral%20background%2C%20studio%20lighting%2C%20fashion%20photography%2C%20professional%20pose%2C%20high%20quality&width=120&height=150&seq=${counter + 2000}&orientation=portrait`,
-                        rating: Math.floor(Math.random() * 3) + 3,
-                        previousResult: `https://readdy.ai/api/search-image?query=person%20in%20stylish%20outfit%2C%20full%20body%20shot%2C%20neutral%20background%2C%20studio%20lighting%2C%20fashion%20photography%2C%20professional%20pose%2C%20high%20quality&width=120&height=150&seq=${counter + 3000}&orientation=portrait`,
-                        previousRating: `评分: ${Math.floor(Math.random() * 3) + 2}/5`,
+                        generatedResult: '',
+                        taskId: undefined,
+                        status: undefined,
+                        progress: false,
+                        completedSteps: 0,
+                        estimatedSteps: 1,
+                        error: undefined
                     });
                     counter++;
                 });
@@ -67,12 +71,6 @@ const ResultsPage: React.FC<ResultsProps> = ({ userImages, clothingImages }) => 
         };
         generateTestResults();
     }, [userImages, clothingImages]);
-
-    const testHistory: TestHistory[] = [
-        { id: 1, name: 'Initial Test', version: 'v10', date: '2025-05-15 10:30', score: 3.8 },
-        { id: 2, name: 'Beta Test', version: 'v9', date: '2025-05-14 15:45', score: 3.5 },
-        { id: 3, name: 'Alpha Test', version: 'v8', date: '2025-05-13 09:20', score: 3.2 },
-    ];
 
     const columns: ColumnsType<TestResult> = [
         {
@@ -89,7 +87,15 @@ const ResultsPage: React.FC<ResultsProps> = ({ userImages, clothingImages }) => 
             width: 150,
             render: (image) => (
                 <div className="w-28 h-36 overflow-hidden">
-                    <img src={image} alt="User" className="w-full h-full object-cover object-top" />
+                    <Image
+                        src={image}
+                        alt="User"
+                        className="w-full h-full object-cover object-top"
+                        preview={{
+                            mask: '点击预览',
+                            maskClassName: 'flex items-center justify-center'
+                        }}
+                    />
                 </div>
             ),
         },
@@ -100,7 +106,15 @@ const ResultsPage: React.FC<ResultsProps> = ({ userImages, clothingImages }) => 
             width: 150,
             render: (image) => (
                 <div className="w-28 h-36 overflow-hidden">
-                    <img src={image} alt="Clothing" className="w-full h-full object-cover object-top" />
+                    <Image
+                        src={image}
+                        alt="Clothing"
+                        className="w-full h-full object-cover object-top"
+                        preview={{
+                            mask: '点击预览',
+                            maskClassName: 'flex items-center justify-center'
+                        }}
+                    />
                 </div>
             ),
         },
@@ -111,40 +125,81 @@ const ResultsPage: React.FC<ResultsProps> = ({ userImages, clothingImages }) => 
             width: 150,
             render: (image, record: TestResult) => (
                 <div className="w-28 h-36 overflow-hidden relative">
-                    <img src={image} alt="Generated Result" className="w-full h-full object-cover object-top" />
-                    {record.progress && record.completedSteps !== undefined && record.estimatedSteps !== undefined && (
-                        <div className="absolute bottom-0 left-0 right-0 bg-black/50 p-1">
-                            <Progress
-                                percent={Math.round((record.completedSteps / record.estimatedSteps) * 100)}
-                                size="small"
-                                showInfo={false}
-                                strokeColor="#4caf50"
-                            />
+                    {record.status === 'COMPLETED' && image ? (
+                        <Image
+                            src={image}
+                            alt="Generated Result"
+                            className="w-full h-full object-cover object-top"
+                            preview={{
+                                mask: '点击预览',
+                                maskClassName: 'flex items-center justify-center'
+                            }}
+                        />
+                    ) : (
+                        <div className="w-full h-full flex flex-col items-center justify-center bg-gray-100">
+                            {record.progress && record.completedSteps !== undefined && record.estimatedSteps !== undefined ? (
+                                <>
+                                    <Progress
+                                        percent={Math.round((record.completedSteps / record.estimatedSteps) * 100)}
+                                        size="small"
+                                        showInfo={false}
+                                        strokeColor="#4caf50"
+                                    />
+                                    <Text type="secondary" className="mt-1 text-xs">
+                                        {record.completedSteps}/{record.estimatedSteps}
+                                    </Text>
+                                </>
+                            ) : record.status === 'FAILED' ? (
+                                <Text type="danger">Failed</Text>
+                            ) : (
+                                <Text type="secondary">Waiting</Text>
+                            )}
                         </div>
                     )}
                 </div>
             ),
         },
         {
-            title: 'RATING (1-5)',
-            dataIndex: 'rating',
-            key: 'rating',
-            width: 150,
-            render: (rating) => <Rate disabled defaultValue={rating} />,
+            title: 'TASK ID',
+            dataIndex: 'taskId',
+            key: 'taskId',
+            width: 200,
+            className: 'whitespace-nowrap',
         },
         {
-            title: 'PREVIOUS RESULT',
-            dataIndex: 'previousResult',
-            key: 'previousResult',
-            width: 150,
-            render: (image, record) => (
-                <div className="w-28 h-36 overflow-hidden relative">
-                    <img src={image} alt="Previous Result" className="w-full h-full object-cover object-top" />
-                    <div className="absolute bottom-0 right-0 bg-white/80 px-2 py-1 text-xs">
-                        {record.previousRating}
-                    </div>
-                </div>
+            title: 'STATUS',
+            dataIndex: 'status',
+            key: 'status',
+            width: 120,
+            className: 'whitespace-nowrap',
+            render: (status) => (
+                <span className={`${status === 'COMPLETED' ? 'text-green-500' :
+                    status === 'FAILED' ? 'text-red-500' :
+                        status === 'IN_PROGRESS' || status === 'IN_QUEUE' || status === 'EXECUTING' ? 'text-blue-500' :
+                            'text-gray-500'
+                    }`}>
+                    {status || 'Not Started'}
+                </span>
             ),
+        },
+        {
+            title: 'INFO',
+            dataIndex: 'info',
+            key: 'info',
+            width: 200,
+            className: 'whitespace-nowrap',
+            render: (_, record) => {
+                if (record.status === 'COMPLETED') {
+                    return (
+                        <div className="text-xs">
+                            <div>执行时间: {record.executionTime?.toFixed(2)}ms</div>
+                            <div>延迟时间: {record.delayTime?.toFixed(2)}ms</div>
+                            <div>成本: {record.cost?.toFixed(4)}</div>
+                        </div>
+                    );
+                }
+                return '-';
+            },
         },
     ];
 
@@ -159,23 +214,48 @@ const ResultsPage: React.FC<ResultsProps> = ({ userImages, clothingImages }) => 
         const newProcessingTasks = new Set<string>();
 
         try {
-            const tryonPromises = selectedResults.map(async (result) => {
-                try {
-                    const response = await tryonApi.startTryon(result.userImage, result.clothingImage);
-                    newProcessingTasks.add(response.task_id);
-                    return response;
-                } catch (error) {
-                    message.error(`试穿请求失败: ${result.testNo}`);
-                    return null;
+            // 先获取所有任务的响应
+            const responses = await Promise.all(
+                selectedResults.map(result =>
+                    tryonApi.startTryon(result.userImage, result.clothingImage)
+                        .catch(error => {
+                            message.error(`试穿请求失败: ${result.testNo}`);
+                            return null;
+                        })
+                )
+            );
+
+            // 过滤出成功的响应
+            const validResponses = responses.filter(r => r !== null);
+
+            // 一次性更新所有任务的状态
+            const newResults = [...testResults];
+            validResponses.forEach((response, index) => {
+                if (response) {
+                    const resultIndex = newResults.findIndex(r => r.key === selectedResults[index].key);
+                    if (resultIndex !== -1) {
+                        newProcessingTasks.add(response.task_id);
+                        newResults[resultIndex] = {
+                            ...newResults[resultIndex],
+                            taskId: response.task_id,
+                            status: 'IN_QUEUE',
+                            progress: true,
+                            completedSteps: 0,
+                            estimatedSteps: response.estimated_steps || 1,
+                            error: undefined
+                        };
+                    }
                 }
             });
 
-            const responses = await Promise.all(tryonPromises);
+            // 一次性更新状态
+            setTestResults(newResults);
             setProcessingTasks(newProcessingTasks);
 
-            const taskIds = responses.filter(r => r !== null).map(r => r!.task_id);
+            // 开始轮询任务状态
+            const taskIds = validResponses.map(r => r!.task_id);
             if (taskIds.length > 0) {
-                pollTaskStatus(taskIds);
+                pollTaskStatus(taskIds, newResults);
             }
         } catch (error) {
             message.error('批量试穿请求失败');
@@ -184,7 +264,7 @@ const ResultsPage: React.FC<ResultsProps> = ({ userImages, clothingImages }) => 
         }
     };
 
-    const pollTaskStatus = async (taskIds: string[]) => {
+    const pollTaskStatus = async (taskIds: string[], newResults: TestResult[]) => {
         const checkStatus = async () => {
             const statusPromises = taskIds.map(async (taskId) => {
                 try {
@@ -199,48 +279,55 @@ const ResultsPage: React.FC<ResultsProps> = ({ userImages, clothingImages }) => 
             const results = await Promise.all(statusPromises);
             const completedTasks = new Set<string>();
 
+            console.log(results, '~~~~~~1111122222');
             results.forEach((result) => {
                 if (result) {
                     const { taskId, status } = result;
-                    const resultIndex = testResults.findIndex(r => r.key === selectedRowKeys[taskIds.indexOf(taskId)]);
+                    const resultIndex = newResults.findIndex(r =>
+                        selectedRowKeys.includes(r.key) && r.taskId === taskId
+                    );
 
+                    console.log(resultIndex, newResults, taskId, '~~~~~~111114444444');
                     if (resultIndex !== -1) {
                         if (status.status === 'COMPLETED') {
                             completedTasks.add(taskId);
-                            if (status.image_urls && status.image_urls.length > 0) {
-                                const newResults = [...testResults];
-                                newResults[resultIndex] = {
-                                    ...newResults[resultIndex],
-                                    generatedResult: status.image_urls[0],
-                                    rating: Math.floor(Math.random() * 3) + 3,
-                                    previousResult: newResults[resultIndex].generatedResult,
-                                    previousRating: `评分: ${newResults[resultIndex].rating}/5`,
-                                    progress: undefined,
-                                    completedSteps: undefined,
-                                    estimatedSteps: undefined
-                                };
-                                setTestResults(newResults);
-                                message.success(`测试项 ${newResults[resultIndex].testNo} 已完成`);
-                            }
-                        } else if (status.status === 'FAILED') {
-                            completedTasks.add(taskId);
-                            message.error(`试穿任务失败: ${taskId}`);
-                        } else if (status.status === 'IN_PROGRESS' || status.status === 'IN_QUEUE') {
-                            const newResults = [...testResults];
                             newResults[resultIndex] = {
                                 ...newResults[resultIndex],
+                                generatedResult: status.image_urls?.[0] || '',
+                                status: status.status,
+                                progress: false,
+                                completedSteps: status.completed_steps,
+                                estimatedSteps: status.estimated_steps,
+                                executionTime: status.execution_time,
+                                delayTime: status.delay_time,
+                                cost: status.cost,
+                                error: status.error
+                            };
+                        } else if (status.status === 'FAILED') {
+                            completedTasks.add(taskId);
+                            newResults[resultIndex] = {
+                                ...newResults[resultIndex],
+                                status: status.status,
+                                error: status.error || '任务执行失败',
+                                completedSteps: status.completed_steps,
+                                estimatedSteps: status.estimated_steps
+                            };
+                            message.error(`试穿任务失败: ${taskId}`);
+                        } else if (status.status === 'EXECUTING' || status.status === 'IN_QUEUE' || status.status === 'IN_PROGRESS') {
+                            newResults[resultIndex] = {
+                                ...newResults[resultIndex],
+                                status: status.status,
                                 progress: true,
                                 completedSteps: status.completed_steps,
                                 estimatedSteps: status.estimated_steps
                             };
-                            setTestResults(newResults);
-                            const progress = Math.round((status.completed_steps / status.estimated_steps) * 100);
-                            message.loading(`测试项 ${testResults[resultIndex].testNo} 处理中: ${progress}%`);
+                            console.log(newResults, '~~~~~~111113333333');
                         }
                     }
                 }
             });
 
+            setTestResults(newResults);
             setProcessingTasks(prev => {
                 const newSet = new Set(prev);
                 completedTasks.forEach(taskId => newSet.delete(taskId));
@@ -248,7 +335,7 @@ const ResultsPage: React.FC<ResultsProps> = ({ userImages, clothingImages }) => 
             });
 
             if (completedTasks.size < taskIds.length) {
-                setTimeout(checkStatus, 5000); // 每5秒检查一次
+                setTimeout(checkStatus, 2000);
             } else {
                 message.success('所有测试项处理完成');
             }
@@ -265,52 +352,6 @@ const ResultsPage: React.FC<ResultsProps> = ({ userImages, clothingImages }) => 
         selectedRowKeys,
         onChange: onSelectChange,
     };
-
-    const handleFilterRating = (rating: number | null) => {
-        setFilterRating(rating);
-        setDropdownVisible(false);
-    };
-
-    const filterMenu = (
-        <Menu className="py-2 bg-white shadow-lg rounded-md">
-            <div className="px-4 py-2 border-b border-gray-100">
-                <Text strong>Filter by Rating</Text>
-            </div>
-            <Menu.Item key="1" onClick={() => handleFilterRating(1)}>
-                <div className="flex items-center px-2">
-                    <span>1 Star</span>
-                </div>
-            </Menu.Item>
-            <Menu.Item key="2" onClick={() => handleFilterRating(2)}>
-                <div className="flex items-center px-2">
-                    <span>2 Stars</span>
-                </div>
-            </Menu.Item>
-            <Menu.Item key="3" onClick={() => handleFilterRating(3)}>
-                <div className="flex items-center px-2">
-                    <span>3 Stars</span>
-                </div>
-            </Menu.Item>
-            <Menu.Item key="4" onClick={() => handleFilterRating(4)}>
-                <div className="flex items-center px-2">
-                    <span>4 Stars</span>
-                </div>
-            </Menu.Item>
-            <Menu.Item key="5" onClick={() => handleFilterRating(5)}>
-                <div className="flex items-center px-2">
-                    <span>5 Stars</span>
-                </div>
-            </Menu.Item>
-            <div className="mt-2 px-4 py-2 border-t border-gray-100">
-                <Button
-                    className="w-full !rounded-button whitespace-nowrap"
-                    onClick={() => handleFilterRating(null)}
-                >
-                    Clear Filter
-                </Button>
-            </div>
-        </Menu>
-    );
 
     useEffect(() => {
         const chartDom = document.getElementById('improvement-chart');
@@ -363,10 +404,6 @@ const ResultsPage: React.FC<ResultsProps> = ({ userImages, clothingImages }) => 
             myChart.setOption(option);
         }
     }, []);
-
-    const filteredResults = filterRating
-        ? testResults.filter(item => item.rating === filterRating)
-        : testResults;
 
     return (
         <div className="min-h-screen bg-gray-50">
@@ -423,61 +460,16 @@ const ResultsPage: React.FC<ResultsProps> = ({ userImages, clothingImages }) => 
                                 <Checkbox onChange={(e) => e.target.checked ? setSelectedRowKeys(testResults.map(item => item.key)) : setSelectedRowKeys([])}>
                                     Select All
                                 </Checkbox>
-                                <div className="flex items-center">
-                                    <Text className="mr-2">Filter by Rating:</Text>
-                                    <Dropdown
-                                        overlay={filterMenu}
-                                        trigger={['click']}
-                                        visible={dropdownVisible}
-                                        onVisibleChange={(visible) => setDropdownVisible(visible)}
-                                    >
-                                        <Button
-                                            className="flex items-center !rounded-button whitespace-nowrap"
-                                            icon={<FilterOutlined />}
-                                            onClick={(e) => e.preventDefault()}
-                                        >
-                                            {filterRating ? `${filterRating} Star${filterRating > 1 ? 's' : ''}` : 'All Ratings'} <CaretDownOutlined />
-                                        </Button>
-                                    </Dropdown>
-                                </div>
                             </div>
                             <Table
                                 rowSelection={rowSelection}
                                 columns={columns}
-                                dataSource={filteredResults}
+                                dataSource={testResults}
                                 pagination={false}
                                 rowKey="key"
                                 className="test-results-table"
                             />
                         </div>
-                    </div>
-                    <div className="w-80">
-                        <Card className="shadow-md">
-                            <Title level={4} className="mb-4">Test History</Title>
-                            {testHistory.map((test) => (
-                                <Card
-                                    key={test.id}
-                                    className="mb-4 shadow-sm hover:shadow-md transition-shadow cursor-pointer"
-                                >
-                                    <div className="flex justify-between items-center mb-2">
-                                        <Text strong>{test.name}</Text>
-                                        <Button
-                                            type="text"
-                                            icon={<EditOutlined />}
-                                            size="small"
-                                            className="!rounded-button whitespace-nowrap"
-                                        />
-                                    </div>
-                                    <div className="text-gray-500 text-sm mb-2">
-                                        {test.version}
-                                        <br />
-                                        {test.date}
-                                    </div>
-                                    <Rate disabled defaultValue={test.score} />
-                                    <Text className="ml-2">{test.score.toFixed(1)}</Text>
-                                </Card>
-                            ))}
-                        </Card>
                     </div>
                 </div>
             </div>
