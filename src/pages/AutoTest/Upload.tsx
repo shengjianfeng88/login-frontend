@@ -64,9 +64,9 @@ const UploadPage: React.FC<UploadProps> = ({ onImagesSelected }) => {
             reader.onload = (e) => {
                 if (e.target?.result) {
                     if (uploadType === 'user') {
-                        setUserImages(prev => [...prev, e.target.result as string]);
+                        setUserImages(prev => [...prev, e.target?.result as string]);
                     } else {
-                        setClothingImages(prev => [...prev, e.target.result as string]);
+                        setClothingImages(prev => [...prev, e.target?.result as string]);
                     }
                 }
             };

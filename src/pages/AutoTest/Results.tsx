@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Button, Table, Checkbox, Dropdown, Menu, Rate, Typography, Card, Progress, message, Image } from 'antd';
+import { Button, Table, Checkbox, Dropdown, Menu, Rate, Typography, Card, Progress, message, Image, Modal } from 'antd';
 import { UploadOutlined, EditOutlined, FilterOutlined, CaretDownOutlined, HistoryOutlined, SaveOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import * as echarts from 'echarts';
@@ -353,7 +353,6 @@ const ResultsPage: React.FC<ResultsProps> = ({
                                 completedSteps: status.completed_steps,
                                 estimatedSteps: status.estimated_steps,
                                 executionTime: status.execution_time,
-                                delayTime: status.delay_time,
                                 cost: status.cost,
                                 error: status.error
                             };
@@ -503,10 +502,32 @@ const ResultsPage: React.FC<ResultsProps> = ({
         navigate('/auto-test/history');
     };
 
+    // 检查是否有正在执行的任务
+    const hasProcessingTasks = processingTasks.size > 0;
+
     // 检查是否所有任务都已完成
     const allTasksCompleted = testResults.length > 0 && testResults.every(
         result => result.status === 'COMPLETED' || result.status === 'FAILED'
     );
+
+    // 处理上传图片按钮点击
+    const handleUploadClick = () => {
+        Modal.confirm({
+            title: '确认上传新图片',
+            content: '上传新图片将清空当前的任务列表，是否继续？',
+            okText: '确认',
+            cancelText: '取消',
+            onOk: () => {
+                // 清空所有状态
+                setTestResults([]);
+                setSelectedRowKeys([]);
+                setProcessingTasks(new Set());
+                // 导航到上传页面
+                // navigate('/auto-test/upload');
+                window.location.href = '/auto-test/upload';
+            }
+        });
+    };
 
     return (
         <div className="min-h-screen bg-gray-50">
@@ -516,14 +537,15 @@ const ResultsPage: React.FC<ResultsProps> = ({
                     <div className="flex gap-4">
                         <Button
                             className="!rounded-button whitespace-nowrap"
-                            onClick={() => navigate('/auto-test/upload')}
+                            onClick={handleUploadClick}
                             icon={<UploadOutlined />}
+                            disabled={hasProcessingTasks}
                         >
                             Upload Images
                         </Button>
                         <Button
                             type="primary"
-                            disabled={selectedRowKeys.length === 0 || loading}
+                            disabled={selectedRowKeys.length === 0 || loading || hasProcessingTasks}
                             loading={loading}
                             onClick={handleTestSelected}
                             className="!rounded-button whitespace-nowrap"
