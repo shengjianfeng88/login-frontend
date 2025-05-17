@@ -142,7 +142,7 @@ export const tryonApi = {
 
     // 保存测试结果
     saveTestResults: async (results: any[]): Promise<void> => {
-        const response = await fetch('/api/test-results', {
+        const response = await fetch('/api/test-results-post', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
