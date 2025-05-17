@@ -14,7 +14,7 @@ import VerifyEmail from "./pages/VerifyEmail";  // 【新增】
 import ConfirmRegister from "@/pages/ConfirmRegister";
 
 
-
+console.log('test')
 
 function App() {
   const googleClientId =
@@ -31,7 +31,7 @@ function App() {
             <Routes>
               <Route path="/signin" element={<SignIn />} />
               <Route path="/signup" element={<SignUp />} />
-              <Route path="/done" element={<Done />} /> 
+              <Route path="/done" element={<Done />} />
               <Route path="/forgot-password" element={<ForgotPassword />} />
               <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/tryon-history" element={<History />} />
