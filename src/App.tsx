@@ -12,7 +12,7 @@ import Done from "./pages/Done";
 import History from "./pages/History";
 import VerifyEmail from "./pages/VerifyEmail";  // 【新增】
 import ConfirmRegister from "@/pages/ConfirmRegister";
-import AutoTest from "./pages/AutoTest";
+import AutoTest from "./pages/AutoTest/index";
 
 
 
@@ -39,8 +39,7 @@ function App() {
               <Route path="/verify-email" element={<VerifyEmail />} />  {/* 【新增】 */}
               <Route path="*" element={<PageNotFound />} />
               <Route path="/confirm-register" element={<ConfirmRegister />} />
-              <Route path="/auto-test" element={<AutoTest />} />
-
+              <Route path="/auto-test/*" element={<AutoTest />} />
             </Routes>
           </Suspense>
         </Router>

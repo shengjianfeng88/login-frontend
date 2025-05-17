@@ -1,7 +1,7 @@
-import axiosInstance from '../utils/axiosInstance';
+import axios from 'axios';
 
 // API 基础 URL
-const BASE_URL = 'https://api.instasd.com/api_endpoints/1ddbztbz0f6wgv';
+const BASE_URL = '/api/api_endpoints/1ddbztbz0f6wgv';  // 修改为相对路径，将通过代理访问
 
 // 类型定义
 export interface TryonInput {
@@ -18,45 +18,75 @@ export interface TryonRequest {
 
 export interface TryonResponse {
     task_id: string;
-    status: 'CREATED' | 'IN_QUEUE' | 'IN_PROGRESS' | 'COMPLETED' | 'FAILED';
+    status: string;
     estimated_steps: number;
 }
 
 export interface TaskStatusResponse {
     task_id: string;
-    status: 'IN_QUEUE' | 'IN_PROGRESS' | 'COMPLETED' | 'FAILED';
+    status: string;
     estimated_steps: number;
     completed_steps: number;
     image_urls: string[];
     video_urls: string[];
-    delay_time: number;
     execution_time: number;
-    cost: number;
+    error_message?: string;
 }
+
+// 辅助函数：将图片 URL 转换为 base64
+const getBase64FromUrl = async (url: string): Promise<string> => {
+    try {
+        const response = await fetch(url);
+        const blob = await response.blob();
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                const base64data = reader.result as string;
+                // 移除 data:image/jpeg;base64, 前缀
+                const base64 = base64data.split(',')[1];
+                resolve(base64);
+            };
+            reader.onerror = reject;
+            reader.readAsDataURL(blob);
+        });
+    } catch (error) {
+        console.error('转换图片失败:', error);
+        throw error;
+    }
+};
 
 // API 函数
 export const tryonApi = {
     // 发起试穿请求
     async startTryon(userImage: string, clothingImage: string): Promise<TryonResponse> {
-        const requestBody: TryonRequest = {
-            inputs: {
-                '594981c08d5bbf10': {
-                    title: 'Load Image',
-                    value: userImage
-                },
-                '5dfee988692c6a98': {
-                    title: 'Load Image',
-                    value: clothingImage
-                }
-            }
-        };
-
         try {
-            const response = await axiosInstance.post(`${BASE_URL}/run_task`, requestBody, {
-                headers: {
-                    'Authorization': 'Bearer y7nf4qVOytqiL6dhfWV6rg'
+            // 转换图片为 base64
+            const [userBase64, clothingBase64] = await Promise.all([
+                getBase64FromUrl(userImage),
+                getBase64FromUrl(clothingImage)
+            ]);
+
+            const response = await axios.post(
+                `${BASE_URL}/run_task`,
+                {
+                    inputs: {
+                        '594981c08d5bbf10': {
+                            title: 'Load Image',
+                            value: clothingBase64
+                        },
+                        '5dfee988692c6a98': {
+                            title: 'Load Image',
+                            value: userBase64
+                        }
+                    }
+                },
+                {
+                    headers: {
+                        'Authorization': 'Bearer y7nf4qVOytqiL6dhfWV6rg',
+                        'Content-Type': 'application/json'
+                    }
                 }
-            });
+            );
             return response.data;
         } catch (error) {
             console.error('试穿请求失败:', error);
@@ -67,11 +97,15 @@ export const tryonApi = {
     // 获取任务状态
     async getTaskStatus(taskId: string): Promise<TaskStatusResponse> {
         try {
-            const response = await axiosInstance.get(`${BASE_URL}/task_status/${taskId}`, {
-                headers: {
-                    'Authorization': 'Bearer y7nf4qVOytqiL6dhfWV6rg'
+            const response = await axios.get(
+                `${BASE_URL}/task_status/${taskId}`,
+                {
+                    headers: {
+                        'Authorization': 'Bearer y7nf4qVOytqiL6dhfWV6rg',
+                        'Content-Type': 'application/json'
+                    }
                 }
-            });
+            );
             return response.data;
         } catch (error) {
             console.error('获取任务状态失败:', error);
