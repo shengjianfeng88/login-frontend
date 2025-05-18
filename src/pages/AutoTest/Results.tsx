@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Button, Table, Checkbox, Dropdown, Menu, Rate, Typography, Card, Progress, message, Image, Modal } from 'antd';
 import { UploadOutlined, EditOutlined, FilterOutlined, CaretDownOutlined, HistoryOutlined, SaveOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
-import * as echarts from 'echarts';
+// import * as echarts from 'echarts';
 import { useNavigate } from 'react-router-dom';
 import { tryonApi } from '../../api/tryon';
 
@@ -401,57 +401,57 @@ const ResultsPage: React.FC<ResultsProps> = ({
         setSelectedRowKeys(newSelectedRowKeys);
     };
 
-    useEffect(() => {
-        const chartDom = document.getElementById('improvement-chart');
-        if (chartDom) {
-            const myChart = echarts.init(chartDom);
-            const option = {
-                animation: false,
-                tooltip: {
-                    trigger: 'axis',
-                    axisPointer: {
-                        type: 'shadow'
-                    }
-                },
-                grid: {
-                    left: '3%',
-                    right: '4%',
-                    bottom: '3%',
-                    containLabel: true
-                },
-                xAxis: [
-                    {
-                        type: 'category',
-                        data: ['v8', 'v9', 'v10', 'v11'],
-                        axisTick: {
-                            alignWithLabel: true
-                        }
-                    }
-                ],
-                yAxis: [
-                    {
-                        type: 'value',
-                        min: 3,
-                        max: 5
-                    }
-                ],
-                series: [
-                    {
-                        name: 'Average Score',
-                        type: 'bar',
-                        barWidth: '60%',
-                        data: [
-                            { value: 3.2, itemStyle: { color: '#8884d8' } },
-                            { value: 3.5, itemStyle: { color: '#8884d8' } },
-                            { value: 3.8, itemStyle: { color: '#8884d8' } },
-                            { value: 4.2, itemStyle: { color: '#4caf50' } }
-                        ]
-                    }
-                ]
-            };
-            myChart.setOption(option);
-        }
-    }, []);
+    // useEffect(() => {
+    //     const chartDom = document.getElementById('improvement-chart');
+    //     if (chartDom) {
+    //         const myChart = echarts.init(chartDom);
+    //         const option = {
+    //             animation: false,
+    //             tooltip: {
+    //                 trigger: 'axis',
+    //                 axisPointer: {
+    //                     type: 'shadow'
+    //                 }
+    //             },
+    //             grid: {
+    //                 left: '3%',
+    //                 right: '4%',
+    //                 bottom: '3%',
+    //                 containLabel: true
+    //             },
+    //             xAxis: [
+    //                 {
+    //                     type: 'category',
+    //                     data: ['v8', 'v9', 'v10', 'v11'],
+    //                     axisTick: {
+    //                         alignWithLabel: true
+    //                     }
+    //                 }
+    //             ],
+    //             yAxis: [
+    //                 {
+    //                     type: 'value',
+    //                     min: 3,
+    //                     max: 5
+    //                 }
+    //             ],
+    //             series: [
+    //                 {
+    //                     name: 'Average Score',
+    //                     type: 'bar',
+    //                     barWidth: '60%',
+    //                     data: [
+    //                         { value: 3.2, itemStyle: { color: '#8884d8' } },
+    //                         { value: 3.5, itemStyle: { color: '#8884d8' } },
+    //                         { value: 3.8, itemStyle: { color: '#8884d8' } },
+    //                         { value: 4.2, itemStyle: { color: '#4caf50' } }
+    //                     ]
+    //                 }
+    //             ]
+    //         };
+    //         myChart.setOption(option);
+    //     }
+    // }, []);
 
     const handleSaveResults = async () => {
         if (testResults.length === 0) {
