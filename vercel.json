@@ -1,5 +1,10 @@
 {
-    "rewrites":  [
-      {"source": "/(.*)", "destination": "/"}
-    ]
+  "framework": "vite",
+  "buildCommand": "npm install --force && npm run build",
+  "outputDirectory": "dist",
+  "installCommand": "npm install --force",
+  "env": {
+    "NODE_VERSION": "18",
+    "NPM_FLAGS": "--legacy-peer-deps"
   }
+}
