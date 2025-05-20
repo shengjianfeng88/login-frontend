@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // API 基础 URL
-const BASE_URL = 'https://api.instasd.com/api_endpoints/1ddbztbz0f6wgv';  // 修改为相对路径，将通过代理访问
+const BASE_URL = 'https://api.instasd.com/api_endpoints';  // 修改为相对路径，将通过代理访问
 
 // 类型定义
 export interface TryonInput {
@@ -100,7 +100,7 @@ export const tryonApi = {
                 },
                 {
                     headers: {
-                        'Authorization': 'Bearer y7nf4qVOytqiL6dhfWV6rg',
+                        'Authorization': 'Bearer GohWR0ibz9bDbhSpHYcecw',
                         'Content-Type': 'application/json'
                     }
                 }
@@ -119,7 +119,7 @@ export const tryonApi = {
                 `${BASE_URL}/task_status/${taskId}`,
                 {
                     headers: {
-                        'Authorization': 'Bearer y7nf4qVOytqiL6dhfWV6rg',
+                        'Authorization': 'Bearer GohWR0ibz9bDbhSpHYcecw',
                         'Content-Type': 'application/json'
                     }
                 }
