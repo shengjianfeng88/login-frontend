@@ -10,6 +10,14 @@ export default defineConfig({
     fs: {
       strict: true,
     },
+    proxy: {
+      '/api': {
+        target: 'https://api.instasd.com',
+        changeOrigin: true,
+        secure: false,
+        rewrite: (path) => path.replace(/^\/api/, '')
+      }
+    }
   },
   // history fallback 放在 build 或 preview 阶段配置
   build: {
