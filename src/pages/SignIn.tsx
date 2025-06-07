@@ -124,6 +124,7 @@ const SignIn = () => {
         email: res.data.email,
         picture: res.data.picture,
         accessToken: res.data.accessToken,
+        userId: res.data.userId
       });
       navigate("/done");
     } catch (err: any) {
@@ -142,10 +143,14 @@ const SignIn = () => {
       const token = response.credential;
       const res = await axiosInstance.post("/auth/google-auth", { token });
       localStorage.setItem("accessToken", res.data.accessToken);
+      if (res.data.userId) {
+        localStorage.setItem("userId", res.data.userId);
+      }
       sendMessageToExtension({
         email: res.data.email,
         picture: res.data.picture,
         accessToken: res.data.accessToken,
+        userId: res.data.userId
       });
       navigate("/done");
     } catch (error) {
@@ -174,21 +179,21 @@ const SignIn = () => {
     <main className="min-h-screen">
       {/* Left side page (for the form) */}
 
-      <div className="flex flex-col md:flex-row h-screen">
+      <div className="flex flex-col h-screen md:flex-row">
         {/* Left side (for the form) */}
         <div className="w-full md:w-[40%] lg:w-[35%] overflow-auto relative">
           {/* Logo area */}
           <Link
             to="https://www.faishion.ai/"
-            className="flex items-center absolute top-8 left-8"
+            className="absolute flex items-center top-8 left-8"
           >
-            <div className="w-9 h-9 rounded-full bg-blue-200 flex items-center justify-center"></div>
-            <span className="ml-3 font-bold text-xl text-gray-800">
+            <div className="flex items-center justify-center bg-blue-200 rounded-full w-9 h-9"></div>
+            <span className="ml-3 text-xl font-bold text-gray-800">
               fAIshion.AI
             </span>
           </Link>
 
-          <div className="p-4 md:p-6 lg:p-8 flex flex-col w-full h-full justify-center pt-16">
+          <div className="flex flex-col justify-center w-full h-full p-4 pt-16 md:p-6 lg:p-8">
             {/* Form content */}
             <div className="w-full max-w-[90%] mx-auto">
               {/* Welcome text */}
@@ -202,7 +207,7 @@ const SignIn = () => {
               </div>
 
               {error && (
-                <div className="text-red-500 text-xs mb-3">{error}</div>
+                <div className="mb-3 text-xs text-red-500">{error}</div>
               )}
 
               <form onSubmit={handleSubmit} className="w-full">
@@ -229,7 +234,7 @@ const SignIn = () => {
                 </div>
 
                 {/* Remember me and Forgot password */}
-                <div className="relative mb-4 w-full">
+                <div className="relative w-full mb-4">
                   <div className="flex items-center">
                     <input
                       type="checkbox"
@@ -264,7 +269,7 @@ const SignIn = () => {
               </form>
 
               {/* Or divider */}
-              <div className="flex items-center my-4 w-full">
+              <div className="flex items-center w-full my-4">
                 <div className="flex-grow h-px bg-[#2E2E2E]"></div>
                 <span className="mx-3 text-sm font-medium text-[#2E2E2E]">
                   or
@@ -273,7 +278,7 @@ const SignIn = () => {
               </div>
 
               {/* Google button */}
-              <div className="mb-4 w-full">
+              <div className="w-full mb-4">
                 <button
                   onClick={() => login()}
                   className="w-full h-10 bg-white border border-[#DADCE0] rounded-lg text-sm font-medium flex items-center justify-center gap-2 text-[#2F2F2F] hover:bg-gray-100"
@@ -284,7 +289,7 @@ const SignIn = () => {
               </div>
 
               {/* Sign up link */}
-              <div className="w-full flex justify-center">
+              <div className="flex justify-center w-full">
                 <p className="text-xs text-[#A6A6A6]">
                   Don't have an account?{" "}
                   <Link to="/signup" className="font-bold text-[#2F2F2F]">
@@ -314,7 +319,7 @@ const SignIn = () => {
               onMouseLeave={() => setIsPaused(false)}
             >
               {/* Left blurred image */}
-              <div className="relative -mr-2 xs:-mr-3 sm:-mr-4 md:-mr-12 lg:-mr-24 z-0">
+              <div className="relative z-0 -mr-2 xs:-mr-3 sm:-mr-4 md:-mr-12 lg:-mr-24">
                 <div className="w-24 xs:w-28 sm:w-36 md:w-52 lg:w-72 h-44 xs:h-56 sm:h-64 md:h-80 lg:h-[28rem] rounded-3xl overflow-hidden opacity-60 blur-[3px]">
                   <img
                     src={images[activeSlide].left}
@@ -339,7 +344,7 @@ const SignIn = () => {
               </div>
 
               {/* Right blurred image */}
-              <div className="relative -ml-2 xs:-ml-3 sm:-ml-4 md:-ml-12 lg:-ml-24 z-0">
+              <div className="relative z-0 -ml-2 xs:-ml-3 sm:-ml-4 md:-ml-12 lg:-ml-24">
                 <div className="w-24 xs:w-28 sm:w-36 md:w-52 lg:w-72 h-44 xs:h-56 sm:h-64 md:h-80 lg:h-[28rem] rounded-3xl overflow-hidden opacity-60 blur-[3px]">
                   <img
                     src={images[activeSlide].right}
@@ -354,24 +359,24 @@ const SignIn = () => {
           </div>
 
           {/* Bottom text content - positioned at the very bottom */}
-          <div className="absolute bottom-0 px-4 md:px-8 lg:px-16 w-full text-left">
+          <div className="absolute bottom-0 w-full px-4 text-left md:px-8 lg:px-16">
             <div className="ml-0 md:ml-4 lg:ml-8 pb-4 scale-[0.85] md:scale-90 lg:scale-100 origin-bottom-left">
               <h2 className="mb-1">
-                <span className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-gray-800 block">
+                <span className="block text-lg font-bold text-gray-800 sm:text-xl md:text-2xl lg:text-3xl">
                   Welcome to
                 </span>
-                <span className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-gray-800 block">
+                <span className="block text-2xl font-bold text-gray-800 sm:text-3xl md:text-4xl lg:text-5xl">
                   fAIshion.AI
                 </span>
               </h2>
-              <p className="text-xs sm:text-xs md:text-sm text-gray-600 max-w-lg">
+              <p className="max-w-lg text-xs text-gray-600 sm:text-xs md:text-sm">
                 Your AI shopping assistant for all apparel brands—try on
                 virtually, find your perfect size, and grab the best deals!
               </p>
             </div>
 
             {/* Pagination dots */}
-            <div className="flex justify-center pb-4 md:pb-6 space-x-3 md:space-x-4 lg:space-x-5">
+            <div className="flex justify-center pb-4 space-x-3 md:pb-6 md:space-x-4 lg:space-x-5">
               <button
                 onClick={() => changeSlide(0)}
                 className={`w-1.5 h-1.5 md:w-2 md:h-2 rounded-full transition-colors duration-300 ${

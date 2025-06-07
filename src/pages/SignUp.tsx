@@ -14,7 +14,7 @@ import image3 from "@/assets/image_3.jpg";
 import googleLogo from "@/assets/g-logo.png";
 
 //This user schema does not include the confimPassword, I stick to the original userSchema
-// const signUpSchema = z.object({ 
+// const signUpSchema = z.object({
 //   email: z.string().email("Please enter a valid email address"),
 //   password: z.string().min(6, "Password must be at least 6 characters"),
 // });
@@ -130,24 +130,21 @@ const SignUp = () => {
   const handleGoogleLoginSuccess = async (response: CredentialResponse) => {
     try {
       const token = response.credential;
-      const apiUrl = "https://api-auth.faishion.ai";
-
-      // Use axiosInstance instead of axios 
-      const res = await axiosInstance.post(apiUrl + "/api/auth/google-auth", { token });
-
-      if (res.data) {
-        const accessToken = res.data.accessToken;
-        // Store token in localStorage
-        localStorage.setItem("accessToken", accessToken);
-
-        sendMessageToExtension({
-          email: res.data.email,
-          picture: res.data.picture,
-          accessToken: res.data.accessToken,
-        });
-
-        navigate("/done");
+      const res = await axiosInstance.post("/auth/google-auth", { token });
+      
+      localStorage.setItem("accessToken", res.data.accessToken);
+      if (res.data.userId) {
+        localStorage.setItem("userId", res.data.userId);
       }
+      
+      sendMessageToExtension({
+        email: res.data.email,
+        picture: res.data.picture,
+        accessToken: res.data.accessToken,
+        userId: res.data.userId
+      });
+
+      navigate("/done");
     } catch (error) {
       console.error("Google authentication failed:", error);
       setError("Google authentication failed. Please try again.");

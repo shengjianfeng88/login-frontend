@@ -28,6 +28,7 @@ export const sendMessageToExtension = (userData: {
   email: string;
   picture?: string;
   accessToken: string;
+  userId?: string;
 }) => {
   console.log('Full userData object:', userData);
   console.log('Sending message to extension with email:', userData.email);
