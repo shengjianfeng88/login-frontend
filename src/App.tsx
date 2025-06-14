@@ -10,10 +10,10 @@ import { GoogleOAuthProvider } from '@react-oauth/google';
 import SignUp from './pages/SignUp';
 import Done from './pages/Done';
 import History from './pages/History';
-import VerifyEmail from './pages/VerifyEmail';
+import TryonHistory from './pages/TryonHistory';
+import VerifyEmail from './pages/VerifyEmail'; // 【新增】
 import ConfirmRegister from '@/pages/ConfirmRegister';
-import AutoTest from './pages/AutoTest/index';
-import ChatWidget from './pages/ChatWidget';
+import ChatWidget from '@/pages/ChatWidget';
 
 function App() {
   const googleClientId =
@@ -33,12 +33,13 @@ function App() {
               <Route path='/done' element={<Done />} />
               <Route path='/forgot-password' element={<ForgotPassword />} />
               <Route path='/reset-password' element={<ResetPassword />} />
-              <Route path='/tryon-history' element={<History />} />
-              <Route path='/verify-email' element={<VerifyEmail />} />
+              {/* <Route path='/tryon-history' element={<History />} /> */}
+              <Route path='/verify-email' element={<VerifyEmail />} />{' '}
+              {/* 【新增】 */}
               <Route path='*' element={<PageNotFound />} />
               <Route path='/confirm-register' element={<ConfirmRegister />} />
-              <Route path='/auto-test/*' element={<AutoTest />} />
-              <Route path='/chat/*' element={<ChatWidget />} />
+              <Route path='/chat' element={<ChatWidget />} />
+              <Route path='/tryon-history' element={<TryonHistory />} />
             </Routes>
           </Suspense>
         </Router>
