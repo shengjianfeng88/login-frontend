@@ -347,6 +347,35 @@ const ResultsPage: React.FC<ResultsProps> = ({
         });
     };
 
+    const handleSaveResults = async () => {
+        if (testResults.length === 0) {
+            message.warning('没有可保存的测试结果');
+            return;
+        }
+
+        setSaving(true);
+        try {
+            // 过滤出已完成的测试结果
+            const completedResults = testResults.filter(result =>
+                result.status === 'success' || result.status === 'FAILED'
+            );
+
+            if (completedResults.length === 0) {
+                message.warning('没有已完成的测试结果可保存');
+                return;
+            }
+
+            // 调用保存接口
+            await tryonApi.saveTestResults(completedResults);
+            message.success('测试结果保存成功');
+        } catch (error) {
+            console.error('保存测试结果失败:', error);
+            message.error('保存测试结果失败');
+        } finally {
+            setSaving(false);
+        }
+    };
+
     return (
         <div className="min-h-screen bg-gray-50">
             <div className="max-w-7xl mx-auto px-4 py-6">
@@ -380,6 +409,7 @@ const ResultsPage: React.FC<ResultsProps> = ({
                             type="primary"
                             icon={<SaveOutlined />}
                             loading={saving}
+                            onClick={handleSaveResults}
                             className="!rounded-button whitespace-nowrap"
                         >
                             保存结果
