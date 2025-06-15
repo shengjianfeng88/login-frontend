@@ -95,29 +95,6 @@ export const TestResultsTable: React.FC<TestResultsTableProps> = ({
             ),
         },
         {
-            title: 'TASK ID',
-            dataIndex: 'taskId',
-            key: 'taskId',
-            width: 200,
-            className: 'whitespace-nowrap',
-        },
-        {
-            title: 'STATUS',
-            dataIndex: 'status',
-            key: 'status',
-            width: 120,
-            className: 'whitespace-nowrap',
-            render: (status) => (
-                <span className={`${status === 'success' ? 'text-green-500' :
-                    status === 'FAILED' ? 'text-red-500' :
-                        status === 'IN_PROGRESS' || status === 'IN_QUEUE' || status === 'EXECUTING' ? 'text-blue-500' :
-                            'text-gray-500'
-                    }`}>
-                    {status || 'Not Started'}
-                </span>
-            ),
-        },
-        {
             title: '耗时',
             dataIndex: 'executionTime',
             key: 'executionTime',
@@ -133,6 +110,13 @@ export const TestResultsTable: React.FC<TestResultsTableProps> = ({
                 }
                 return '-';
             },
+        },
+        {
+            title: 'TASK ID',
+            dataIndex: 'taskId',
+            key: 'taskId',
+            width: 200,
+            className: 'whitespace-nowrap',
         },
     ];
 
