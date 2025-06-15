@@ -154,25 +154,6 @@ export const TestResultsTable: React.FC<TestResultsTableProps> = ({
                 </span>
             ),
         },
-        {
-            title: 'INFO',
-            dataIndex: 'info',
-            key: 'info',
-            width: 200,
-            className: 'whitespace-nowrap',
-            render: (_, record) => {
-                if (record.status === 'COMPLETED') {
-                    return (
-                        <div className="text-xs">
-                            <div>执行时间: {record.executionTime?.toFixed(2)}ms</div>
-                            <div>延迟时间: {record.delayTime?.toFixed(2)}ms</div>
-                            <div>成本: {record.cost?.toFixed(4)}</div>
-                        </div>
-                    );
-                }
-                return '-';
-            },
-        },
     ];
 
     const rowSelection = {
@@ -265,136 +246,55 @@ const ResultsPage: React.FC<ResultsProps> = ({
 
         setLoading(true);
         const selectedResults = testResults.filter(item => selectedRowKeys.includes(item.key));
-        const newProcessingTasks = new Set<string>();
 
         try {
-            // 先获取所有任务的响应
-            const responses = await Promise.all(
-                selectedResults.map(result =>
-                    tryonApi.startTryon(result.userImage, result.clothingImage)
-                        .catch(error => {
-                            message.error(`试穿请求失败: ${result.testNo}`);
-                            return null;
-                        })
-                )
-            );
+            for (const test of selectedResults) {
+                try {
+                    // 调用试穿接口
+                    const response = await tryonApi.startTryon(test.userImage, test.clothingImage);
 
-            // 过滤出成功的响应
-            const validResponses = responses.filter(r => r !== null);
+                    // 更新测试结果状态
+                    setTestResults((prev) => prev.map((item) => {
+                        if (item.key === test.key) {
+                            return {
+                                ...item,
+                                status: response.status,
+                                taskId: response.uuid,
+                                estimatedSteps: response.estimated_steps,
+                                progress: true,
+                                completedSteps: 0
+                            };
+                        }
+                        return item;
+                    }));
 
-            // 一次性更新所有任务的状态
-            const newResults = [...testResults];
-            validResponses.forEach((response, index) => {
-                if (response) {
-                    const resultIndex = newResults.findIndex(r => r.key === selectedResults[index].key);
-                    if (resultIndex !== -1) {
-                        newProcessingTasks.add(response.task_id);
-                        newResults[resultIndex] = {
-                            ...newResults[resultIndex],
-                            taskId: response.task_id,
-                            status: 'IN_QUEUE',
-                            progress: true,
-                            completedSteps: 0,
-                            estimatedSteps: response.estimated_steps || 1,
-                            error: undefined
-                        };
+                    // 将任务ID添加到处理中的任务集合
+                    if (response.uuid) {
+                        setProcessingTasks((prev) => new Set([...prev, response.uuid as string]));
                     }
+                } catch (error) {
+                    console.error('测试失败:', error);
+                    message.error(`测试 ${test.testNo} 失败`);
+
+                    // 更新失败状态
+                    setTestResults((prev) => prev.map((item) => {
+                        if (item.key === test.key) {
+                            return {
+                                ...item,
+                                status: 'FAILED',
+                                error: error instanceof Error ? error.message : '未知错误'
+                            };
+                        }
+                        return item;
+                    }));
                 }
-            });
-
-            // 一次性更新状态
-            setTestResults(newResults);
-            setProcessingTasks(newProcessingTasks);
-
-            // 开始轮询任务状态
-            const taskIds = validResponses.map(r => r!.task_id);
-            if (taskIds.length > 0) {
-                pollTaskStatus(taskIds, newResults);
             }
         } catch (error) {
-            message.error('批量试穿请求失败');
+            console.error('批量测试失败:', error);
+            message.error('批量测试失败');
         } finally {
             setLoading(false);
         }
-    };
-
-    const pollTaskStatus = async (taskIds: string[], newResults: TestResult[]) => {
-        const checkStatus = async () => {
-            const statusPromises = taskIds.map(async (taskId) => {
-                try {
-                    const status = await tryonApi.getTaskStatus(taskId);
-                    return { taskId, status };
-                } catch (error) {
-                    console.error(`获取任务状态失败: ${taskId}`, error);
-                    return null;
-                }
-            });
-
-            const results = await Promise.all(statusPromises);
-            const completedTasks = new Set<string>();
-
-            console.log(results, '~~~~~~1111122222');
-            results.forEach((result) => {
-                if (result) {
-                    const { taskId, status } = result;
-                    const resultIndex = newResults.findIndex(r =>
-                        selectedRowKeys.includes(r.key) && r.taskId === taskId
-                    );
-
-                    console.log(resultIndex, newResults, taskId, '~~~~~~111114444444');
-                    if (resultIndex !== -1) {
-                        if (status.status === 'COMPLETED') {
-                            completedTasks.add(taskId);
-                            newResults[resultIndex] = {
-                                ...newResults[resultIndex],
-                                generatedResult: status.image_urls?.[0] || '',
-                                status: status.status,
-                                progress: false,
-                                completedSteps: status.completed_steps,
-                                estimatedSteps: status.estimated_steps,
-                                executionTime: status.execution_time,
-                                cost: status.cost,
-                                error: status.error
-                            };
-                        } else if (status.status === 'FAILED') {
-                            completedTasks.add(taskId);
-                            newResults[resultIndex] = {
-                                ...newResults[resultIndex],
-                                status: status.status,
-                                error: status.error || '任务执行失败',
-                                completedSteps: status.completed_steps,
-                                estimatedSteps: status.estimated_steps
-                            };
-                            message.error(`试穿任务失败: ${taskId}`);
-                        } else if (status.status === 'EXECUTING' || status.status === 'IN_QUEUE' || status.status === 'IN_PROGRESS') {
-                            newResults[resultIndex] = {
-                                ...newResults[resultIndex],
-                                status: status.status,
-                                progress: true,
-                                completedSteps: status.completed_steps,
-                                estimatedSteps: status.estimated_steps
-                            };
-                            console.log(newResults, '~~~~~~111113333333');
-                        }
-                    }
-                }
-            });
-
-            setTestResults(newResults);
-            setProcessingTasks(prev => {
-                const newSet = new Set(prev);
-                completedTasks.forEach(taskId => newSet.delete(taskId));
-                return newSet;
-            });
-
-            if (completedTasks.size < taskIds.length) {
-                setTimeout(checkStatus, 2000);
-            } else {
-                message.success('所有测试项处理完成');
-            }
-        };
-
-        checkStatus();
     };
 
     const onSelectChange = (newSelectedRowKeys: React.Key[]) => {
@@ -453,62 +353,9 @@ const ResultsPage: React.FC<ResultsProps> = ({
     //     }
     // }, []);
 
-    const handleSaveResults = async () => {
-        if (testResults.length === 0) {
-            message.warning('没有可保存的测试结果');
-            return;
-        }
-
-        // 检查是否所有任务都已完成
-        const hasUnfinishedTasks = testResults.some(
-            result => result.status && ['IN_PROGRESS', 'IN_QUEUE', 'EXECUTING'].includes(result.status)
-        );
-
-        if (hasUnfinishedTasks) {
-            message.warning('请等待所有测试任务完成后再保存');
-            return;
-        }
-
-        setSaving(true);
-        try {
-            // 准备要保存的数据
-            const resultsToSave = testResults.map(result => ({
-                testNo: result.testNo,
-                userImage: result.userImage,
-                clothingImage: result.clothingImage,
-                generatedResult: result.generatedResult,
-                taskId: result.taskId,
-                status: result.status,
-                completedSteps: result.completedSteps,
-                estimatedSteps: result.estimatedSteps,
-                executionTime: result.executionTime,
-                delayTime: result.delayTime,
-                cost: result.cost,
-                error: result.error
-            }));
-
-            // 调用保存接口
-            await tryonApi.saveTestResults(resultsToSave);
-            message.success('测试结果保存成功');
-        } catch (error) {
-            console.error('保存测试结果失败:', error);
-            message.error('保存测试结果失败');
-        } finally {
-            setSaving(false);
-        }
-    };
-
     const handleViewHistory = () => {
         navigate('/auto-test/history');
     };
-
-    // 检查是否有正在执行的任务
-    const hasProcessingTasks = processingTasks.size > 0;
-
-    // 检查是否所有任务都已完成
-    const allTasksCompleted = testResults.length > 0 && testResults.every(
-        result => result.status === 'COMPLETED' || result.status === 'FAILED'
-    );
 
     // 处理上传图片按钮点击
     const handleUploadClick = () => {
@@ -539,13 +386,11 @@ const ResultsPage: React.FC<ResultsProps> = ({
                             className="!rounded-button whitespace-nowrap"
                             onClick={handleUploadClick}
                             icon={<UploadOutlined />}
-                            disabled={hasProcessingTasks}
                         >
                             Upload Images
                         </Button>
                         <Button
                             type="primary"
-                            disabled={selectedRowKeys.length === 0 || loading || hasProcessingTasks}
                             loading={loading}
                             onClick={handleTestSelected}
                             className="!rounded-button whitespace-nowrap"
@@ -560,17 +405,14 @@ const ResultsPage: React.FC<ResultsProps> = ({
                         >
                             查看历史记录
                         </Button>
-                        {allTasksCompleted && (
-                            <Button
-                                type="primary"
-                                icon={<SaveOutlined />}
-                                loading={saving}
-                                onClick={handleSaveResults}
-                                className="!rounded-button whitespace-nowrap"
-                            >
-                                保存结果
-                            </Button>
-                        )}
+                        <Button
+                            type="primary"
+                            icon={<SaveOutlined />}
+                            loading={saving}
+                            className="!rounded-button whitespace-nowrap"
+                        >
+                            保存结果
+                        </Button>
                     </div>
                 </div>
                 {/* <div className="bg-white rounded-lg shadow-md p-6 mb-6">
