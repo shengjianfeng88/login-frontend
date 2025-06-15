@@ -19,8 +19,6 @@ export type TryOnResponse = {
     image: string
     status: string
     uuid?: string
-    task_id?: string
-    estimated_steps?: number
 }
 
 // 辅助函数：将图片 URL 转换为 base64

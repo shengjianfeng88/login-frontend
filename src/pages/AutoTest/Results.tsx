@@ -10,27 +10,13 @@ const { Title, Text } = Typography;
 
 export interface TestResult {
     key: string;
-    testNo: string;
     userImage: string;
     clothingImage: string;
     generatedResult: string;
     taskId?: string;
     status?: string;
-    progress?: boolean;
-    completedSteps?: number;
-    estimatedSteps?: number;
     error?: string;
     executionTime?: number;
-    delayTime?: number;
-    cost?: number;
-}
-
-interface TestHistory {
-    id: number;
-    name: string;
-    version: string;
-    date: string;
-    score: number;
 }
 
 export interface TestResultsTableProps {
@@ -45,13 +31,6 @@ export const TestResultsTable: React.FC<TestResultsTableProps> = ({
     onSelectChange,
 }) => {
     const columns: ColumnsType<TestResult> = [
-        {
-            title: 'TEST NO.',
-            dataIndex: 'testNo',
-            key: 'testNo',
-            width: 80,
-            className: 'whitespace-nowrap',
-        },
         {
             title: 'INPUT 1 (USER IMAGE)',
             dataIndex: 'userImage',
@@ -97,9 +76,9 @@ export const TestResultsTable: React.FC<TestResultsTableProps> = ({
             width: 150,
             render: (image, record: TestResult) => (
                 <div className="w-28 h-36 overflow-hidden relative">
-                    {record.status === 'COMPLETED' && image ? (
+                    {record.status === 'success' && image ? (
                         <Image
-                            src={image}
+                            src={`data:image/jpeg;base64,${image}`}
                             alt="Generated Result"
                             className="w-full h-full object-cover object-top"
                             preview={{
@@ -107,26 +86,10 @@ export const TestResultsTable: React.FC<TestResultsTableProps> = ({
                                 maskClassName: 'flex items-center justify-center'
                             }}
                         />
+                    ) : record.status === 'FAILED' ? (
+                        <Text type="danger">Failed</Text>
                     ) : (
-                        <div className="w-full h-full flex flex-col items-center justify-center bg-gray-100">
-                            {record.progress && record.completedSteps !== undefined && record.estimatedSteps !== undefined ? (
-                                <>
-                                    <Progress
-                                        percent={Math.round((record.completedSteps / record.estimatedSteps) * 100)}
-                                        size="small"
-                                        showInfo={false}
-                                        strokeColor="#4caf50"
-                                    />
-                                    <Text type="secondary" className="mt-1 text-xs">
-                                        {record.completedSteps}/{record.estimatedSteps}
-                                    </Text>
-                                </>
-                            ) : record.status === 'FAILED' ? (
-                                <Text type="danger">Failed</Text>
-                            ) : (
-                                <Text type="secondary">Waiting</Text>
-                            )}
-                        </div>
+                        <Text type="secondary">Waiting</Text>
                     )}
                 </div>
             ),
@@ -145,7 +108,7 @@ export const TestResultsTable: React.FC<TestResultsTableProps> = ({
             width: 120,
             className: 'whitespace-nowrap',
             render: (status) => (
-                <span className={`${status === 'COMPLETED' ? 'text-green-500' :
+                <span className={`${status === 'success' ? 'text-green-500' :
                     status === 'FAILED' ? 'text-red-500' :
                         status === 'IN_PROGRESS' || status === 'IN_QUEUE' || status === 'EXECUTING' ? 'text-blue-500' :
                             'text-gray-500'
@@ -153,6 +116,23 @@ export const TestResultsTable: React.FC<TestResultsTableProps> = ({
                     {status || 'Not Started'}
                 </span>
             ),
+        },
+        {
+            title: '耗时',
+            dataIndex: 'executionTime',
+            key: 'executionTime',
+            width: 120,
+            className: 'whitespace-nowrap',
+            render: (time, record) => {
+                if (record.status === 'success' && time) {
+                    return `${(time / 1000).toFixed(2)}s`;
+                } else if (record.status === 'FAILED') {
+                    return <span className="text-red-500">失败</span>;
+                } else if (record.status === 'IN_PROGRESS' || record.status === 'IN_QUEUE' || record.status === 'EXECUTING') {
+                    return <span className="text-blue-500">处理中</span>;
+                }
+                return '-';
+            },
         },
     ];
 
@@ -217,16 +197,12 @@ const ResultsPage: React.FC<ResultsProps> = ({
                 userImages.forEach((userImg) => {
                     clothingImages.forEach((clothingImg) => {
                         results.push({
-                            key: counter.toString(),
-                            testNo: `#${counter.toString().padStart(3, '0')}`,
+                            key: `${counter}`,
                             userImage: userImg,
                             clothingImage: clothingImg,
                             generatedResult: '',
                             taskId: undefined,
                             status: undefined,
-                            progress: false,
-                            completedSteps: 0,
-                            estimatedSteps: 1,
                             error: undefined
                         });
                         counter++;
@@ -260,21 +236,14 @@ const ResultsPage: React.FC<ResultsProps> = ({
                                 ...item,
                                 status: response.status,
                                 taskId: response.uuid,
-                                estimatedSteps: response.estimated_steps,
-                                progress: true,
-                                completedSteps: 0
+                                generatedResult: response.image,
                             };
                         }
                         return item;
                     }));
-
-                    // 将任务ID添加到处理中的任务集合
-                    if (response.uuid) {
-                        setProcessingTasks((prev) => new Set([...prev, response.uuid as string]));
-                    }
                 } catch (error) {
                     console.error('测试失败:', error);
-                    message.error(`测试 ${test.testNo} 失败`);
+                    message.error(`测试 ${test.key} 失败`);
 
                     // 更新失败状态
                     setTestResults((prev) => prev.map((item) => {
@@ -435,7 +404,7 @@ const ResultsPage: React.FC<ResultsProps> = ({
                     </div>
                     <Progress percent={100} showInfo={false} strokeColor="#4caf50" />
                     <div className="flex justify-between mt-2">
-                        <Text type="secondary">5/5 Completed</Text>
+                        <Text type="secondary">5/5 success</Text>
                         <div className="h-6 w-32" id="improvement-chart"></div>
                     </div>
                 </div> */}
