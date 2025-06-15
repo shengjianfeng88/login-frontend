@@ -18,11 +18,10 @@ export default defineConfig({
       strict: true,
     },
     proxy: {
-      '/api': {
-        target: 'https://api.instasd.com',
+      '/upload': {
+        target: 'https://tryon-advanced.faishion.ai',
         changeOrigin: true,
         secure: false,
-        rewrite: (path) => path.replace(/^\/api/, ''),
       },
     },
   },
