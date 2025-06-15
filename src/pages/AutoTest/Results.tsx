@@ -105,7 +105,7 @@ export const TestResultsTable: React.FC<TestResultsTableProps> = ({
                     return `${(time / 1000).toFixed(2)}s`;
                 } else if (record.status === 'FAILED') {
                     return <span className="text-red-500">失败</span>;
-                } else if (record.status === 'IN_PROGRESS' || record.status === 'IN_QUEUE' || record.status === 'EXECUTING') {
+                } else if (record.status === 'IN_PROGRESS') {
                     return <span className="text-blue-500">处理中</span>;
                 }
                 return '-';
@@ -210,17 +210,35 @@ const ResultsPage: React.FC<ResultsProps> = ({
         try {
             for (const test of selectedResults) {
                 try {
+                    // 记录开始时间
+                    const startTime = Date.now();
+
+                    // 设置初始状态为处理中
+                    setTestResults((prev) => prev.map((item) => {
+                        if (item.key === test.key) {
+                            return {
+                                ...item,
+                                status: 'IN_PROGRESS'
+                            };
+                        }
+                        return item;
+                    }));
+
                     // 调用试穿接口
                     const response = await tryonApi.startTryon(test.userImage, test.clothingImage);
+
+                    // 计算耗时
+                    const executionTime = Date.now() - startTime;
 
                     // 更新测试结果状态
                     setTestResults((prev) => prev.map((item) => {
                         if (item.key === test.key) {
                             return {
                                 ...item,
-                                status: response.status,
+                                status: response.image ? 'success' : 'FAILED',
                                 taskId: response.uuid,
                                 generatedResult: response.image,
+                                executionTime: executionTime
                             };
                         }
                         return item;

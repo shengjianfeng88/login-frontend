@@ -17,7 +17,6 @@ type GetTryOnParams = {
 
 export type TryOnResponse = {
     image: string
-    status: string
     uuid?: string
 }
 
