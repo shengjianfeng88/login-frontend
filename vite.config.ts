@@ -23,6 +23,11 @@ export default defineConfig({
         changeOrigin: true,
         secure: false,
       },
+      '/api/auth/test-history': {
+        target: 'http://192.168.10.12:3001',
+        changeOrigin: true,
+        secure: false,
+      },
     },
   },
   // history fallback 放在 build 或 preview 阶段配置

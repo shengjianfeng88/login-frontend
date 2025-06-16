@@ -71,7 +71,7 @@ export const tryonApi = {
     // 获取测试历史记录
     getTestHistory: async (): Promise<any[]> => {
         try {
-            const response = await axiosInstance.get('/test/history');
+            const response = await axiosInstance.get('/api/auth/test-history?page=1&limit=10');
             return response.data;
         } catch (error) {
             console.error('获取测试历史记录失败:', error);
@@ -82,7 +82,7 @@ export const tryonApi = {
     // 保存测试结果
     saveTestResults: async (results: any[]): Promise<void> => {
         try {
-            await axiosInstance.post('/test/results', { results });
+            await axiosInstance.post('/api/auth/test-history', { results });
         } catch (error) {
             console.error('保存测试结果失败:', error);
             throw error;
