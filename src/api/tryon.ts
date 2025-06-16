@@ -3,9 +3,6 @@ import axios from 'axios';
 // 创建 axios 实例
 const axiosInstance = axios.create({
     baseURL: 'https://tryon-advanced-canary.faishion.ai',
-    headers: {
-        'Content-Type': 'application/json'
-    },
     withCredentials: true
 });
 
