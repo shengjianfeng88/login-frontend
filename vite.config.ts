@@ -18,11 +18,21 @@ export default defineConfig({
       strict: true,
     },
     proxy: {
-      '/api': {
-        target: 'https://api.instasd.com',
+      '/upload': {
+        target: 'https://tryon-advanced.faishion.ai',
         changeOrigin: true,
         secure: false,
-        rewrite: (path) => path.replace(/^\/api/, ''),
+        headers: {
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, PATCH, OPTIONS',
+          'Access-Control-Allow-Headers': 'X-Requested-With, content-type, Authorization',
+          'Access-Control-Allow-Credentials': 'true'
+        }
+      },
+      '/api/auth/test-history': {
+        target: 'http://192.168.10.12:3001',
+        changeOrigin: true,
+        secure: false,
       },
     },
   },

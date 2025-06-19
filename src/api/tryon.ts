@@ -1,54 +1,23 @@
 import axios from 'axios';
 
-// API 基础 URL
-const BASE_URL = 'https://api.instasd.com/api_endpoints';  // 修改为相对路径，将通过代理访问
+// 创建 axios 实例
+const axiosInstance = axios.create({
+    baseURL: 'https://tryon-advanced-canary.faishion.ai',
+    headers: {
+        'Content-Type': 'application/json'
+    }
+});
 
 // 类型定义
-export interface TryonInput {
-    title: string;
-    value: string;
+type GetTryOnParams = {
+    access_token: string
+    face: string
+    model: string
 }
 
-export interface TryonRequest {
-    inputs: {
-        '594981c08d5bbf10': TryonInput;
-        '5dfee988692c6a98': TryonInput;
-    };
-}
-
-export interface TryonResponse {
-    task_id: string;
-    status: string;
-    estimated_steps: number;
-}
-
-export interface TaskStatusResponse {
-    task_id: string;
-    status: string;
-    estimated_steps: number;
-    completed_steps: number;
-    image_urls: string[];
-    video_urls: string[];
-    execution_time: number;
-    error_message?: string;
-    cost?: number;
-    error?: string;
-}
-
-export interface TestHistoryResponse {
-    id: string;
-    userImage: string;
-    clothingImage: string;
-    generatedResult: string;
-    taskId: string;
-    status: string;
-    completedSteps: number;
-    estimatedSteps: number;
-    executionTime: number;
-    delayTime: number;
-    cost: number;
-    error?: string;
-    createdAt: string;
+export type TryOnResponse = {
+    image: string
+    uuid?: string
 }
 
 // 辅助函数：将图片 URL 转换为 base64
@@ -76,7 +45,7 @@ const getBase64FromUrl = async (url: string): Promise<string> => {
 // API 函数
 export const tryonApi = {
     // 发起试穿请求
-    async startTryon(userImage: string, clothingImage: string): Promise<TryonResponse> {
+    async startTryon(userImage: string, clothingImage: string): Promise<TryOnResponse> {
         try {
             // 转换图片为 base64
             const [userBase64, clothingBase64] = await Promise.all([
@@ -84,25 +53,13 @@ export const tryonApi = {
                 getBase64FromUrl(clothingImage)
             ]);
 
-            const response = await axios.post(
-                `${BASE_URL}/run_task`,
+            const response = await axiosInstance.post(
+                '/upload/images',
                 {
-                    inputs: {
-                        '594981c08d5bbf10': {
-                            title: 'Load Image',
-                            value: clothingBase64
-                        },
-                        '5dfee988692c6a98': {
-                            title: 'Load Image',
-                            value: userBase64
-                        }
-                    }
-                },
-                {
-                    headers: {
-                        'Authorization': 'Bearer GohWR0ibz9bDbhSpHYcecw',
-                        'Content-Type': 'application/json'
-                    }
+                    // access_token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2ODM5MzVmZWIzMjliNTI0MTNkOGQ2YTUiLCJwaWN0dXJlIjoiaHR0cHM6Ly9saDMuZ29vZ2xldXNlcmNvbnRlbnQuY29tL2EvQUNnOG9jSVN5dHEtQnNWcTItRTNXNGFoTG9CZTdYRVdZb0h1RmhoU3V4VjRLTy02cEdUTHlBPXM5Ni1jIiwiZW1haWwiOiJqaWFuZmVuZ3NoZW5nMEBnbWFpbC5jb20iLCJpYXQiOjE3NDk4ODg4NTgsImV4cCI6MTc0OTg4OTc1OH0.woufGJfaaL9fz6DDJmAc3GAxm4Bg2aGMLFqgxlbAhaA',
+                    face: userBase64,
+                    model: clothingBase64,
+                    prompt: ''
                 }
             );
             return response.data;
@@ -111,46 +68,24 @@ export const tryonApi = {
             throw error;
         }
     },
-
-    // 获取任务状态
-    async getTaskStatus(taskId: string): Promise<TaskStatusResponse> {
+    // 获取测试历史记录
+    getTestHistory: async (): Promise<any[]> => {
         try {
-            const response = await axios.get(
-                `${BASE_URL}/task_status/${taskId}`,
-                {
-                    headers: {
-                        'Authorization': 'Bearer GohWR0ibz9bDbhSpHYcecw',
-                        'Content-Type': 'application/json'
-                    }
-                }
-            );
+            const response = await axiosInstance.get('/api/auth/test-history?page=1&limit=10');
             return response.data;
         } catch (error) {
-            console.error('获取任务状态失败:', error);
+            console.error('获取测试历史记录失败:', error);
             throw error;
         }
     },
 
-    // 获取测试历史记录
-    getTestHistory: async (): Promise<TestHistoryResponse[]> => {
-        const response = await fetch('/api/test-history');
-        if (!response.ok) {
-            throw new Error('获取测试历史记录失败');
-        }
-        return response.json();
-    },
-
     // 保存测试结果
     saveTestResults: async (results: any[]): Promise<void> => {
-        const response = await fetch('/api/test-results-post', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(results),
-        });
-        if (!response.ok) {
-            throw new Error('保存测试结果失败');
+        try {
+            await axiosInstance.post('/api/auth/test-history', { results });
+        } catch (error) {
+            console.error('保存测试结果失败:', error);
+            throw error;
         }
     },
 }; 
