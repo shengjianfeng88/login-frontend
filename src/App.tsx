@@ -38,7 +38,7 @@ function App() {
               <Route path='*' element={<PageNotFound />} />
               <Route path='/confirm-register' element={<ConfirmRegister />} />
               <Route path='/auto-test/*' element={<AutoTest />} />
-              <Route path='/chat/*' element={<ChatWidget />} />
+              <Route path='/faishion-chatbot' element={<ChatWidget />} />
             </Routes>
           </Suspense>
         </Router>

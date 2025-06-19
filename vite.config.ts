@@ -24,13 +24,25 @@ export default defineConfig({
         secure: false,
         headers: {
           'Access-Control-Allow-Origin': '*',
-          'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, PATCH, OPTIONS',
-          'Access-Control-Allow-Headers': 'X-Requested-With, content-type, Authorization',
-          'Access-Control-Allow-Credentials': 'true'
-        }
+          'Access-Control-Allow-Methods':
+            'GET, POST, PUT, DELETE, PATCH, OPTIONS',
+          'Access-Control-Allow-Headers':
+            'X-Requested-With, content-type, Authorization',
+          'Access-Control-Allow-Credentials': 'true',
+        },
       },
       '/api/auth/test-history': {
         target: 'http://192.168.10.12:3001',
+        changeOrigin: true,
+        secure: false,
+      },
+      '/health': {
+        target: 'http://chatbot.faishion.ai',
+        changeOrigin: true,
+        secure: false,
+      },
+      '/chat': {
+        target: 'http://chatbot.faishion.ai',
         changeOrigin: true,
         secure: false,
       },
