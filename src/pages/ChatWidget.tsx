@@ -11,7 +11,7 @@ interface Message {
   timestamp: Date;
 }
 
-const API_BASE_URL = 'https://chatbot.faishion.ai/chat';
+const API_BASE_URL = 'http://chatbot.faishion.ai/chat';
 
 const WidgetContainer = styled.div`
   position: fixed;
