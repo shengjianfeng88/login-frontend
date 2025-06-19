@@ -124,7 +124,9 @@ const ChatWidget: React.FC = () => {
     setIsLoading(true);
 
     try {
-      console.log(`Attempting to connect to backend at ${API_BASE_URL}/chat`);
+      console.log(
+        `Attempting to connect to backend at ${API_BASE_URL}/faishion-chatbot`
+      );
       const requestData = {
         question: userMessage.content,
         chat_history: messages.map((msg) => ({
@@ -134,12 +136,16 @@ const ChatWidget: React.FC = () => {
       };
       console.log('Request data:', requestData);
 
-      const response = await axios.post(`${API_BASE_URL}/chat`, requestData, {
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        timeout: 10000, // 10 second timeout
-      });
+      const response = await axios.post(
+        `${API_BASE_URL}/faishion-chatbot`,
+        requestData,
+        {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          timeout: 10000, // 10 second timeout
+        }
+      );
 
       console.log('Response status:', response.status);
       console.log('Response data:', response.data);
