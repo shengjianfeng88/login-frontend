@@ -10,21 +10,21 @@ import {
   Image,
   Modal,
   DatePicker,
+  Descriptions,
 } from 'antd';
 import {
   ArrowLeftOutlined,
   SearchOutlined,
   ReloadOutlined,
-  CalendarOutlined,
+  BarChartOutlined,
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import { useNavigate } from 'react-router-dom';
-import { tryonApi, TestHistoryItem } from '../../api/tryon';
+import { tryonApi, TestHistoryItem, TestHistoryQuery } from '../../api/tryon';
 import { TestResult } from './Results';
 import dayjs from 'dayjs';
 
 const { Title, Text } = Typography;
-const { Search } = Input;
 const { RangePicker } = DatePicker;
 
 // 辅助函数：将 base64 转换为 blob URL
@@ -384,27 +384,105 @@ const HistoryPage: React.FC = () => {
   const [timeRange, setTimeRange] = useState<[dayjs.Dayjs, dayjs.Dayjs] | null>(
     null
   );
-  const [isTimeRangeSearch, setIsTimeRangeSearch] = useState(false);
+  const [isFiltered, setIsFiltered] = useState(false);
+  const [isStatModalVisible, setIsStatModalVisible] = useState(false);
+  const [averages, setAverages] = useState({
+    avgTime: 0,
+    minTime: 0,
+    maxTime: 0,
+    avgScore: 0,
+    minScore: 0,
+    maxScore: 0,
+    scoreCount: 0,
+    successCount: 0,
+  });
   const navigate = useNavigate();
   const isRequesting = useRef(false);
 
+  const calculateAverages = () => {
+    if (testResults.length === 0) {
+      setAverages({
+        avgTime: 0,
+        minTime: 0,
+        maxTime: 0,
+        avgScore: 0,
+        minScore: 0,
+        maxScore: 0,
+        scoreCount: 0,
+        successCount: 0,
+      });
+      setIsStatModalVisible(true); // 即使没数据也打开弹窗显示0
+      return;
+    }
+
+    // --- 耗时统计 ---
+    const successfulResults = testResults.filter(
+      (r) => r.status === 'success' && r.executionTime && r.executionTime > 0
+    );
+    const successCount = successfulResults.length;
+    let avgTime = 0,
+      minTime = 0,
+      maxTime = 0;
+
+    if (successCount > 0) {
+      const executionTimes = successfulResults.map((r) => r.executionTime!);
+      const totalExecutionTime = executionTimes.reduce(
+        (sum, time) => sum + time,
+        0
+      );
+      avgTime = totalExecutionTime / successCount;
+      minTime = Math.min(...executionTimes);
+      maxTime = Math.max(...executionTimes);
+    }
+
+    // --- 得分统计 ---
+    const scoredResults = testResults.filter(
+      (result) =>
+        result.score !== undefined && result.score !== null && result.score > 0
+    );
+    const scoreCount = scoredResults.length;
+    let avgScore = 0,
+      minScore = 0,
+      maxScore = 0;
+
+    if (scoreCount > 0) {
+      const scores = scoredResults.map((r) => r.score!);
+      const totalScore = scores.reduce((sum, score) => sum + score, 0);
+      avgScore = totalScore / scoreCount;
+      minScore = Math.min(...scores);
+      maxScore = Math.max(...scores);
+    }
+
+    setAverages({
+      avgTime: parseFloat((avgTime / 1000).toFixed(2)),
+      minTime: parseFloat((minTime / 1000).toFixed(2)),
+      maxTime: parseFloat((maxTime / 1000).toFixed(2)),
+      avgScore: parseFloat(avgScore.toFixed(2)),
+      minScore,
+      maxScore,
+      scoreCount,
+      successCount,
+    });
+    setIsStatModalVisible(true);
+  };
+
   useEffect(() => {
-    fetchTestHistory(1, pageSize);
+    fetchTestHistory(1, 10);
   }, []);
 
   const fetchTestHistory = async (page?: number, limit?: number) => {
     if (isRequesting.current) {
       return;
     }
-
     isRequesting.current = true;
     setLoading(true);
 
     try {
-      const response = await tryonApi.getTestHistory(
-        page || currentPage,
-        limit || pageSize
-      );
+      const response = await tryonApi.queryTestHistory({
+        queryType: 'all',
+        page: page || currentPage,
+        limit: limit || pageSize,
+      });
 
       const formattedResults = response.data.map(
         (result: TestHistoryItem, index: number) => ({
@@ -421,26 +499,14 @@ const HistoryPage: React.FC = () => {
         })
       );
 
-      // 使用后端返回的分页信息
       setTestResults(formattedResults);
-
-      // 使用 totalPages * limit 来计算正确的 total 值
-      const correctTotal =
-        response.pagination.totalPages * response.pagination.limit;
-
-      setTotal(correctTotal);
-      setCurrentPage(response.pagination.page);
-      setPageSize(response.pagination.limit);
-
-      // 调试信息
-      console.log('分页信息:', {
-        originalTotal: response.pagination.total,
-        totalPages: response.pagination.totalPages,
-        limit: response.pagination.limit,
-        calculatedTotal: correctTotal,
-        page: response.pagination.page,
-        dataLength: formattedResults.length,
-      });
+      if (response.pagination) {
+        const correctTotal =
+          response.pagination.totalPages * response.pagination.limit;
+        setTotal(correctTotal);
+        setCurrentPage(response.pagination.page);
+        setPageSize(response.pagination.limit);
+      }
     } catch (error) {
       console.error('获取测试历史记录失败:', error);
       message.error('获取测试历史记录失败');
@@ -450,74 +516,32 @@ const HistoryPage: React.FC = () => {
     }
   };
 
-  const handleSearchByTaskId = async (taskId: string) => {
-    if (!taskId.trim()) {
-      message.warning('请输入 taskId');
+  const handleFilterSearch = async () => {
+    const hasTaskId = searchTaskId.trim() !== '';
+    const hasTimeRange = timeRange && timeRange[0] && timeRange[1];
+
+    if (!hasTaskId && !hasTimeRange) {
+      message.warning('请输入至少一个筛选条件（TaskId 或时间范围）');
       return;
     }
 
     setSearchLoading(true);
     try {
-      const result = await tryonApi.getTestResultByTaskId(taskId.trim());
-
-      // 将单个结果转换为数组格式
-      const formattedResult: TestResult = {
-        key: result._id,
-        userImage: result.userImage,
-        clothingImage: result.clothingImage,
-        generatedResult: result.generatedResult,
-        taskId: result.taskId,
-        status: result.status,
-        executionTime: result.executionTime,
-        error: result.error || undefined,
-        score: result.score,
-        savedAt: result.savedAt,
+      const query: TestHistoryQuery = {
+        queryType: 'byFilter',
+        page: 1, // 每次筛选都回到第一页
+        limit: pageSize,
       };
 
-      setTestResults([formattedResult]);
-      setTotal(1);
-      setCurrentPage(1);
-      setIsTimeRangeSearch(false);
-      message.success('检索成功');
-    } catch (error) {
-      console.error('检索失败:', error);
-      message.error('未找到对应的测试结果');
-    } finally {
-      setSearchLoading(false);
-    }
-  };
+      if (hasTaskId) {
+        query.taskId = searchTaskId.trim();
+      }
+      if (hasTimeRange) {
+        query.startTime = timeRange![0].toISOString();
+        query.endTime = timeRange![1].toISOString();
+      }
 
-  const handleSearchByTimeRange = async () => {
-    if (!timeRange || !timeRange[0] || !timeRange[1]) {
-      message.warning('请选择时间范围');
-      return;
-    }
-
-    setSearchLoading(true);
-    try {
-      // 统一使用 UTC 时间
-      const startTime = timeRange[0].toISOString();
-      const endTime = timeRange[1].toISOString();
-
-      // 调试信息
-      console.log('时间范围搜索:', {
-        选择的时间范围: {
-          开始: timeRange[0].format('YYYY-MM-DD HH:mm:ss'),
-          结束: timeRange[1].format('YYYY-MM-DD HH:mm:ss'),
-        },
-        发送到后端的时间_UTC: {
-          开始: startTime,
-          结束: endTime,
-        },
-        用户时区: Intl.DateTimeFormat().resolvedOptions().timeZone,
-      });
-
-      const response = await tryonApi.getTestResultsByTimeRange(
-        startTime,
-        endTime,
-        1,
-        pageSize
-      );
+      const response = await tryonApi.queryTestHistory(query);
 
       const formattedResults = response.data.map(
         (result: TestHistoryItem, index: number) => ({
@@ -535,17 +559,23 @@ const HistoryPage: React.FC = () => {
       );
 
       setTestResults(formattedResults);
-      const correctTotal =
-        response.pagination.totalPages * response.pagination.limit;
-      setTotal(correctTotal);
-      setCurrentPage(response.pagination.page);
-      setPageSize(response.pagination.limit);
-      setIsTimeRangeSearch(true);
-
-      message.success(`找到 ${response.pagination.total} 条记录`);
+      if (response.pagination) {
+        const correctTotal =
+          response.pagination.totalPages * response.pagination.limit;
+        setTotal(correctTotal);
+        setCurrentPage(response.pagination.page);
+        setPageSize(response.pagination.limit);
+      } else {
+        setTotal(formattedResults.length);
+        setCurrentPage(1);
+      }
+      setIsFiltered(true);
+      message.success(
+        `找到 ${response.pagination?.total || formattedResults.length} 条记录`
+      );
     } catch (error) {
-      console.error('时间范围搜索失败:', error);
-      message.error('时间范围搜索失败');
+      console.error('筛选失败:', error);
+      message.error('筛选失败');
     } finally {
       setSearchLoading(false);
     }
@@ -559,9 +589,7 @@ const HistoryPage: React.FC = () => {
   const handleResetSearch = () => {
     setSearchTaskId('');
     setTimeRange(null);
-    setIsTimeRangeSearch(false);
-    setCurrentPage(1);
-    setPageSize(10);
+    setIsFiltered(false);
     fetchTestHistory(1, 10);
   };
 
@@ -569,15 +597,25 @@ const HistoryPage: React.FC = () => {
     setCurrentPage(page);
     setPageSize(size);
 
-    // 根据当前搜索模式决定调用哪个接口
-    if (isTimeRangeSearch && timeRange) {
-      // 统一使用 UTC 时间
-      const startTime = timeRange[0].toISOString();
-      const endTime = timeRange[1].toISOString();
+    if (isFiltered) {
+      // 在筛选模式下，分页需要保留筛选条件
+      const hasTaskId = searchTaskId.trim() !== '';
+      const hasTimeRange = timeRange && timeRange[0] && timeRange[1];
+
+      const query: TestHistoryQuery = {
+        queryType: 'byFilter',
+        page,
+        limit: size,
+      };
+      if (hasTaskId) query.taskId = searchTaskId.trim();
+      if (hasTimeRange) {
+        query.startTime = timeRange![0].toISOString();
+        query.endTime = timeRange![1].toISOString();
+      }
 
       setSearchLoading(true);
       tryonApi
-        .getTestResultsByTimeRange(startTime, endTime, page, size)
+        .queryTestHistory(query)
         .then((response) => {
           const formattedResults = response.data.map(
             (result: TestHistoryItem, index: number) => ({
@@ -593,23 +631,23 @@ const HistoryPage: React.FC = () => {
               savedAt: result.savedAt,
             })
           );
-
           setTestResults(formattedResults);
-          const correctTotal =
-            response.pagination.totalPages * response.pagination.limit;
-          setTotal(correctTotal);
-          setCurrentPage(response.pagination.page);
-          setPageSize(response.pagination.limit);
+          if (response.pagination) {
+            const correctTotal =
+              response.pagination.totalPages * response.pagination.limit;
+            setTotal(correctTotal);
+            setCurrentPage(response.pagination.page);
+            setPageSize(response.pagination.limit);
+          }
         })
         .catch((error) => {
-          console.error('时间范围分页失败:', error);
+          console.error('筛选分页失败:', error);
           message.error('获取数据失败');
         })
         .finally(() => {
           setSearchLoading(false);
         });
     } else {
-      // 页码或页面大小改变时，重新请求接口
       fetchTestHistory(page, size);
     }
   };
@@ -624,7 +662,11 @@ const HistoryPage: React.FC = () => {
     if (sorter && sorter.field) {
       // 排序时重新请求接口，传递排序参数
       // 这里可以根据需要添加排序参数到 API 调用中
-      fetchTestHistory(currentPage, pageSize);
+      if (isFiltered) {
+        handleFilterSearch();
+      } else {
+        fetchTestHistory(currentPage, pageSize);
+      }
     }
   };
 
@@ -698,29 +740,25 @@ const HistoryPage: React.FC = () => {
 
         {/* 检索区域 */}
         <Card className='mb-6'>
-          <div className='space-y-4'>
-            {/* TaskId 检索 */}
+          <div className='flex flex-col gap-4'>
+            {/* 第一行：筛选条件 */}
             <div className='flex items-center gap-4'>
-              <div className='flex-1'>
-                <Search
-                  placeholder='请输入 taskId 进行检索'
+              <div className='flex items-center gap-2' style={{ flex: 1 }}>
+                <Text className='font-semibold whitespace-nowrap'>
+                  Task ID:
+                </Text>
+                <Input
+                  placeholder='请输入 taskId'
                   value={searchTaskId}
                   onChange={(e) => setSearchTaskId(e.target.value)}
-                  onSearch={handleSearchByTaskId}
-                  loading={searchLoading}
-                  enterButton={
-                    <Button type='primary' icon={<SearchOutlined />}>
-                      检索
-                    </Button>
-                  }
+                  onPressEnter={handleFilterSearch}
                   className='!rounded-button'
                 />
               </div>
-            </div>
-
-            {/* 时间范围检索 */}
-            <div className='flex items-center gap-4'>
-              <div className='flex-1'>
+              <div className='flex items-center gap-2' style={{ flex: 1.5 }}>
+                <Text className='font-semibold whitespace-nowrap'>
+                  时间范围:
+                </Text>
                 <RangePicker
                   value={timeRange}
                   onChange={handleTimeRangeChange}
@@ -730,18 +768,26 @@ const HistoryPage: React.FC = () => {
                   className='!rounded-button w-full'
                 />
               </div>
+            </div>
+
+            {/* 第二行：操作按钮 */}
+            <div className='flex justify-end gap-2'>
               <Button
                 type='primary'
-                icon={<CalendarOutlined />}
-                onClick={handleSearchByTimeRange}
+                icon={<SearchOutlined />}
+                onClick={handleFilterSearch}
                 loading={searchLoading}
                 className='!rounded-button'
               >
-                时间筛选
+                筛选
               </Button>
-            </div>
-
-            <div className='flex justify-end'>
+              <Button
+                icon={<BarChartOutlined />}
+                onClick={calculateAverages}
+                className='!rounded-button'
+              >
+                统计
+              </Button>
               <Button
                 icon={<ReloadOutlined />}
                 onClick={handleResetSearch}
@@ -751,9 +797,8 @@ const HistoryPage: React.FC = () => {
               </Button>
             </div>
           </div>
-          <div className='mt-2 text-sm text-gray-500'>
-            提示：可以输入完整的 taskId
-            进行精确检索，或选择时间范围进行筛选，点击重置可以恢复显示所有记录
+          <div className='mt-4 text-sm text-gray-500'>
+            提示：可同时输入 TaskId 和时间范围进行组合筛选，点击重置恢复所有记录
           </div>
         </Card>
 
@@ -772,11 +817,11 @@ const HistoryPage: React.FC = () => {
                 onChange: handlePageChange,
                 showSizeChanger: true,
                 showQuickJumper: true,
-                showTotal: (total: number, range: [number, number]) =>
+                showTotal: (total, range) =>
                   `第 ${range[0]}-${range[1]} 条，共 ${total} 条`,
                 pageSizeOptions: ['10', '20', '50', '100'],
                 hideOnSinglePage: false,
-                onShowSizeChange: (current: number, size: number) => {
+                onShowSizeChange: (current, size) => {
                   console.log('页面大小改变:', { current, size });
                 },
               }}
@@ -790,6 +835,59 @@ const HistoryPage: React.FC = () => {
           </div>
         </div>
       </div>
+
+      <Modal
+        title='当前列表数据统计'
+        open={isStatModalVisible}
+        onCancel={() => setIsStatModalVisible(false)}
+        footer={[
+          <Button
+            key='close'
+            onClick={() => setIsStatModalVisible(false)}
+            className='!rounded-button'
+          >
+            关闭
+          </Button>,
+        ]}
+        width={600}
+      >
+        <Descriptions bordered column={2} className='mt-6 mb-4'>
+          <Descriptions.Item label='平均耗时' span={2}>
+            <span className='text-blue-600 font-bold'>{averages.avgTime}</span>{' '}
+            秒
+          </Descriptions.Item>
+          <Descriptions.Item label='最小耗时'>
+            <span className='text-blue-600 font-bold'>{averages.minTime}</span>{' '}
+            秒
+          </Descriptions.Item>
+          <Descriptions.Item label='最大耗时'>
+            <span className='text-blue-600 font-bold'>{averages.maxTime}</span>{' '}
+            秒
+          </Descriptions.Item>
+
+          <Descriptions.Item label='平均得分' span={2}>
+            <span className='text-green-600 font-bold'>
+              {averages.avgScore}
+            </span>
+          </Descriptions.Item>
+          <Descriptions.Item label='最小得分'>
+            <span className='text-green-600 font-bold'>
+              {averages.minScore}
+            </span>
+          </Descriptions.Item>
+          <Descriptions.Item label='最大得分'>
+            <span className='text-green-600 font-bold'>
+              {averages.maxScore}
+            </span>
+          </Descriptions.Item>
+        </Descriptions>
+        <p className='text-sm text-gray-500'>
+          * 耗时统计基于 {averages.successCount} 条成功的记录。
+        </p>
+        <p className='text-sm text-gray-500'>
+          * 得分统计基于 {averages.scoreCount} 条有效评分 (分数大于0) 的记录。
+        </p>
+      </Modal>
     </div>
   );
 };

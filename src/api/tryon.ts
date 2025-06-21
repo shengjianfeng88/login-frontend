@@ -51,6 +51,29 @@ export type TestHistoryItem = {
   __v: number;
 };
 
+export type TestHistoryQuery = {
+  queryType: 'all' | 'byFilter';
+  taskId?: string;
+  startTime?: string;
+  endTime?: string;
+  page?: number;
+  limit?: number;
+};
+
+export type QueryTestHistoryResponse = {
+  success: boolean;
+  data: TestHistoryItem[];
+  pagination?: {
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  };
+  queryInfo: {
+    queryType: string;
+  };
+};
+
 export type TestHistoryResponse = {
   success: boolean;
   data: TestHistoryItem[];
@@ -167,36 +190,18 @@ export const tryonApi = {
     }
   },
 
-  // 获取测试历史记录
-  getTestHistory: async (
-    page: number = 1,
-    limit: number = 10
-  ): Promise<{
-    data: TestHistoryItem[];
-    pagination: {
-      total: number;
-      page: number;
-      limit: number;
-      totalPages: number;
-    };
-  }> => {
+  // 统一查询接口
+  async queryTestHistory(
+    query: TestHistoryQuery
+  ): Promise<QueryTestHistoryResponse> {
     try {
-      const response = await saveTestResultsAxiosInstance.get(
-        `/api/auth/test-history?page=${page}&limit=${limit}`
+      const response = await saveTestResultsAxiosInstance.post(
+        '/api/auth/test-history/query',
+        query
       );
-
-      // 返回完整的分页信息
-      return {
-        data: response.data.data || [],
-        pagination: response.data.pagination || {
-          total: 0,
-          page: 1,
-          limit: 10,
-          totalPages: 0,
-        },
-      };
+      return response.data;
     } catch (error) {
-      console.error('获取测试历史记录失败:', error);
+      console.error('查询测试历史记录失败:', error);
       throw error;
     }
   },
@@ -211,7 +216,7 @@ export const tryonApi = {
       }
 
       await saveTestResultsAxiosInstance.post(
-        '/api/auth/test-history',
+        '/api/auth/test-history/save',
         results,
         {
           headers: {
