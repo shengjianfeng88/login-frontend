@@ -64,7 +64,6 @@ export interface TestResultsTableProps {
   testResults: TestResult[];
   selectedRowKeys: React.Key[];
   onSelectChange: (newSelectedRowKeys: React.Key[]) => void;
-  onScoreUpdate?: (taskId: string, score: number) => void;
   onDeleteSelected?: (taskIds?: string[]) => Promise<void>;
   pagination?: {
     current: number;
@@ -83,28 +82,10 @@ export const TestResultsTable: React.FC<TestResultsTableProps> = ({
   testResults,
   selectedRowKeys,
   onSelectChange,
-  onScoreUpdate,
   onDeleteSelected,
   pagination,
   onTableChange,
 }) => {
-  const [scoringTaskId, setScoringTaskId] = useState<string | null>(null);
-  const [scoreValue, setScoreValue] = useState<number>(0);
-
-  const handleScoreSubmit = async (taskId: string) => {
-    if (onScoreUpdate) {
-      try {
-        await onScoreUpdate(taskId, scoreValue);
-        setScoringTaskId(null);
-        setScoreValue(0);
-        message.success('分数更新成功');
-      } catch (error) {
-        console.error('分数更新失败:', error);
-        message.error('分数更新失败');
-      }
-    }
-  };
-
   const handleDeleteButtonClick = () => {
     if (selectedRowKeys.length === 0) {
       message.warning('请选择要删除的项目');
@@ -228,58 +209,7 @@ export const TestResultsTable: React.FC<TestResultsTableProps> = ({
         if (record.status !== 'success') {
           return <span className='text-gray-400'>-</span>;
         }
-
-        if (scoringTaskId === record.taskId) {
-          return (
-            <div className='flex items-center gap-2'>
-              <input
-                type='number'
-                min='0'
-                max='100'
-                value={scoreValue}
-                onChange={(e) => setScoreValue(Number(e.target.value))}
-                className='w-16 px-2 py-1 border rounded text-sm'
-                placeholder='分数'
-              />
-              <Button
-                size='small'
-                type='primary'
-                onClick={() => handleScoreSubmit(record.taskId!)}
-                className='!rounded-button'
-              >
-                提交
-              </Button>
-              <Button
-                size='small'
-                onClick={() => {
-                  setScoringTaskId(null);
-                  setScoreValue(0);
-                }}
-                className='!rounded-button'
-              >
-                取消
-              </Button>
-            </div>
-          );
-        }
-
-        return (
-          <div className='flex items-center gap-2'>
-            <span className='font-medium'>{score || '-'}</span>
-            {record.taskId && (
-              <Button
-                size='small'
-                onClick={() => {
-                  setScoringTaskId(record.taskId!);
-                  setScoreValue(score || 0);
-                }}
-                className='!rounded-button'
-              >
-                打分
-              </Button>
-            )}
-          </div>
-        );
+        return <span className='font-medium'>{score || '-'}</span>;
       },
     },
     {
