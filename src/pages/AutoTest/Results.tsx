@@ -66,6 +66,17 @@ export interface TestResultsTableProps {
   onSelectChange: (newSelectedRowKeys: React.Key[]) => void;
   onScoreUpdate?: (taskId: string, score: number) => void;
   onDeleteSelected?: (taskIds?: string[]) => Promise<void>;
+  pagination?: {
+    current: number;
+    pageSize: number;
+    total: number;
+    onChange: (page: number, pageSize: number) => void;
+    showSizeChanger?: boolean;
+    showQuickJumper?: boolean;
+    showTotal?: (total: number, range: [number, number]) => string;
+    pageSizeOptions?: string[];
+  };
+  onTableChange?: (...args: unknown[]) => void;
 }
 
 export const TestResultsTable: React.FC<TestResultsTableProps> = ({
@@ -74,6 +85,8 @@ export const TestResultsTable: React.FC<TestResultsTableProps> = ({
   onSelectChange,
   onScoreUpdate,
   onDeleteSelected,
+  pagination,
+  onTableChange,
 }) => {
   const [scoringTaskId, setScoringTaskId] = useState<string | null>(null);
   const [scoreValue, setScoreValue] = useState<number>(0);
@@ -310,9 +323,10 @@ export const TestResultsTable: React.FC<TestResultsTableProps> = ({
         rowSelection={rowSelection}
         columns={columns}
         dataSource={testResults}
-        pagination={false}
+        pagination={pagination || false}
         rowKey='key'
         className='test-results-table'
+        onChange={pagination ? onTableChange : undefined}
       />
     </div>
   );
@@ -528,20 +542,25 @@ const ResultsPage: React.FC<ResultsProps> = ({
   };
 
   const handleSaveResults = async () => {
-    if (testResults.length === 0) {
-      message.warning('没有可保存的测试结果');
+    if (selectedRowKeys.length === 0) {
+      message.warning('请选择要保存的测试结果');
       return;
     }
 
     setSaving(true);
     try {
+      // 获取选中的测试结果
+      const selectedResults = testResults.filter((result) =>
+        selectedRowKeys.includes(result.key)
+      );
+
       // 过滤出已完成的测试结果
-      const completedResults = testResults.filter(
+      const completedResults = selectedResults.filter(
         (result) => result.status === 'success' || result.status === 'FAILED'
       );
 
       if (completedResults.length === 0) {
-        message.warning('没有已完成的测试结果可保存');
+        message.warning('选中的项目中没有已完成的测试结果可保存');
         return;
       }
 
@@ -549,7 +568,7 @@ const ResultsPage: React.FC<ResultsProps> = ({
       const apiResults = completedResults.map((result) => ({
         userImage: result.userImage,
         clothingImage: result.clothingImage,
-        generatedResult: result.generatedResult, // 保存原始数据，不转换为 blob URL
+        generatedResult: 'test_result_placeholder', // 暂时用字符串替代，避免 base64 数据过大
         status: result.status || 'unknown',
         taskId: result.taskId,
         executionTime: result.executionTime,
@@ -557,7 +576,7 @@ const ResultsPage: React.FC<ResultsProps> = ({
 
       // 调用保存接口
       await tryonApi.saveTestResults(apiResults);
-      message.success('测试结果保存成功');
+      message.success(`成功保存 ${completedResults.length} 个测试结果`);
     } catch (error) {
       console.error('保存测试结果失败:', error);
       message.error('保存测试结果失败');
