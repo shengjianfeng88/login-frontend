@@ -14,6 +14,7 @@ import VerifyEmail from './pages/VerifyEmail';
 import ConfirmRegister from '@/pages/ConfirmRegister';
 import AutoTest from './pages/AutoTest/index';
 import ChatWidget from './pages/ChatWidget';
+import ImageConvertTest from './pages/ImageConvertTest';
 
 function App() {
   const googleClientId =
@@ -39,6 +40,10 @@ function App() {
               <Route path='/confirm-register' element={<ConfirmRegister />} />
               <Route path='/auto-test/*' element={<AutoTest />} />
               <Route path='/faishion-chatbot' element={<ChatWidget />} />
+              <Route
+                path='/image-convert-test'
+                element={<ImageConvertTest />}
+              />
             </Routes>
           </Suspense>
         </Router>
