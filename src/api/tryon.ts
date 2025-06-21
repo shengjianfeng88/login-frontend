@@ -2,90 +2,282 @@ import axios from 'axios';
 
 // 创建 axios 实例
 const axiosInstance = axios.create({
-    baseURL: 'https://tryon-advanced-canary.faishion.ai',
-    headers: {
-        'Content-Type': 'application/json'
-    }
+  baseURL: 'https://tryon-advanced.faishion.ai',
+  headers: {
+    'Content-Type': 'application/json',
+  },
 });
 
+// 创建用于上传图片的 axios 实例
+const uploadAxiosInstance = axios.create({
+  baseURL: 'http://localhost:3001',
+  headers: {
+    'Content-Type': 'multipart/form-data',
+  },
+});
+
+// 创建用于保存测试结果的 axios 实例
+const saveTestResultsAxiosInstance = axios.create({
+  baseURL: 'http://localhost:3001',
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
 // 类型定义
-type GetTryOnParams = {
-    access_token: string
-    face: string
-    model: string
-}
+export type UploadImageResponse = {
+  success: boolean;
+  url?: string;
+  message?: string;
+  error?: string;
+};
+
+export type TestHistoryItem = {
+  _id: string;
+  testNo?: string;
+  userImage: string;
+  clothingImage: string;
+  generatedResult: string;
+  taskId: string;
+  status: string;
+  completedSteps?: number;
+  estimatedSteps?: number;
+  executionTime: number;
+  delayTime?: number;
+  cost?: number;
+  score?: number;
+  error?: string | null;
+  createdAt: string;
+  __v: number;
+};
+
+export type TestHistoryResponse = {
+  success: boolean;
+  data: TestHistoryItem[];
+  pagination: {
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  };
+};
+
+export type TestResult = {
+  userImage: string;
+  clothingImage: string;
+  generatedResult: string;
+  status: string;
+  taskId?: string;
+  executionTime?: number;
+};
 
 export type TryOnResponse = {
-    image: string
-    uuid?: string
-}
-
-// 辅助函数：将图片 URL 转换为 base64
-const getBase64FromUrl = async (url: string): Promise<string> => {
-    try {
-        const response = await fetch(url);
-        const blob = await response.blob();
-        return new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                const base64data = reader.result as string;
-                // 移除 data:image/jpeg;base64, 前缀
-                const base64 = base64data.split(',')[1];
-                resolve(base64);
-            };
-            reader.onerror = reject;
-            reader.readAsDataURL(blob);
-        });
-    } catch (error) {
-        console.error('转换图片失败:', error);
-        throw error;
-    }
+  image: string;
+  uuid?: string;
+  status: string;
 };
+
+// 辅助函数：将 File 对象转换为 FormData
+function createFormData(file: File): FormData {
+  const formData = new FormData();
+  formData.append('file', file); // 字段名必须是 'file'
+  return formData;
+}
 
 // API 函数
 export const tryonApi = {
-    // 发起试穿请求
-    async startTryon(userImage: string, clothingImage: string): Promise<TryOnResponse> {
-        try {
-            // 转换图片为 base64
-            const [userBase64, clothingBase64] = await Promise.all([
-                getBase64FromUrl(userImage),
-                getBase64FromUrl(clothingImage)
-            ]);
+  // 上传图片
+  async uploadImage(file: File): Promise<UploadImageResponse> {
+    try {
+      // 获取认证 token
+      const token = localStorage.getItem('accessToken');
+      if (!token) {
+        throw new Error('未找到认证 token，请先登录');
+      }
 
-            const response = await axiosInstance.post(
-                '/upload/images',
-                {
-                    // access_token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2ODM5MzVmZWIzMjliNTI0MTNkOGQ2YTUiLCJwaWN0dXJlIjoiaHR0cHM6Ly9saDMuZ29vZ2xldXNlcmNvbnRlbnQuY29tL2EvQUNnOG9jSVN5dHEtQnNWcTItRTNXNGFoTG9CZTdYRVdZb0h1RmhoU3V4VjRLTy02cEdUTHlBPXM5Ni1jIiwiZW1haWwiOiJqaWFuZmVuZ3NoZW5nMEBnbWFpbC5jb20iLCJpYXQiOjE3NDk4ODg4NTgsImV4cCI6MTc0OTg4OTc1OH0.woufGJfaaL9fz6DDJmAc3GAxm4Bg2aGMLFqgxlbAhaA',
-                    face: userBase64,
-                    model: clothingBase64,
-                    prompt: ''
-                }
-            );
-            return response.data;
-        } catch (error) {
-            console.error('试穿请求失败:', error);
-            throw error;
+      const formData = createFormData(file);
+      const response = await uploadAxiosInstance.post(
+        '/api/auth/upload',
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+            Authorization: `Bearer ${token}`,
+          },
         }
-    },
-    // 获取测试历史记录
-    getTestHistory: async (): Promise<any[]> => {
-        try {
-            const response = await axiosInstance.get('/api/auth/test-history?page=1&limit=10');
-            return response.data;
-        } catch (error) {
-            console.error('获取测试历史记录失败:', error);
-            throw error;
-        }
-    },
+      );
 
-    // 保存测试结果
-    saveTestResults: async (results: any[]): Promise<void> => {
-        try {
-            await axiosInstance.post('/api/auth/test-history', { results });
-        } catch (error) {
-            console.error('保存测试结果失败:', error);
-            throw error;
+      // 后端返回格式: { url: data.Location }
+      return {
+        success: true,
+        url: response.data.url,
+        message: '图片上传成功',
+      };
+    } catch (error: unknown) {
+      console.error('图片上传失败:', error);
+
+      // 处理不同类型的错误
+      if (axios.isAxiosError(error)) {
+        // 服务器返回错误响应
+        const errorMessage = error.response?.data?.error || '图片上传失败';
+        return {
+          success: false,
+          error: errorMessage,
+        };
+      } else if (error instanceof Error) {
+        // 其他错误
+        return {
+          success: false,
+          error: error.message || '图片上传失败',
+        };
+      } else {
+        // 未知错误
+        return {
+          success: false,
+          error: '图片上传失败',
+        };
+      }
+    }
+  },
+
+  // 发起试穿请求
+  async startTryon(
+    userImage: string,
+    clothingImage: string
+  ): Promise<TryOnResponse> {
+    try {
+      // 直接使用图片 URL，不再转换为 base64
+      const response = await axiosInstance.post('/upload/images', {
+        // access_token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2ODM5MzVmZWIzMjliNTI0MTNkOGQ2YTUiLCJwaWN0dXJlIjoiaHR0cHM6Ly9saDMuZ29vZ2xldXNlcmNvbnRlbnQuY29tL2EvQUNnOG9jSVN5dHEtQnNWcTItRTNXNGFoTG9CZTdYRVdZb0h1RmhoU3V4VjRLTy02cEdUTHlBPXM5Ni1jIiwiZW1haWwiOiJqaWFuZmVuZ3NoZW5nMEBnbWFpbC5jb20iLCJpYXQiOjE3NDk4ODg4NTgsImV4cCI6MTc0OTg4OTc1OH0.woufGJfaaL9fz6DDJmAc3GAxm4Bg2aGMLFqgxlbAhaA',
+        face: userImage, // 直接使用 URL
+        model: clothingImage, // 直接使用 URL
+        prompt: '',
+      });
+      return response.data;
+    } catch (error) {
+      console.error('试穿请求失败:', error);
+      throw error;
+    }
+  },
+
+  // 获取测试历史记录
+  getTestHistory: async (): Promise<TestHistoryItem[]> => {
+    try {
+      const response = await saveTestResultsAxiosInstance.get(
+        '/api/auth/test-history?page=1&limit=10'
+      );
+
+      // 返回 data 数组，而不是整个响应
+      return response.data.data || [];
+    } catch (error) {
+      console.error('获取测试历史记录失败:', error);
+      throw error;
+    }
+  },
+
+  // 保存测试结果
+  saveTestResults: async (results: TestResult[]): Promise<void> => {
+    try {
+      // 获取认证 token
+      const token = localStorage.getItem('accessToken');
+      if (!token) {
+        throw new Error('未找到认证 token，请先登录');
+      }
+
+      await saveTestResultsAxiosInstance.post(
+        '/api/auth/test-history',
+        results,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         }
-    },
-}; 
+      );
+    } catch (error) {
+      console.error('保存测试结果失败:', error);
+      throw error;
+    }
+  },
+
+  // 更新测试结果分数
+  updateScore: async (
+    taskId: string,
+    score: number
+  ): Promise<TestHistoryItem> => {
+    try {
+      // 获取认证 token
+      const token = localStorage.getItem('accessToken');
+      if (!token) {
+        throw new Error('未找到认证 token，请先登录');
+      }
+
+      const response = await saveTestResultsAxiosInstance.post(
+        '/api/auth/test-history/update-score',
+        { taskId, score },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      return response.data.data;
+    } catch (error) {
+      console.error('更新分数失败:', error);
+      throw error;
+    }
+  },
+
+  // 批量删除测试结果
+  deleteTestResults: async (
+    taskIds: string[]
+  ): Promise<{ deletedCount: number; taskIds: string[] }> => {
+    try {
+      // 获取认证 token
+      const token = localStorage.getItem('accessToken');
+      if (!token) {
+        throw new Error('未找到认证 token，请先登录');
+      }
+
+      const response = await saveTestResultsAxiosInstance.post(
+        '/api/auth/test-history/delete-task',
+        { taskIds },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      return response.data.data;
+    } catch (error) {
+      console.error('删除测试结果失败:', error);
+      throw error;
+    }
+  },
+
+  // 根据 taskId 获取单个测试结果
+  getTestResultByTaskId: async (taskId: string): Promise<TestHistoryItem> => {
+    try {
+      // 获取认证 token
+      const token = localStorage.getItem('accessToken');
+      if (!token) {
+        throw new Error('未找到认证 token，请先登录');
+      }
+
+      const response = await saveTestResultsAxiosInstance.post(
+        '/api/auth/test-history/get-task',
+        { taskId },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      return response.data.data;
+    } catch (error) {
+      console.error('获取测试结果失败:', error);
+      throw error;
+    }
+  },
+};
