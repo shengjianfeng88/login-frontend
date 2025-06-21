@@ -142,16 +142,23 @@ export const tryonApi = {
   // 发起试穿请求
   async startTryon(
     userImage: string,
-    clothingImage: string
+    clothingImage: string,
+    signal?: AbortSignal
   ): Promise<TryOnResponse> {
     try {
       // 直接使用图片 URL，不再转换为 base64
-      const response = await axiosInstance.post('/upload/images', {
-        // access_token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2ODM5MzVmZWIzMjliNTI0MTNkOGQ2YTUiLCJwaWN0dXJlIjoiaHR0cHM6Ly9saDMuZ29vZ2xldXNlcmNvbnRlbnQuY29tL2EvQUNnOG9jSVN5dHEtQnNWcTItRTNXNGFoTG9CZTdYRVdZb0h1RmhoU3V4VjRLTy02cEdUTHlBPXM5Ni1jIiwiZW1haWwiOiJqaWFuZmVuZ3NoZW5nMEBnbWFpbC5jb20iLCJpYXQiOjE3NDk4ODg4NTgsImV4cCI6MTc0OTg4OTc1OH0.woufGJfaaL9fz6DDJmAc3GAxm4Bg2aGMLFqgxlbAhaA',
-        face: userImage, // 直接使用 URL
-        model: clothingImage, // 直接使用 URL
-        prompt: '',
-      });
+      const response = await axiosInstance.post(
+        '/upload/images',
+        {
+          // access_token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2ODM5MzVmZWIzMjliNTI0MTNkOGQ2YTUiLCJwaWN0dXJlIjoiaHR0cHM6Ly9saDMuZ29vZ2xldXNlcmNvbnRlbnQuY29tL2EvQUNnOG9jSVN5dHEtQnNWcTItRTNXNGFoTG9CZTdYRVdZb0h1RmhoU3V4VjRLTy02cEdUTHlBPXM5Ni1jIiwiZW1haWwiOiJqaWFuZmVuZ3NoZW5nMEBnbWFpbC5jb20iLCJpYXQiOjE3NDk4ODg4NTgsImV4cCI6MTc0OTg4OTc1OH0.woufGJfaaL9fz6DDJmAc3GAxm4Bg2aGMLFqgxlbAhaA',
+          face: userImage, // 直接使用 URL
+          model: clothingImage, // 直接使用 URL
+          prompt: '',
+        },
+        {
+          signal, // 添加 signal 用于终止请求
+        }
+      );
       return response.data;
     } catch (error) {
       console.error('试穿请求失败:', error);

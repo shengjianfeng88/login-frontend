@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Button,
   Table,
@@ -177,6 +177,8 @@ export const TestResultsTable: React.FC<TestResultsTableProps> = ({
             />
           ) : record.status === 'FAILED' ? (
             <Text type='danger'>Failed</Text>
+          ) : record.status === 'CANCELLED' ? (
+            <Text type='warning'>已终止</Text>
           ) : (
             <Text type='secondary'>Waiting</Text>
           )}
@@ -196,6 +198,8 @@ export const TestResultsTable: React.FC<TestResultsTableProps> = ({
           return <span className='text-red-500'>失败</span>;
         } else if (record.status === 'IN_PROGRESS') {
           return <span className='text-blue-500'>处理中</span>;
+        } else if (record.status === 'CANCELLED') {
+          return <span className='text-orange-500'>已终止</span>;
         }
         return '-';
       },
@@ -284,7 +288,9 @@ const ResultsPage: React.FC<ResultsProps> = ({
   setLoading,
 }) => {
   const [saving, setSaving] = useState(false);
+  const [isCancelling, setIsCancelling] = useState(false);
   const navigate = useNavigate();
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
     // 只在 testResults 为空时初始化
@@ -319,12 +325,21 @@ const ResultsPage: React.FC<ResultsProps> = ({
     }
 
     setLoading(true);
+    setIsCancelling(false);
+    // 创建新的 AbortController
+    abortControllerRef.current = new AbortController();
+
     const selectedResults = testResults.filter((item) =>
       selectedRowKeys.includes(item.key)
     );
 
     try {
       for (const test of selectedResults) {
+        // 检查是否被终止
+        if (abortControllerRef.current?.signal.aborted) {
+          break;
+        }
+
         try {
           // 记录开始时间
           const startTime = Date.now();
@@ -342,11 +357,30 @@ const ResultsPage: React.FC<ResultsProps> = ({
             })
           );
 
-          // 调用试穿接口
+          // 调用试穿接口，传入 signal 用于终止
           const response = await tryonApi.startTryon(
             test.userImage,
-            test.clothingImage
+            test.clothingImage,
+            abortControllerRef.current?.signal
           );
+
+          // 检查是否被终止
+          if (abortControllerRef.current?.signal.aborted) {
+            // 更新状态为已终止
+            setTestResults((prev) =>
+              prev.map((item) => {
+                if (item.key === test.key) {
+                  return {
+                    ...item,
+                    status: 'CANCELLED',
+                    error: '用户终止了生成',
+                  };
+                }
+                return item;
+              })
+            );
+            break;
+          }
 
           // 计算耗时
           const executionTime = Date.now() - startTime;
@@ -367,6 +401,24 @@ const ResultsPage: React.FC<ResultsProps> = ({
             })
           );
         } catch (error) {
+          // 检查是否是终止错误
+          if (error instanceof Error && error.name === 'AbortError') {
+            // 更新状态为已终止
+            setTestResults((prev) =>
+              prev.map((item) => {
+                if (item.key === test.key) {
+                  return {
+                    ...item,
+                    status: 'CANCELLED',
+                    error: '用户终止了生成',
+                  };
+                }
+                return item;
+              })
+            );
+            break;
+          }
+
           console.error('测试失败:', error);
           message.error(`测试 ${test.key} 失败`);
 
@@ -390,6 +442,16 @@ const ResultsPage: React.FC<ResultsProps> = ({
       message.error('批量测试失败');
     } finally {
       setLoading(false);
+      setIsCancelling(false);
+      abortControllerRef.current = null;
+    }
+  };
+
+  const handleCancelGeneration = () => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      setIsCancelling(true);
+      message.info('正在终止生成...');
     }
   };
 
@@ -558,6 +620,17 @@ const ResultsPage: React.FC<ResultsProps> = ({
             >
               {loading ? 'Processing...' : 'Test Selected'}
             </Button>
+            {loading && (
+              <Button
+                type='primary'
+                danger
+                loading={isCancelling}
+                onClick={handleCancelGeneration}
+                className='!rounded-button whitespace-nowrap'
+              >
+                {isCancelling ? '终止中...' : '终止生成'}
+              </Button>
+            )}
             <Button
               type='primary'
               icon={<HistoryOutlined />}
@@ -577,30 +650,6 @@ const ResultsPage: React.FC<ResultsProps> = ({
             </Button>
           </div>
         </div>
-        {/* <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-                    <div className="flex justify-between items-center mb-4">
-                        <Text strong>Test Progress</Text>
-                        <div className="grid grid-cols-3 gap-8">
-                            <div className="text-center">
-                                <Text type="secondary">Current Version (v11) Avg Score</Text>
-                                <div className="text-2xl font-bold">4.2</div>
-                            </div>
-                            <div className="text-center">
-                                <Text type="secondary">Previous Version (v10) Avg Score</Text>
-                                <div className="text-2xl font-bold">3.8</div>
-                            </div>
-                            <div className="text-center">
-                                <Text type="secondary">Improvement</Text>
-                                <div className="text-2xl font-bold text-green-500">+10.5%</div>
-                            </div>
-                        </div>
-                    </div>
-                    <Progress percent={100} showInfo={false} strokeColor="#4caf50" />
-                    <div className="flex justify-between mt-2">
-                        <Text type="secondary">5/5 success</Text>
-                        <div className="h-6 w-32" id="improvement-chart"></div>
-                    </div>
-                </div> */}
         <div className='flex gap-6'>
           <div className='flex-grow'>
             <TestResultsTable
