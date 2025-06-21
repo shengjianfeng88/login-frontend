@@ -66,6 +66,8 @@ interface HistoryTableProps {
     showQuickJumper?: boolean;
     showTotal?: (total: number, range: [number, number]) => string;
     pageSizeOptions?: string[];
+    hideOnSinglePage?: boolean;
+    onShowSizeChange?: (current: number, size: number) => void;
   };
   onTableChange?: (...args: unknown[]) => void;
 }
@@ -337,7 +339,6 @@ const HistoryTable: React.FC<HistoryTableProps> = ({
 
 const HistoryPage: React.FC = () => {
   const [testResults, setTestResults] = useState<TestResult[]>([]);
-  const [allTestResults, setAllTestResults] = useState<TestResult[]>([]);
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchLoading, setSearchLoading] = useState(false);
@@ -349,10 +350,10 @@ const HistoryPage: React.FC = () => {
   const isRequesting = useRef(false);
 
   useEffect(() => {
-    fetchTestHistory();
+    fetchTestHistory(1, pageSize);
   }, []);
 
-  const fetchTestHistory = async () => {
+  const fetchTestHistory = async (page?: number, limit?: number) => {
     if (isRequesting.current) {
       return;
     }
@@ -361,8 +362,12 @@ const HistoryPage: React.FC = () => {
     setLoading(true);
 
     try {
-      const response = await tryonApi.getTestHistory();
-      const formattedResults = response.map(
+      const response = await tryonApi.getTestHistory(
+        page || currentPage,
+        limit || pageSize
+      );
+
+      const formattedResults = response.data.map(
         (result: TestHistoryItem, index: number) => ({
           key: result._id || index.toString(),
           userImage: result.userImage,
@@ -376,14 +381,26 @@ const HistoryPage: React.FC = () => {
         })
       );
 
-      setAllTestResults(formattedResults);
-      setTotal(formattedResults.length);
+      // 使用后端返回的分页信息
+      setTestResults(formattedResults);
 
-      // 应用当前页的分页
-      const startIndex = (currentPage - 1) * pageSize;
-      const endIndex = startIndex + pageSize;
-      const paginatedResults = formattedResults.slice(startIndex, endIndex);
-      setTestResults(paginatedResults);
+      // 使用 totalPages * limit 来计算正确的 total 值
+      const correctTotal =
+        response.pagination.totalPages * response.pagination.limit;
+
+      setTotal(correctTotal);
+      setCurrentPage(response.pagination.page);
+      setPageSize(response.pagination.limit);
+
+      // 调试信息
+      console.log('分页信息:', {
+        originalTotal: response.pagination.total,
+        totalPages: response.pagination.totalPages,
+        limit: response.pagination.limit,
+        calculatedTotal: correctTotal,
+        page: response.pagination.page,
+        dataLength: formattedResults.length,
+      });
     } catch (error) {
       console.error('获取测试历史记录失败:', error);
       message.error('获取测试历史记录失败');
@@ -417,7 +434,6 @@ const HistoryPage: React.FC = () => {
       };
 
       setTestResults([formattedResult]);
-      setAllTestResults([formattedResult]);
       setTotal(1);
       setCurrentPage(1);
       message.success('检索成功');
@@ -433,18 +449,15 @@ const HistoryPage: React.FC = () => {
     setSearchTaskId('');
     setCurrentPage(1);
     setPageSize(10);
-    fetchTestHistory();
+    fetchTestHistory(1, 10);
   };
 
   const handlePageChange = (page: number, size: number) => {
     setCurrentPage(page);
     setPageSize(size);
 
-    // 使用已有的数据进行分页，避免重复请求
-    const startIndex = (page - 1) * size;
-    const endIndex = startIndex + size;
-    const paginatedResults = allTestResults.slice(startIndex, endIndex);
-    setTestResults(paginatedResults);
+    // 页码或页面大小改变时，重新请求接口
+    fetchTestHistory(page, size);
   };
 
   const handleTableChange = (...args: unknown[]) => {
@@ -455,32 +468,9 @@ const HistoryPage: React.FC = () => {
     };
 
     if (sorter && sorter.field) {
-      // 对数据进行排序
-      const sortedData = [...allTestResults].sort((a, b) => {
-        const field = sorter.field as keyof TestResult;
-        const order = sorter.order === 'ascend' ? 1 : -1;
-
-        let valueA = a[field];
-        let valueB = b[field];
-
-        // 处理 undefined 和 null 值
-        if (valueA === undefined || valueA === null) valueA = 0;
-        if (valueB === undefined || valueB === null) valueB = 0;
-
-        if (typeof valueA === 'number' && typeof valueB === 'number') {
-          return (valueA - valueB) * order;
-        }
-
-        return 0;
-      });
-
-      setAllTestResults(sortedData);
-
-      // 重新计算当前页的数据
-      const startIndex = (currentPage - 1) * pageSize;
-      const endIndex = startIndex + pageSize;
-      const paginatedResults = sortedData.slice(startIndex, endIndex);
-      setTestResults(paginatedResults);
+      // 排序时重新请求接口，传递排序参数
+      // 这里可以根据需要添加排序参数到 API 调用中
+      fetchTestHistory(currentPage, pageSize);
     }
   };
 
@@ -488,21 +478,8 @@ const HistoryPage: React.FC = () => {
     try {
       const updatedResult = await tryonApi.updateScore(taskId, score);
 
-      // 更新所有数据中的分数
-      const updatedAllResults = allTestResults.map((result) =>
-        result.taskId === taskId
-          ? { ...result, score: updatedResult.score }
-          : result
-      );
-      setAllTestResults(updatedAllResults);
-
-      // 更新当前页数据中的分数
-      const updatedTestResults = testResults.map((result) =>
-        result.taskId === taskId
-          ? { ...result, score: updatedResult.score }
-          : result
-      );
-      setTestResults(updatedTestResults);
+      // 打分后重新请求当前页的数据
+      fetchTestHistory(currentPage, pageSize);
 
       return updatedResult;
     } catch (error) {
@@ -530,18 +507,8 @@ const HistoryPage: React.FC = () => {
 
       const result = await tryonApi.deleteTestResults(selectedTaskIds);
 
-      // 从本地状态中移除已删除的项目
-      const updatedAllResults = allTestResults.filter(
-        (result) => !selectedTaskIds.includes(result.taskId!)
-      );
-      setAllTestResults(updatedAllResults);
-      setTotal(updatedAllResults.length);
-
-      // 重新计算当前页的数据
-      const startIndex = (currentPage - 1) * pageSize;
-      const endIndex = startIndex + pageSize;
-      const paginatedResults = updatedAllResults.slice(startIndex, endIndex);
-      setTestResults(paginatedResults);
+      // 删除后重新请求当前页的数据
+      fetchTestHistory(currentPage, pageSize);
 
       // 清空选中状态
       setSelectedRowKeys([]);
@@ -625,6 +592,10 @@ const HistoryPage: React.FC = () => {
                 showTotal: (total: number, range: [number, number]) =>
                   `第 ${range[0]}-${range[1]} 条，共 ${total} 条`,
                 pageSizeOptions: ['10', '20', '50', '100'],
+                hideOnSinglePage: false,
+                onShowSizeChange: (current: number, size: number) => {
+                  console.log('页面大小改变:', { current, size });
+                },
               }}
               onTableChange={handleTableChange}
             />

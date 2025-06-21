@@ -167,14 +167,33 @@ export const tryonApi = {
   },
 
   // 获取测试历史记录
-  getTestHistory: async (): Promise<TestHistoryItem[]> => {
+  getTestHistory: async (
+    page: number = 1,
+    limit: number = 10
+  ): Promise<{
+    data: TestHistoryItem[];
+    pagination: {
+      total: number;
+      page: number;
+      limit: number;
+      totalPages: number;
+    };
+  }> => {
     try {
       const response = await saveTestResultsAxiosInstance.get(
-        '/api/auth/test-history?page=1&limit=10'
+        `/api/auth/test-history?page=${page}&limit=${limit}`
       );
 
-      // 返回 data 数组，而不是整个响应
-      return response.data.data || [];
+      // 返回完整的分页信息
+      return {
+        data: response.data.data || [],
+        pagination: response.data.pagination || {
+          total: 0,
+          page: 1,
+          limit: 10,
+          totalPages: 0,
+        },
+      };
     } catch (error) {
       console.error('获取测试历史记录失败:', error);
       throw error;
