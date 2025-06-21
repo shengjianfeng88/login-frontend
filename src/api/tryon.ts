@@ -46,6 +46,7 @@ export type TestHistoryItem = {
   cost?: number;
   score?: number;
   error?: string | null;
+  savedAt?: string;
   createdAt: string;
   __v: number;
 };
@@ -303,6 +304,52 @@ export const tryonApi = {
       return response.data.data;
     } catch (error) {
       console.error('获取测试结果失败:', error);
+      throw error;
+    }
+  },
+
+  // 按时间范围获取测试结果
+  getTestResultsByTimeRange: async (
+    startTime: string,
+    endTime: string,
+    page: number = 1,
+    limit: number = 10
+  ): Promise<{
+    data: TestHistoryItem[];
+    pagination: {
+      total: number;
+      page: number;
+      limit: number;
+      totalPages: number;
+    };
+    timeRange: { startTime: Date; endTime: Date };
+  }> => {
+    try {
+      const response = await saveTestResultsAxiosInstance.post(
+        '/api/auth/test-history/get-by-time-range',
+        {
+          startTime,
+          endTime,
+          page,
+          limit,
+        }
+      );
+
+      return {
+        data: response.data.data || [],
+        pagination: response.data.pagination || {
+          total: 0,
+          page: 1,
+          limit: 10,
+          totalPages: 0,
+        },
+        timeRange: response.data.timeRange || {
+          startTime: new Date(),
+          endTime: new Date(),
+        },
+      };
+    } catch (error) {
+      console.error('按时间范围获取测试结果失败:', error);
       throw error;
     }
   },

@@ -9,19 +9,23 @@ import {
   Checkbox,
   Image,
   Modal,
+  DatePicker,
 } from 'antd';
 import {
   ArrowLeftOutlined,
   SearchOutlined,
   ReloadOutlined,
+  CalendarOutlined,
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import { useNavigate } from 'react-router-dom';
 import { tryonApi, TestHistoryItem } from '../../api/tryon';
 import { TestResult } from './Results';
+import dayjs from 'dayjs';
 
 const { Title, Text } = Typography;
 const { Search } = Input;
+const { RangePicker } = DatePicker;
 
 // 辅助函数：将 base64 转换为 blob URL
 const base64ToBlobUrl = (base64Data: string): string => {
@@ -294,6 +298,37 @@ const HistoryTable: React.FC<HistoryTableProps> = ({
       width: 200,
       className: 'whitespace-nowrap',
     },
+    {
+      title: '保存时间',
+      dataIndex: 'savedAt',
+      key: 'savedAt',
+      width: 180,
+      className: 'whitespace-nowrap',
+      sorter: (a, b) => {
+        const timeA = a.savedAt ? new Date(a.savedAt).getTime() : 0;
+        const timeB = b.savedAt ? new Date(b.savedAt).getTime() : 0;
+        return timeA - timeB;
+      },
+      render: (savedAt) => {
+        if (!savedAt) {
+          return <span className='text-gray-400'>-</span>;
+        }
+
+        try {
+          const date = new Date(savedAt);
+          return (
+            <div className='text-sm'>
+              <div>{date.toLocaleDateString('zh-CN')}</div>
+              <div className='text-gray-500'>
+                {date.toLocaleTimeString('zh-CN')}
+              </div>
+            </div>
+          );
+        } catch {
+          return <span className='text-gray-400'>格式错误</span>;
+        }
+      },
+    },
   ];
 
   const rowSelection = {
@@ -346,6 +381,10 @@ const HistoryPage: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [total, setTotal] = useState(0);
+  const [timeRange, setTimeRange] = useState<[dayjs.Dayjs, dayjs.Dayjs] | null>(
+    null
+  );
+  const [isTimeRangeSearch, setIsTimeRangeSearch] = useState(false);
   const navigate = useNavigate();
   const isRequesting = useRef(false);
 
@@ -378,6 +417,7 @@ const HistoryPage: React.FC = () => {
           executionTime: result.executionTime,
           error: result.error || undefined,
           score: result.score,
+          savedAt: result.savedAt,
         })
       );
 
@@ -431,11 +471,13 @@ const HistoryPage: React.FC = () => {
         executionTime: result.executionTime,
         error: result.error || undefined,
         score: result.score,
+        savedAt: result.savedAt,
       };
 
       setTestResults([formattedResult]);
       setTotal(1);
       setCurrentPage(1);
+      setIsTimeRangeSearch(false);
       message.success('检索成功');
     } catch (error) {
       console.error('检索失败:', error);
@@ -445,8 +487,79 @@ const HistoryPage: React.FC = () => {
     }
   };
 
+  const handleSearchByTimeRange = async () => {
+    if (!timeRange || !timeRange[0] || !timeRange[1]) {
+      message.warning('请选择时间范围');
+      return;
+    }
+
+    setSearchLoading(true);
+    try {
+      // 统一使用 UTC 时间
+      const startTime = timeRange[0].toISOString();
+      const endTime = timeRange[1].toISOString();
+
+      // 调试信息
+      console.log('时间范围搜索:', {
+        选择的时间范围: {
+          开始: timeRange[0].format('YYYY-MM-DD HH:mm:ss'),
+          结束: timeRange[1].format('YYYY-MM-DD HH:mm:ss'),
+        },
+        发送到后端的时间_UTC: {
+          开始: startTime,
+          结束: endTime,
+        },
+        用户时区: Intl.DateTimeFormat().resolvedOptions().timeZone,
+      });
+
+      const response = await tryonApi.getTestResultsByTimeRange(
+        startTime,
+        endTime,
+        1,
+        pageSize
+      );
+
+      const formattedResults = response.data.map(
+        (result: TestHistoryItem, index: number) => ({
+          key: result._id || index.toString(),
+          userImage: result.userImage,
+          clothingImage: result.clothingImage,
+          generatedResult: result.generatedResult,
+          taskId: result.taskId,
+          status: result.status,
+          executionTime: result.executionTime,
+          error: result.error || undefined,
+          score: result.score,
+          savedAt: result.savedAt,
+        })
+      );
+
+      setTestResults(formattedResults);
+      const correctTotal =
+        response.pagination.totalPages * response.pagination.limit;
+      setTotal(correctTotal);
+      setCurrentPage(response.pagination.page);
+      setPageSize(response.pagination.limit);
+      setIsTimeRangeSearch(true);
+
+      message.success(`找到 ${response.pagination.total} 条记录`);
+    } catch (error) {
+      console.error('时间范围搜索失败:', error);
+      message.error('时间范围搜索失败');
+    } finally {
+      setSearchLoading(false);
+    }
+  };
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const handleTimeRangeChange = (dates: any) => {
+    setTimeRange(dates);
+  };
+
   const handleResetSearch = () => {
     setSearchTaskId('');
+    setTimeRange(null);
+    setIsTimeRangeSearch(false);
     setCurrentPage(1);
     setPageSize(10);
     fetchTestHistory(1, 10);
@@ -456,8 +569,49 @@ const HistoryPage: React.FC = () => {
     setCurrentPage(page);
     setPageSize(size);
 
-    // 页码或页面大小改变时，重新请求接口
-    fetchTestHistory(page, size);
+    // 根据当前搜索模式决定调用哪个接口
+    if (isTimeRangeSearch && timeRange) {
+      // 统一使用 UTC 时间
+      const startTime = timeRange[0].toISOString();
+      const endTime = timeRange[1].toISOString();
+
+      setSearchLoading(true);
+      tryonApi
+        .getTestResultsByTimeRange(startTime, endTime, page, size)
+        .then((response) => {
+          const formattedResults = response.data.map(
+            (result: TestHistoryItem, index: number) => ({
+              key: result._id || index.toString(),
+              userImage: result.userImage,
+              clothingImage: result.clothingImage,
+              generatedResult: result.generatedResult,
+              taskId: result.taskId,
+              status: result.status,
+              executionTime: result.executionTime,
+              error: result.error || undefined,
+              score: result.score,
+              savedAt: result.savedAt,
+            })
+          );
+
+          setTestResults(formattedResults);
+          const correctTotal =
+            response.pagination.totalPages * response.pagination.limit;
+          setTotal(correctTotal);
+          setCurrentPage(response.pagination.page);
+          setPageSize(response.pagination.limit);
+        })
+        .catch((error) => {
+          console.error('时间范围分页失败:', error);
+          message.error('获取数据失败');
+        })
+        .finally(() => {
+          setSearchLoading(false);
+        });
+    } else {
+      // 页码或页面大小改变时，重新请求接口
+      fetchTestHistory(page, size);
+    }
   };
 
   const handleTableChange = (...args: unknown[]) => {
@@ -544,33 +698,62 @@ const HistoryPage: React.FC = () => {
 
         {/* 检索区域 */}
         <Card className='mb-6'>
-          <div className='flex items-center gap-4'>
-            <div className='flex-1'>
-              <Search
-                placeholder='请输入 taskId 进行检索'
-                value={searchTaskId}
-                onChange={(e) => setSearchTaskId(e.target.value)}
-                onSearch={handleSearchByTaskId}
-                loading={searchLoading}
-                enterButton={
-                  <Button type='primary' icon={<SearchOutlined />}>
-                    检索
-                  </Button>
-                }
-                className='!rounded-button'
-              />
+          <div className='space-y-4'>
+            {/* TaskId 检索 */}
+            <div className='flex items-center gap-4'>
+              <div className='flex-1'>
+                <Search
+                  placeholder='请输入 taskId 进行检索'
+                  value={searchTaskId}
+                  onChange={(e) => setSearchTaskId(e.target.value)}
+                  onSearch={handleSearchByTaskId}
+                  loading={searchLoading}
+                  enterButton={
+                    <Button type='primary' icon={<SearchOutlined />}>
+                      检索
+                    </Button>
+                  }
+                  className='!rounded-button'
+                />
+              </div>
             </div>
-            <Button
-              icon={<ReloadOutlined />}
-              onClick={handleResetSearch}
-              className='!rounded-button'
-            >
-              重置
-            </Button>
+
+            {/* 时间范围检索 */}
+            <div className='flex items-center gap-4'>
+              <div className='flex-1'>
+                <RangePicker
+                  value={timeRange}
+                  onChange={handleTimeRangeChange}
+                  showTime
+                  format='YYYY-MM-DD HH:mm:ss'
+                  placeholder={['开始时间', '结束时间']}
+                  className='!rounded-button w-full'
+                />
+              </div>
+              <Button
+                type='primary'
+                icon={<CalendarOutlined />}
+                onClick={handleSearchByTimeRange}
+                loading={searchLoading}
+                className='!rounded-button'
+              >
+                时间筛选
+              </Button>
+            </div>
+
+            <div className='flex justify-end'>
+              <Button
+                icon={<ReloadOutlined />}
+                onClick={handleResetSearch}
+                className='!rounded-button'
+              >
+                重置
+              </Button>
+            </div>
           </div>
           <div className='mt-2 text-sm text-gray-500'>
-            提示：输入完整的 taskId
-            可以精确检索单个测试结果，点击重置可以恢复显示所有记录
+            提示：可以输入完整的 taskId
+            进行精确检索，或选择时间范围进行筛选，点击重置可以恢复显示所有记录
           </div>
         </Card>
 

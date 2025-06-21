@@ -58,6 +58,7 @@ export interface TestResult {
   error?: string;
   executionTime?: number;
   score?: number;
+  savedAt?: string;
 }
 
 export interface TestResultsTableProps {
@@ -308,6 +309,7 @@ const ResultsPage: React.FC<ResultsProps> = ({
               taskId: undefined,
               status: undefined,
               error: undefined,
+              savedAt: undefined,
             });
             counter++;
           });
@@ -374,6 +376,7 @@ const ResultsPage: React.FC<ResultsProps> = ({
                     ...item,
                     status: 'CANCELLED',
                     error: '用户终止了生成',
+                    savedAt: new Date().toISOString(),
                   };
                 }
                 return item;
@@ -395,6 +398,7 @@ const ResultsPage: React.FC<ResultsProps> = ({
                   taskId: response.uuid,
                   generatedResult: response.image,
                   executionTime: executionTime,
+                  savedAt: new Date().toISOString(),
                 };
               }
               return item;
@@ -411,6 +415,7 @@ const ResultsPage: React.FC<ResultsProps> = ({
                     ...item,
                     status: 'CANCELLED',
                     error: '用户终止了生成',
+                    savedAt: new Date().toISOString(),
                   };
                 }
                 return item;
@@ -430,6 +435,7 @@ const ResultsPage: React.FC<ResultsProps> = ({
                   ...item,
                   status: 'FAILED',
                   error: error instanceof Error ? error.message : '未知错误',
+                  savedAt: new Date().toISOString(),
                 };
               }
               return item;
@@ -564,6 +570,7 @@ const ResultsPage: React.FC<ResultsProps> = ({
         status: result.status || 'unknown',
         taskId: result.taskId,
         executionTime: result.executionTime,
+        savedAt: result.savedAt,
       }));
 
       // 调用保存接口
