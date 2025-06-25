@@ -20,45 +20,18 @@ import { tryonApi } from '../../api/tryon';
 
 const { Title, Text } = Typography;
 
-// 辅助函数：将 base64 转换为 blob URL
-const base64ToBlobUrl = (base64Data: string): string => {
-  try {
-    // 检查是否已经是 URL
-    if (base64Data.startsWith('http://') || base64Data.startsWith('https://')) {
-      return base64Data;
-    }
-
-    // 检查是否包含 data URL 前缀
-    if (base64Data.startsWith('data:')) {
-      return base64Data;
-    }
-
-    // 假设是纯 base64 数据，添加前缀并转换为 blob URL
-    const byteCharacters = atob(base64Data);
-    const byteNumbers = new Array(byteCharacters.length);
-    for (let i = 0; i < byteCharacters.length; i++) {
-      byteNumbers[i] = byteCharacters.charCodeAt(i);
-    }
-    const byteArray = new Uint8Array(byteNumbers);
-    const blob = new Blob([byteArray], { type: 'image/jpeg' });
-    return URL.createObjectURL(blob);
-  } catch (error) {
-    console.error('转换 base64 失败:', error);
-    return '';
-  }
-};
-
 export interface TestResult {
   key: string;
   userImage: string;
   clothingImage: string;
-  generatedResult: string;
+  generatedResult?: string;
   taskId?: string;
   status?: string;
   error?: string;
   executionTime?: number;
   score?: number;
   savedAt?: string;
+  modelId?: string;
 }
 
 export interface TestResultsTableProps {
@@ -166,9 +139,9 @@ export const TestResultsTable: React.FC<TestResultsTableProps> = ({
       width: 150,
       render: (image, record: TestResult) => (
         <div className='w-28 h-36 overflow-hidden relative'>
-          {record.status === 'success' && image ? (
+          {record.status === 'success' && record.generatedResult ? (
             <Image
-              src={base64ToBlobUrl(image)}
+              src={record.generatedResult}
               alt='Generated Result'
               className='w-full h-full object-cover object-top'
               preview={{
@@ -223,6 +196,19 @@ export const TestResultsTable: React.FC<TestResultsTableProps> = ({
       key: 'taskId',
       width: 200,
       className: 'whitespace-nowrap',
+    },
+    {
+      title: 'MODEL ID',
+      dataIndex: 'modelId',
+      key: 'modelId',
+      width: 150,
+      className: 'whitespace-nowrap',
+      render: (modelId, record: TestResult) => {
+        if (record.status !== 'success') {
+          return <span className='text-gray-400'>-</span>;
+        }
+        return <span className='font-mono text-sm'>{modelId || '-'}</span>;
+      },
     },
   ];
 
@@ -305,11 +291,12 @@ const ResultsPage: React.FC<ResultsProps> = ({
               key: `${counter}`,
               userImage: userImg,
               clothingImage: clothingImg,
-              generatedResult: '',
+              generatedResult: undefined,
               taskId: undefined,
               status: undefined,
               error: undefined,
               savedAt: undefined,
+              modelId: undefined,
             });
             counter++;
           });
@@ -366,6 +353,11 @@ const ResultsPage: React.FC<ResultsProps> = ({
             abortControllerRef.current?.signal
           );
 
+          // 添加调试信息
+          console.log('API 响应:', response);
+          console.log('image 字段:', response.image);
+          console.log('result_image_url 字段:', response.result_image_url);
+
           // 检查是否被终止
           if (abortControllerRef.current?.signal.aborted) {
             // 更新状态为已终止
@@ -396,9 +388,10 @@ const ResultsPage: React.FC<ResultsProps> = ({
                   ...item,
                   status: response.image ? 'success' : 'FAILED',
                   taskId: response.uuid,
-                  generatedResult: response.image,
+                  generatedResult: response.result_image_url || response.image,
                   executionTime: executionTime,
                   savedAt: new Date().toISOString(),
+                  modelId: response.modelId,
                 };
               }
               return item;
@@ -566,11 +559,12 @@ const ResultsPage: React.FC<ResultsProps> = ({
       const apiResults = completedResults.map((result) => ({
         userImage: result.userImage,
         clothingImage: result.clothingImage,
-        generatedResult: 'test_result_placeholder', // 暂时用字符串替代，避免 base64 数据过大
+        generatedResult: result.generatedResult,
         status: result.status || 'unknown',
         taskId: result.taskId,
         executionTime: result.executionTime,
         savedAt: result.savedAt,
+        modelId: result.modelId,
       }));
 
       // 调用保存接口

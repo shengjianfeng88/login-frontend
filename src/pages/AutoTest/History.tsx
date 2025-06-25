@@ -27,34 +27,6 @@ import dayjs from 'dayjs';
 const { Title, Text } = Typography;
 const { RangePicker } = DatePicker;
 
-// 辅助函数：将 base64 转换为 blob URL
-const base64ToBlobUrl = (base64Data: string): string => {
-  try {
-    // 检查是否已经是 URL
-    if (base64Data.startsWith('http://') || base64Data.startsWith('https://')) {
-      return base64Data;
-    }
-
-    // 检查是否包含 data URL 前缀
-    if (base64Data.startsWith('data:')) {
-      return base64Data;
-    }
-
-    // 假设是纯 base64 数据，添加前缀并转换为 blob URL
-    const byteCharacters = atob(base64Data);
-    const byteNumbers = new Array(byteCharacters.length);
-    for (let i = 0; i < byteCharacters.length; i++) {
-      byteNumbers[i] = byteCharacters.charCodeAt(i);
-    }
-    const byteArray = new Uint8Array(byteNumbers);
-    const blob = new Blob([byteArray], { type: 'image/jpeg' });
-    return URL.createObjectURL(blob);
-  } catch (error) {
-    console.error('转换 base64 失败:', error);
-    return '';
-  }
-};
-
 interface HistoryTableProps {
   testResults: TestResult[];
   selectedRowKeys: React.Key[];
@@ -183,7 +155,7 @@ const HistoryTable: React.FC<HistoryTableProps> = ({
         <div className='w-28 h-36 overflow-hidden relative'>
           {record.status === 'success' && image ? (
             <Image
-              src={base64ToBlobUrl(image)}
+              src={image}
               alt='Generated Result'
               className='w-full h-full object-cover object-top'
               preview={{
@@ -299,6 +271,19 @@ const HistoryTable: React.FC<HistoryTableProps> = ({
       className: 'whitespace-nowrap',
     },
     {
+      title: 'MODEL ID',
+      dataIndex: 'modelId',
+      key: 'modelId',
+      width: 150,
+      className: 'whitespace-nowrap',
+      render: (modelId, record: TestResult) => {
+        if (record.status !== 'success') {
+          return <span className='text-gray-400'>-</span>;
+        }
+        return <span className='font-mono text-sm'>{modelId || '-'}</span>;
+      },
+    },
+    {
       title: '保存时间',
       dataIndex: 'savedAt',
       key: 'savedAt',
@@ -378,6 +363,7 @@ const HistoryPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [searchLoading, setSearchLoading] = useState(false);
   const [searchTaskId, setSearchTaskId] = useState<string>('');
+  const [searchModelId, setSearchModelId] = useState<string>('');
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [total, setTotal] = useState(0);
@@ -496,6 +482,7 @@ const HistoryPage: React.FC = () => {
           error: result.error || undefined,
           score: result.score,
           savedAt: result.savedAt,
+          modelId: result.modelId,
         })
       );
 
@@ -508,8 +495,9 @@ const HistoryPage: React.FC = () => {
         setPageSize(response.pagination.limit);
       }
     } catch (error) {
-      console.error('获取测试历史记录失败:', error);
-      message.error('获取测试历史记录失败');
+      const e = error as Error;
+      console.error('获取测试历史记录失败:', e);
+      message.error(`获取测试历史记录失败: ${e.message}`);
     } finally {
       setLoading(false);
       isRequesting.current = false;
@@ -518,10 +506,11 @@ const HistoryPage: React.FC = () => {
 
   const handleFilterSearch = async () => {
     const hasTaskId = searchTaskId.trim() !== '';
+    const hasModelId = searchModelId.trim() !== '';
     const hasTimeRange = timeRange && timeRange[0] && timeRange[1];
 
-    if (!hasTaskId && !hasTimeRange) {
-      message.warning('请输入至少一个筛选条件（TaskId 或时间范围）');
+    if (!hasTaskId && !hasModelId && !hasTimeRange) {
+      message.warning('请输入至少一个筛选条件（TaskId、Model ID 或时间范围）');
       return;
     }
 
@@ -535,6 +524,9 @@ const HistoryPage: React.FC = () => {
 
       if (hasTaskId) {
         query.taskId = searchTaskId.trim();
+      }
+      if (hasModelId) {
+        query.modelId = searchModelId.trim();
       }
       if (hasTimeRange) {
         query.startTime = timeRange![0].toISOString();
@@ -555,6 +547,7 @@ const HistoryPage: React.FC = () => {
           error: result.error || undefined,
           score: result.score,
           savedAt: result.savedAt,
+          modelId: result.modelId,
         })
       );
 
@@ -574,8 +567,9 @@ const HistoryPage: React.FC = () => {
         `找到 ${response.pagination?.total || formattedResults.length} 条记录`
       );
     } catch (error) {
-      console.error('筛选失败:', error);
-      message.error('筛选失败');
+      const e = error as Error;
+      console.error('筛选失败:', e);
+      message.error(`筛选失败: ${e.message}`);
     } finally {
       setSearchLoading(false);
     }
@@ -588,6 +582,7 @@ const HistoryPage: React.FC = () => {
 
   const handleResetSearch = () => {
     setSearchTaskId('');
+    setSearchModelId('');
     setTimeRange(null);
     setIsFiltered(false);
     fetchTestHistory(1, 10);
@@ -600,6 +595,7 @@ const HistoryPage: React.FC = () => {
     if (isFiltered) {
       // 在筛选模式下，分页需要保留筛选条件
       const hasTaskId = searchTaskId.trim() !== '';
+      const hasModelId = searchModelId.trim() !== '';
       const hasTimeRange = timeRange && timeRange[0] && timeRange[1];
 
       const query: TestHistoryQuery = {
@@ -608,6 +604,7 @@ const HistoryPage: React.FC = () => {
         limit: size,
       };
       if (hasTaskId) query.taskId = searchTaskId.trim();
+      if (hasModelId) query.modelId = searchModelId.trim();
       if (hasTimeRange) {
         query.startTime = timeRange![0].toISOString();
         query.endTime = timeRange![1].toISOString();
@@ -629,6 +626,7 @@ const HistoryPage: React.FC = () => {
               error: result.error || undefined,
               score: result.score,
               savedAt: result.savedAt,
+              modelId: result.modelId,
             })
           );
           setTestResults(formattedResults);
@@ -641,8 +639,9 @@ const HistoryPage: React.FC = () => {
           }
         })
         .catch((error) => {
-          console.error('筛选分页失败:', error);
-          message.error('获取数据失败');
+          const e = error as Error;
+          console.error('筛选分页失败:', e);
+          message.error(`获取数据失败: ${e.message}`);
         })
         .finally(() => {
           setSearchLoading(false);
@@ -679,7 +678,9 @@ const HistoryPage: React.FC = () => {
 
       return updatedResult;
     } catch (error) {
-      console.error('更新分数失败:', error);
+      const e = error as Error;
+      console.error('更新分数失败:', e);
+      message.error(`更新分数失败: ${e.message}`);
       throw error;
     }
   };
@@ -711,7 +712,9 @@ const HistoryPage: React.FC = () => {
 
       message.success(`成功删除 ${result.deletedCount} 个测试结果`);
     } catch (error) {
-      console.error('删除测试结果失败:', error);
+      const e = error as Error;
+      console.error('删除测试结果失败:', e);
+      message.error(`删除测试结果失败: ${e.message}`);
       throw error;
     }
   };
@@ -751,6 +754,18 @@ const HistoryPage: React.FC = () => {
                   placeholder='请输入 taskId'
                   value={searchTaskId}
                   onChange={(e) => setSearchTaskId(e.target.value)}
+                  onPressEnter={handleFilterSearch}
+                  className='!rounded-button'
+                />
+              </div>
+              <div className='flex items-center gap-2' style={{ flex: 1.5 }}>
+                <Text className='font-semibold whitespace-nowrap'>
+                  Model ID:
+                </Text>
+                <Input
+                  placeholder='请输入 modelId'
+                  value={searchModelId}
+                  onChange={(e) => setSearchModelId(e.target.value)}
                   onPressEnter={handleFilterSearch}
                   className='!rounded-button'
                 />
@@ -798,7 +813,8 @@ const HistoryPage: React.FC = () => {
             </div>
           </div>
           <div className='mt-4 text-sm text-gray-500'>
-            提示：可同时输入 TaskId 和时间范围进行组合筛选，点击重置恢复所有记录
+            提示：可同时输入 TaskId、Model ID
+            和时间范围进行组合筛选，点击重置恢复所有记录
           </div>
         </Card>
 

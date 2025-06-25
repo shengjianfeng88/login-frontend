@@ -31,8 +31,13 @@ export default defineConfig({
           'Access-Control-Allow-Credentials': 'true',
         },
       },
+      '/status': {
+        target: 'http://staging-api-auth.faishion.ai',
+        changeOrigin: true,
+        secure: false,
+      },
       '/api/auth/test-history': {
-        target: 'http://192.168.10.12:3001',
+        target: 'http://staging-api-auth.faishion.ai',
         changeOrigin: true,
         secure: false,
       },

@@ -2,7 +2,7 @@ import axios from 'axios';
 
 // 创建 axios 实例
 const axiosInstance = axios.create({
-  baseURL: 'https://tryon-advanced.faishion.ai',
+  baseURL: 'https://tryon-advanced-canary.faishion.ai',
   headers: {
     'Content-Type': 'application/json',
   },
@@ -10,7 +10,7 @@ const axiosInstance = axios.create({
 
 // 创建用于上传图片的 axios 实例
 const uploadAxiosInstance = axios.create({
-  baseURL: 'http://localhost:3001',
+  baseURL: 'http://staging-api-auth.faishion.ai',
   headers: {
     'Content-Type': 'multipart/form-data',
   },
@@ -18,7 +18,7 @@ const uploadAxiosInstance = axios.create({
 
 // 创建用于保存测试结果的 axios 实例
 const saveTestResultsAxiosInstance = axios.create({
-  baseURL: 'http://localhost:3001',
+  baseURL: 'https://staging-api-auth.faishion.ai',
   headers: {
     'Content-Type': 'application/json',
   },
@@ -49,11 +49,13 @@ export type TestHistoryItem = {
   savedAt?: string;
   createdAt: string;
   __v: number;
+  modelId?: string;
 };
 
 export type TestHistoryQuery = {
   queryType: 'all' | 'byFilter';
   taskId?: string;
+  modelId?: string;
   startTime?: string;
   endTime?: string;
   page?: number;
@@ -88,7 +90,7 @@ export type TestHistoryResponse = {
 export type TestResult = {
   userImage: string;
   clothingImage: string;
-  generatedResult: string;
+  generatedResult?: string;
   status: string;
   taskId?: string;
   executionTime?: number;
@@ -98,6 +100,8 @@ export type TryOnResponse = {
   image: string;
   uuid?: string;
   status: string;
+  result_image_url?: string;
+  modelId?: string;
 };
 
 // 辅助函数：将 File 对象转换为 FormData
@@ -120,7 +124,7 @@ export const tryonApi = {
 
       const formData = createFormData(file);
       const response = await uploadAxiosInstance.post(
-        '/api/auth/upload',
+        '/v1/auth/upload',
         formData,
         {
           headers: {
@@ -195,8 +199,8 @@ export const tryonApi = {
     query: TestHistoryQuery
   ): Promise<QueryTestHistoryResponse> {
     try {
-      const response = await saveTestResultsAxiosInstance.post(
-        '/api/auth/test-history/query',
+      const response = await axios.post(
+        'https://staging-api-auth.faishion.ai/v1/auth/test-history/query',
         query
       );
       return response.data;
@@ -215,15 +219,11 @@ export const tryonApi = {
         throw new Error('未找到认证 token，请先登录');
       }
 
-      await saveTestResultsAxiosInstance.post(
-        '/api/auth/test-history/save',
-        results,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      await axios.post('/v1/auth/test-history/save', results, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
     } catch (error) {
       console.error('保存测试结果失败:', error);
       throw error;
@@ -243,7 +243,7 @@ export const tryonApi = {
       }
 
       const response = await saveTestResultsAxiosInstance.post(
-        '/api/auth/test-history/update-score',
+        '/v1/auth/test-history/update-score',
         { taskId, score },
         {
           headers: {
@@ -271,7 +271,7 @@ export const tryonApi = {
       }
 
       const response = await saveTestResultsAxiosInstance.post(
-        '/api/auth/test-history/delete-task',
+        '/v1/auth/test-history/delete-task',
         { taskIds },
         {
           headers: {
@@ -297,7 +297,7 @@ export const tryonApi = {
       }
 
       const response = await saveTestResultsAxiosInstance.post(
-        '/api/auth/test-history/get-task',
+        '/v1/auth/test-history/get-task',
         { taskId },
         {
           headers: {
@@ -331,7 +331,7 @@ export const tryonApi = {
   }> => {
     try {
       const response = await saveTestResultsAxiosInstance.post(
-        '/api/auth/test-history/get-by-time-range',
+        '/v1/auth/test-history/get-by-time-range',
         {
           startTime,
           endTime,
