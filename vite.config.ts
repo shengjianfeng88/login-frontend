@@ -13,34 +13,28 @@ export default defineConfig({
     tsconfigPaths(),
   ],
   server: {
-    // 正确的 history fallback 写法
+    port: 5173,
     fs: {
       strict: true,
     },
     proxy: {
-      '/upload': {
-        target: 'https://tryon-advanced.faishion.ai',
-        changeOrigin: true,
-        secure: false,
-        headers: {
-          'Access-Control-Allow-Origin': '*',
-          'Access-Control-Allow-Methods':
-            'GET, POST, PUT, DELETE, PATCH, OPTIONS',
-          'Access-Control-Allow-Headers':
-            'X-Requested-With, content-type, Authorization',
-          'Access-Control-Allow-Credentials': 'true',
-        },
-      },
-      '/status': {
-        target: 'http://staging-api-auth.faishion.ai',
-        changeOrigin: true,
-        secure: false,
-      },
-      '/api/auth/test-history': {
-        target: 'http://staging-api-auth.faishion.ai',
-        changeOrigin: true,
-        secure: false,
-      },
+      // '/upload': {
+      //   target: 'https://staging-api-auth.faishion.ai', // 你的本地后端服务器地址
+      //   changeOrigin: true,
+      //   secure: false,
+      //   configure: (proxy, options) => {
+      //     proxy.on('proxyReq', (proxyReq, req) => {
+      //       console.log(
+      //         `Proxy request: ${req.method} ${req.url} -> ${options.target}${req.url}`
+      //       );
+      //     });
+      //     proxy.on('proxyRes', (proxyRes, req) => {
+      //       console.log(
+      //         `Proxy response: ${proxyRes.statusCode} for ${req.url}`
+      //       );
+      //     });
+      //   },
+      // },
       '/health': {
         target: 'http://chatbot.faishion.ai',
         changeOrigin: true,

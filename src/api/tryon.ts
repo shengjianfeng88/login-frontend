@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-// 创建 axios 实例
+// 创建 axios 实例用于试穿服务（第三方 API，不通过 proxy）
 const axiosInstance = axios.create({
   baseURL: 'https://tryon-advanced-canary.faishion.ai',
   headers: {
@@ -8,21 +8,21 @@ const axiosInstance = axios.create({
   },
 });
 
-// 创建用于上传图片的 axios 实例
+// 创建用于上传图片的 axios 实例（使用 proxy）
 const uploadAxiosInstance = axios.create({
-  baseURL: 'http://staging-api-auth.faishion.ai',
+  baseURL: 'https://staging-api-auth.faishion.ai',
   headers: {
     'Content-Type': 'multipart/form-data',
   },
 });
 
-// 创建用于保存测试结果的 axios 实例
+// 创建用于保存测试结果的 axios 实例（使用 proxy）
 const saveTestResultsAxiosInstance = axios.create({
-  baseURL: 'https://staging-api-auth.faishion.ai',
   headers: {
     'Content-Type': 'application/json',
   },
 });
+
 // 类型定义
 export type UploadImageResponse = {
   success: boolean;
@@ -124,7 +124,7 @@ export const tryonApi = {
 
       const formData = createFormData(file);
       const response = await uploadAxiosInstance.post(
-        '/v1/auth/upload',
+        '/api/auth/upload',
         formData,
         {
           headers: {
@@ -199,8 +199,8 @@ export const tryonApi = {
     query: TestHistoryQuery
   ): Promise<QueryTestHistoryResponse> {
     try {
-      const response = await axios.post(
-        'https://staging-api-auth.faishion.ai/v1/auth/test-history/query',
+      const response = await saveTestResultsAxiosInstance.post(
+        '/api/v1/auth/test-history/query',
         query
       );
       return response.data;
@@ -219,11 +219,15 @@ export const tryonApi = {
         throw new Error('未找到认证 token，请先登录');
       }
 
-      await axios.post('/v1/auth/test-history/save', results, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      await saveTestResultsAxiosInstance.post(
+        '/api/v1/auth/test-history/save',
+        results,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
     } catch (error) {
       console.error('保存测试结果失败:', error);
       throw error;
@@ -243,7 +247,7 @@ export const tryonApi = {
       }
 
       const response = await saveTestResultsAxiosInstance.post(
-        '/v1/auth/test-history/update-score',
+        '/api/v1/auth/test-history/update-score',
         { taskId, score },
         {
           headers: {
@@ -271,7 +275,7 @@ export const tryonApi = {
       }
 
       const response = await saveTestResultsAxiosInstance.post(
-        '/v1/auth/test-history/delete-task',
+        '/api/v1/auth/test-history/delete-task',
         { taskIds },
         {
           headers: {
@@ -297,7 +301,7 @@ export const tryonApi = {
       }
 
       const response = await saveTestResultsAxiosInstance.post(
-        '/v1/auth/test-history/get-task',
+        '/api/v1/auth/test-history/get-task',
         { taskId },
         {
           headers: {
@@ -331,7 +335,7 @@ export const tryonApi = {
   }> => {
     try {
       const response = await saveTestResultsAxiosInstance.post(
-        '/v1/auth/test-history/get-by-time-range',
+        '/api/v1/auth/test-history/get-by-time-range',
         {
           startTime,
           endTime,
