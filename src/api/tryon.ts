@@ -18,6 +18,7 @@ const uploadAxiosInstance = axios.create({
 
 // 创建用于保存测试结果的 axios 实例（使用 proxy）
 const saveTestResultsAxiosInstance = axios.create({
+  baseURL: 'https://staging-api-auth.faishion.ai',
   headers: {
     'Content-Type': 'application/json',
   },
@@ -200,7 +201,7 @@ export const tryonApi = {
   ): Promise<QueryTestHistoryResponse> {
     try {
       const response = await saveTestResultsAxiosInstance.post(
-        '/api/v1/auth/test-history/query',
+        '/v1/auth/test-history/query',
         query
       );
       return response.data;
