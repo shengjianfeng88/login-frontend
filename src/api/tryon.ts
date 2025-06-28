@@ -124,16 +124,12 @@ export const tryonApi = {
       }
 
       const formData = createFormData(file);
-      const response = await uploadAxiosInstance.post(
-        '/v1/auth/upload',
-        formData,
-        {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const response = await uploadAxiosInstance.post('/V1/upload', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
       // 后端返回格式: { url: data.Location }
       return {
