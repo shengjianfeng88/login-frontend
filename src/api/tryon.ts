@@ -125,7 +125,7 @@ export const tryonApi = {
 
       const formData = createFormData(file);
       const response = await uploadAxiosInstance.post(
-        '/api/auth/upload',
+        '/v1/auth/upload',
         formData,
         {
           headers: {
@@ -221,7 +221,7 @@ export const tryonApi = {
       }
 
       await saveTestResultsAxiosInstance.post(
-        '/api/v1/auth/test-history/save',
+        '/v1/auth/test-history/save',
         results,
         {
           headers: {
@@ -248,7 +248,7 @@ export const tryonApi = {
       }
 
       const response = await saveTestResultsAxiosInstance.post(
-        '/api/v1/auth/test-history/update-score',
+        '/v1/auth/test-history/update-score',
         { taskId, score },
         {
           headers: {
@@ -276,7 +276,7 @@ export const tryonApi = {
       }
 
       const response = await saveTestResultsAxiosInstance.post(
-        '/api/v1/auth/test-history/delete-task',
+        '/v1/auth/test-history/delete-task',
         { taskIds },
         {
           headers: {
@@ -302,7 +302,7 @@ export const tryonApi = {
       }
 
       const response = await saveTestResultsAxiosInstance.post(
-        '/api/v1/auth/test-history/get-task',
+        '/v1/auth/test-history/get-task',
         { taskId },
         {
           headers: {
@@ -336,7 +336,7 @@ export const tryonApi = {
   }> => {
     try {
       const response = await saveTestResultsAxiosInstance.post(
-        '/api/v1/auth/test-history/get-by-time-range',
+        '/v1/auth/test-history/get-by-time-range',
         {
           startTime,
           endTime,
