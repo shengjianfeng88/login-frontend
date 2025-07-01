@@ -1,9 +1,14 @@
-import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import React, { useEffect, useState, Fragment } from 'react';
 import { Camera, Heart, ChevronDown, X } from 'lucide-react';
+import { Menu, Transition } from '@headlessui/react';
 import empty from '/empty.png';
+import axios from 'axios';
 
-const TryOnSubHeader: React.FC = () => {
+const TryOnSubHeader: React.FC<{
+  onSortChange: (order: 'low-to-high' | 'high-to-low') => void;
+  showOnlyFavorites: boolean;
+  setShowOnlyFavorites: (val: boolean) => void;
+}> = ({ onSortChange, showOnlyFavorites, setShowOnlyFavorites }) => {
   return (
     <div className="flex items-center justify-between px-10 mt-4 mb-8 border-b pb-4">
       <div className="flex items-center gap-2 text-2xl font-bold text-gray-800">
@@ -11,14 +16,61 @@ const TryOnSubHeader: React.FC = () => {
         <span>Try-on History</span>
       </div>
       <div className="flex items-center gap-4">
-        <button className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition">
-          <Heart className="w-4 h-4" />
+        <button
+          onClick={() => setShowOnlyFavorites(!showOnlyFavorites)}
+          className={`flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg transition ${
+            showOnlyFavorites ? 'bg-red-100 text-red-600 border-red-300' : 'text-gray-700 hover:bg-gray-100'
+          }`}
+        >
+          <Heart className={`w-4 h-4 ${showOnlyFavorites ? 'fill-red-500 text-red-500' : ''}`} />
           Favorites
         </button>
-        <button className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition">
-          Sort By
-          <ChevronDown className="w-4 h-4" />
-        </button>
+
+        <Menu as="div" className="relative inline-block text-left">
+          <Menu.Button className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition">
+            Sort By
+            <ChevronDown className="w-4 h-4" />
+          </Menu.Button>
+          <Transition
+            as={Fragment}
+            enter="transition ease-out duration-100"
+            enterFrom="transform opacity-0 scale-95"
+            enterTo="transform opacity-100 scale-100"
+            leave="transition ease-in duration-75"
+            leaveFrom="transform opacity-100 scale-100"
+            leaveTo="transform opacity-0 scale-95"
+          >
+            <Menu.Items className="absolute right-0 z-[9999] mt-2 w-48 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+
+              <div className="py-1">
+                <Menu.Item>
+                  {({ active }) => (
+                    <button
+                      onClick={() => onSortChange('low-to-high')}
+                      className={`${
+                        active ? 'bg-gray-100 text-gray-900' : 'text-gray-700'
+                      } block px-4 py-2 text-sm w-full text-left`}
+                    >
+                      Price: Low to High
+                    </button>
+                  )}
+                </Menu.Item>
+                <Menu.Item>
+                  {({ active }) => (
+                    <button
+                      onClick={() => onSortChange('high-to-low')}
+                      className={`${
+                        active ? 'bg-gray-100 text-gray-900' : 'text-gray-700'
+                      } block px-4 py-2 text-sm w-full text-left`}
+                    >
+                      Price: High to Low
+                    </button>
+                  )}
+                </Menu.Item>
+              </div>
+            </Menu.Items>
+          </Transition>
+        </Menu>
       </div>
     </div>
   );
@@ -32,25 +84,40 @@ interface ProductProps {
   originalPrice?: number | string | null;
   timestamp: string | number | Date;
   url: string;
+  isFavorite: boolean;
+  onToggleFavorite: () => void;
 }
 
-const ProductCard: React.FC<ProductProps> = ({ image, brand, name, price, originalPrice, timestamp, url }) => (
+const ProductCard: React.FC<ProductProps> = ({
+  image,
+  brand,
+  name,
+  price,
+  originalPrice,
+  timestamp,
+  isFavorite,
+  onToggleFavorite
+}) => (
   <div className="relative bg-white rounded-2xl overflow-hidden shadow-lg w-full hover:shadow-xl transition cursor-pointer">
-    <div className="absolute top-2 left-2 bg-red-500 text-white text-xs px-2 py-1 rounded font-semibold z-10">
-      20% OFF
+    <div
+      onClick={(e) => {
+        e.stopPropagation();
+        onToggleFavorite();
+      }}
+      className="absolute top-2 right-2 z-10 cursor-pointer p-1 rounded-full bg-white shadow hover:bg-gray-100"
+    >
+      <Heart className={`w-5 h-5 ${isFavorite ? 'fill-red-500 text-red-500' : 'text-gray-400'}`} />
     </div>
-    <div className="absolute top-2 right-2 bg-gray-100 text-xs px-2 py-1 rounded z-10 text-gray-600">
+    <div className="absolute top-2 left-2 bg-gray-100 text-xs px-2 py-1 rounded z-10 text-gray-600">
       {new Date(timestamp).toLocaleDateString()}
     </div>
-
     <img src={image} alt="Product" className="w-full h-64 object-cover rounded-t-2xl" />
-
     <div className="p-4">
       <p className="text-gray-500 text-xs uppercase tracking-wide font-medium mb-1">{brand}</p>
       <p className="text-lg font-semibold text-gray-900 truncate">{name}</p>
       <div className="flex items-center gap-2 mt-2">
         <span className="text-lg font-bold text-black">{price}</span>
-        {originalPrice && <span className="text-sm text-gray-400 line-through">{originalPrice}</span>}
+        {/* {originalPrice && <span className="text-sm text-gray-400 line-through">{originalPrice}</span>} */}
       </div>
     </div>
   </div>
@@ -75,100 +142,52 @@ const Content: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [selectedProduct, setSelectedProduct] = useState<ProductItem | null>(null);
   const [showModal, setShowModal] = useState(false);
+  const [sortOrder, setSortOrder] = useState<'low-to-high' | 'high-to-low' | null>(null);
+  const [favorites, setFavorites] = useState<Set<string>>(new Set());
+  const [showOnlyFavorites, setShowOnlyFavorites] = useState(false);
   const accessToken = localStorage.getItem('accessToken');
 
   useEffect(() => {
     const fetchHistory = async () => {
       try {
-        // const res = await axios.get<ProductItem[]>('https://tryon-history.faishion.ai/history', {
-        //   headers: {
-        //     Authorization: `Bearer ${accessToken}`,
-        //   },
-        // });
-
-      const res = [
-    {
-        "product_info": {
-            "name": "Test Product",
-            "price": "$29.99",
-            "url": "https://example.com/product"
-        },
-        "record_id": "685c916eaf846498603250f2",
-        "result_image_url": "https://example.com/test-image.png",
-        "timestamp": "2025-06-26T00:16:46.336000",
-        "user_email": "alinapanyue@gmail.com",
-        "user_id": "680befac49e3107d70440d3d"
-    },
-    {
-        "product_info": {
-            "brand_name": "EDSTAR",
-            "domain": "www.amazon.com",
-            "price": "$28.99",
-            "product_name": "EDSTAR Women Dolman Batwing Sleeves Knitted Sweaters Winter Boat Neck Pullovers Tops",
-            "product_url": "https://www.amazon.com/dp/B0F32M72LL/ref=sspa_dk_browse_0/?_encoding=UTF8&ie=UTF8&psc=1&sp_csd=d2lkZ2V0TmFtZT1zcF9icm93c2VfdGhlbWF0aWM%3D&pd_rd_w=Sq7Tv&content-id=amzn1.sym.3f42e3f9-f82f-42ca-8d18-eb6a0d6a19a3&pf_rd_p=3f42e3f9-f82f-42ca-8d18-eb6a0d6a19a3&pf_rd_r=9VJ45X8VCVTEHQ813PCH&pd_rd_wg=TnjhF&pd_rd_r=7930e71e-1ec3-4f5e-b388-4a51de94ae78&ref_=sspa_dk_browse"
-        },
-        "record_id": "685a5e7faf846498603250f1",
-        "result_image_url": "https://faishionai.s3.amazonaws.com/tryon-results/1750752848.png",
-        "timestamp": "2025-06-24T08:14:55.689000",
-        "user_email": "alinapanyue@gmail.com",
-        "user_id": "680befac49e3107d70440d3d"
-    },
-    {
-        "product_info": {
-            "brand_name": "Fuinloth",
-            "domain": "www.amazon.com",
-            "price": "$35.99",
-            "product_name": "Fuinloth Women's Cardigan Sweater, Oversized Chunky Knit Button Closure with Pockets",
-            "product_url": "https://www.amazon.com/Fuinloth-Cardigan-Sweater-Oversized-Closure/dp/B08V233315?ref_=pd_ci_mcx_mh_pe_rm_d1_cai_p_2_0&pd_rd_i=B08V21TRWZ&pd_rd_w=gNgk1&content-id=amzn1.sym.57b80066-10e8-4be7-a5f2-ce3f1faa4959&pf_rd_p=57b80066-10e8-4be7-a5f2-ce3f1faa4959&pf_rd_r=3E887D4ZNKKQYJVPVAFJ&pd_rd_wg=FjLM5&pd_rd_r=270dead3-8624-4dae-888e-3c0b267a0bab&th=1"
-        },
-        "record_id": "68577d0d1cfb2fbd5687536e",
-        "result_image_url": "https://faishionai.s3.amazonaws.com/tryon-results/1750564061.png",
-        "timestamp": "2025-06-22T03:48:29.401000",
-        "user_email": "alinapanyue@gmail.com",
-        "user_id": "680befac49e3107d70440d3d"
-    },
-    {
-        "product_info": {
-            "brand_name": "EDSTAR",
-            "domain": "www.amazon.com",
-            "price": "$28.99",
-            "product_name": "EDSTAR Women Dolman Batwing Sleeves Knitted Sweaters Winter Boat Neck Pullovers Tops",
-            "product_url": "https://www.amazon.com/dp/B0CWRDP7WT/ref=sspa_dk_browse_0/?_encoding=UTF8&ie=UTF8&sp_csd=d2lkZ2V0TmFtZT1zcF9icm93c2VfdGhlbWF0aWM%3D&pd_rd_w=Sq7Tv&content-id=amzn1.sym.3f42e3f9-f82f-42ca-8d18-eb6a0d6a19a3&pf_rd_p=3f42e3f9-f82f-42ca-8d18-eb6a0d6a19a3&pf_rd_r=9VJ45X8VCVTEHQ813PCH&pd_rd_wg=TnjhF&pd_rd_r=7930e71e-1ec3-4f5e-b388-4a51de94ae78&ref_=sspa_dk_browse&th=1&psc=1"
-        },
-        "record_id": "68576a071cfb2fbd5687536d",
-        "result_image_url": "https://faishionai.s3.amazonaws.com/tryon-results/1750559194.png",
-        "timestamp": "2025-06-22T02:27:19.062000",
-        "user_email": "alinapanyue@gmail.com",
-        "user_id": "680befac49e3107d70440d3d"
-    },
-    {
-        "product_info": {
-            "brand_name": "Fuinloth",
-            "domain": "www.amazon.com",
-            "price": "$35.99",
-            "product_name": "Fuinloth Women's Cardigan Sweater, Oversized Chunky Knit Button Closure with Pockets",
-            "product_url": "https://www.amazon.com/Fuinloth-Cardigan-Sweater-Oversized-Closure/dp/B08V21TRWZ?ref_=pd_ci_mcx_mh_pe_rm_d1_cai_p_2_0&pd_rd_i=B08V21TRWZ&pd_rd_w=gNgk1&content-id=amzn1.sym.57b80066-10e8-4be7-a5f2-ce3f1faa4959&pf_rd_p=57b80066-10e8-4be7-a5f2-ce3f1faa4959&pf_rd_r=3E887D4ZNKKQYJVPVAFJ&pd_rd_wg=FjLM5&pd_rd_r=270dead3-8624-4dae-888e-3c0b267a0bab&th=1&psc=1"
-        },
-        "record_id": "6856e18d1cfb2fbd5687536c",
-        "result_image_url": "https://faishionai.s3.amazonaws.com/tryon-results/1750524252.png",
-        "timestamp": "2025-06-21T16:45:01.022000",
-        "user_email": "alinapanyue@gmail.com",
-        "user_id": "680befac49e3107d70440d3d"
-    }
-]
-
-        setProducts(res);
+        const res = await axios.get<ProductItem[]>('https://tryon-history.faishion.ai/history', {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        });
+        
+        setProducts(res.data);
       } catch (error) {
         console.error('Error fetching history:', error);
       } finally {
         setLoading(false);
       }
     };
-
     fetchHistory();
   }, [accessToken]);
 
+  const toggleFavorite = (recordId: string) => {
+    setFavorites(prev => {
+      const updated = new Set(prev);
+      if (updated.has(recordId)) updated.delete(recordId);
+      else updated.add(recordId);
+      return updated;
+    });
+  };
+
   const NoHistory = !loading && products.length === 0;
+
+  const filteredProducts = showOnlyFavorites
+    ? products.filter(p => favorites.has(p.record_id))
+    : products;
+
+  const sortedProducts = [...filteredProducts].sort((a, b) => {
+    const priceA = parseFloat(a.product_info?.price?.toString().replace('$', '') || '0');
+    const priceB = parseFloat(b.product_info?.price?.toString().replace('$', '') || '0');
+    if (sortOrder === 'low-to-high') return priceA - priceB;
+    if (sortOrder === 'high-to-low') return priceB - priceA;
+    return 0;
+  });
 
   return (
     <section className="px-10 py-6 min-h-[calc(100vh-150px)] bg-gray-50 mx-auto rounded-md flex flex-col items-center gap-6">
@@ -180,9 +199,13 @@ const Content: React.FC = () => {
           </div>
         ) : (
           <>
-            <TryOnSubHeader />
+            <TryOnSubHeader
+              onSortChange={setSortOrder}
+              showOnlyFavorites={showOnlyFavorites}
+              setShowOnlyFavorites={setShowOnlyFavorites}
+            />
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8 w-full">
-              {products.map((item) => {
+              {sortedProducts.map(item => {
                 const info = item.product_info || {};
                 return (
                   <div
@@ -200,6 +223,8 @@ const Content: React.FC = () => {
                       originalPrice={129.0}
                       timestamp={item.timestamp}
                       url={info.product_url || info.url || '#'}
+                      isFavorite={favorites.has(item.record_id)}
+                      onToggleFavorite={() => toggleFavorite(item.record_id)}
                     />
                   </div>
                 );
@@ -227,18 +252,12 @@ const Content: React.FC = () => {
             </div>
             <div className="w-1/2 flex flex-col justify-center gap-4">
               <h2 className="text-2xl font-bold text-gray-900">
-                {selectedProduct.product_info?.brand_name || 'Brand'} - {selectedProduct.product_info?.product_name || 'Product Name'}
+                {selectedProduct.product_info?.brand_name || 'Brand'} -{' '}
+                {selectedProduct.product_info?.product_name || 'Product Name'}
               </h2>
-              <p className="text-gray-500 text-sm">{selectedProduct.product_info?.brand_name}</p>
               <div className="flex items-center gap-3">
                 <span className="text-2xl font-bold text-black">
                   {selectedProduct.product_info?.price}
-                </span>
-                <span className="line-through text-gray-400">
-                  $129.00
-                </span>
-                <span className="bg-red-500 text-white text-xs px-2 py-1 rounded font-semibold">
-                  20% OFF
                 </span>
               </div>
               <p className="text-gray-600 text-sm">

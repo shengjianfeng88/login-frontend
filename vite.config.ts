@@ -18,17 +18,6 @@ export default defineConfig({
       strict: true,
     },
     proxy: {
-      '/auth': {
-          target: 'https://auth.faishion.ai',
-          changeOrigin: true,
-          secure: false,
-          headers: {
-            'Access-Control-Allow-Origin': '*',
-            'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, PATCH, OPTIONS',
-            'Access-Control-Allow-Headers': 'X-Requested-With, content-type, Authorization',
-            'Access-Control-Allow-Credentials': 'true'
-          }
-        },
       '/upload': {
         target: 'https://tryon-advanced.faishion.ai',
         changeOrigin: true,
