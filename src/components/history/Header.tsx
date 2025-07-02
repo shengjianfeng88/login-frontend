@@ -16,10 +16,10 @@ const Header = () => {
                 <IoSearchOutline size={15} className='text-gray-500' />
                 <input type="text" placeholder='Search your try-on history' className='w-full h-[30px] rounded-md border-none outline-none text-sm' />
             </div>
-            <div className='flex justify-between items-center gap-2 border border-gray-300 focus-within:border-black focus-within:shadow-md focus-within:border-[2px] rounded-md px-2 py-[11px] w-[200px]'>
+            {/* <div className='flex justify-between items-center gap-2 border border-gray-300 focus-within:border-black focus-within:shadow-md focus-within:border-[2px] rounded-md px-2 py-[11px] w-[200px]'>
               <p className='text-sm font-medium text-gray-800'>Discount</p>
               <FaAngleDown size={15} className='text-gray-500' />
-            </div>
+            </div> */}
         </div>
         <Auth />
     </header>

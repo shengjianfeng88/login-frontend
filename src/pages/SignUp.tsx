@@ -136,6 +136,7 @@ const SignUp = () => {
       const res = await axiosInstance.post(apiUrl + "/api/auth/google-auth", { token });
 
       if (res.data) {
+        console.log('response data: ', res.data)
         const accessToken = res.data.accessToken;
         // Store token in localStorage
         localStorage.setItem("accessToken", accessToken);

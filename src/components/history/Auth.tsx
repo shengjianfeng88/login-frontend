@@ -27,16 +27,16 @@ export const profileItems: ProfileItem[] = [
     href: "/tryon-history",
     icon: <AiOutlineHeart className="text-xl" />,
   },
-  {
-    label: "Profile",
-    href: "/profile",
-    icon: <CgProfile className="text-xl" />,
-  },
-  {
-    label: "Settings",
-    href: "/settings",
-    icon: <IoMdSettings className="text-xl" />,
-  },
+  // {
+  //   label: "Profile",
+  //   href: "/profile",
+  //   icon: <CgProfile className="text-xl" />,
+  // },
+  // {
+  //   label: "Settings",
+  //   href: "/settings",
+  //   icon: <IoMdSettings className="text-xl" />,
+  // },
 ];
 
 const Auth = () => {
@@ -53,10 +53,10 @@ const Auth = () => {
 
   const handleLogout = async () => {
     try {
-      const apiUrl = "https://auth.faishion.ai";
+      //const apiUrl = "https://auth.faishion.ai";
 
       // Call logout API using axios
-      await axios.post(apiUrl + "/auth/logout", {}, { withCredentials: true });
+      await axios.get("/auth/logout", {});
 
       // Clear access token from localStorage
       localStorage.removeItem("accessToken");
