@@ -118,6 +118,7 @@ const SignIn = () => {
       });
       localStorage.setItem("accessToken", res.data.accessToken);
       localStorage.setItem("userId", res.data.userId);
+      console.log('Full response data:', res.data);
       sendMessageToExtension({
         email: res.data.email,
         picture: res.data.picture,

@@ -5,6 +5,7 @@ export const sendDataToExtension = (userData: {
   refreshToken?: string;
 }) => {
   console.log('Sending data to extension');
+  console.log('Email being sent:', userData.email);
 
   if (window.chrome?.runtime) {
     window.chrome.runtime.sendMessage(
@@ -28,6 +29,8 @@ export const sendMessageToExtension = (userData: {
   picture?: string;
   accessToken: string;
 }) => {
+  console.log('Full userData object:', userData);
+  console.log('Sending message to extension with email:', userData.email);
   // Send a message to the content script
   window.postMessage({ type: "FROM_PAGE", payload: userData }, "*");
 
