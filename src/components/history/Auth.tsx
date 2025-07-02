@@ -1,18 +1,17 @@
-"use client";
+'use client';
 
-import React, { useState, useRef, useEffect } from "react";
-import { Link } from "react-router-dom";
-import { useSelector, useDispatch } from "react-redux";
-import { FaUserCircle } from "react-icons/fa";
-import { IoMdNotifications, IoMdSettings } from "react-icons/io";
-import { IoLogOutOutline } from "react-icons/io5";
-import { CgProfile } from "react-icons/cg";
-import { AiOutlineHeart } from "react-icons/ai";
-import { RiMenuFill } from "react-icons/ri";
-import { RootState } from "@/store/store";
-import { logout } from "@/store/features/userSlice";
-import axios from "axios";
-import { useNavigate } from "react-router-dom";
+import React, { useState, useRef, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import { useSelector, useDispatch } from 'react-redux';
+import { FaUserCircle } from 'react-icons/fa';
+import { IoMdNotifications } from 'react-icons/io';
+import { IoLogOutOutline } from 'react-icons/io5';
+import { AiOutlineHeart } from 'react-icons/ai';
+import { RiMenuFill } from 'react-icons/ri';
+import { RootState } from '@/store/store';
+import { logout } from '@/store/features/userSlice';
+import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 
 // Add this type near the profileItems array
 export interface ProfileItem {
@@ -23,9 +22,9 @@ export interface ProfileItem {
 
 export const profileItems: ProfileItem[] = [
   {
-    label: "Try-on History",
-    href: "/tryon-history",
-    icon: <AiOutlineHeart className="text-xl" />,
+    label: 'Try-on History',
+    href: '/tryon-history',
+    icon: <AiOutlineHeart className='text-xl' />,
   },
   // {
   //   label: "Profile",
@@ -53,21 +52,20 @@ const Auth = () => {
 
   const handleLogout = async () => {
     try {
-      //const apiUrl = "https://auth.faishion.ai";
+      const apiUrl = 'https://auth.faishion.ai';
 
-      // Call logout API using axios
-      await axios.get("/auth/logout", {});
+      await axios.post(apiUrl + '/auth/logout', {}, { withCredentials: true });
 
       // Clear access token from localStorage
-      localStorage.removeItem("accessToken");
+      localStorage.removeItem('accessToken');
 
       // Dispatch logout action to clear user state
       dispatch(logout());
 
       // Redirect to signin page
-      navigate("/signin");
+      navigate('/signin');
     } catch (error) {
-      console.error("Logout failed:", error);
+      console.error('Logout failed:', error);
     }
   };
 
@@ -81,39 +79,42 @@ const Auth = () => {
   }
 
   return (
-    <div className="flex justify-center items-center gap-5">
+    <div className='flex justify-center items-center gap-5'>
       {user?.email ? (
         <>
-          <IoMdNotifications className="text-gray-700 text-3xl cursor-pointer hover:text-primary duration-300 transition-all" />
+          <IoMdNotifications className='text-gray-700 text-3xl cursor-pointer hover:text-primary duration-300 transition-all' />
           <div
-            className="relative z-50"
+            className='relative z-50'
             ref={menuRef}
             onMouseEnter={() => setShowMenu(true)}
             onMouseLeave={() => setShowMenu(false)}
           >
             {!user?.picture ? (
               user?.email ? (
-                <RiMenuFill className="text-gray-800 text-3xl cursor-pointer hover:text-primary duration-300 transition-all" size={26} />
+                <RiMenuFill
+                  className='text-gray-800 text-3xl cursor-pointer hover:text-primary duration-300 transition-all'
+                  size={26}
+                />
               ) : (
-                <FaUserCircle className="text-gray-800 text-3xl cursor-pointer hover:text-primary duration-300 transition-all" />
+                <FaUserCircle className='text-gray-800 text-3xl cursor-pointer hover:text-primary duration-300 transition-all' />
               )
             ) : (
               <img
                 src={user.picture}
-                alt="User"
+                alt='User'
                 width={25}
                 height={25}
-                className="rounded-full"
+                className='rounded-full'
               />
             )}
             {showMenu && (
-              <div className="absolute right-0 top-full pt-2">
-                <div className="w-48 bg-white rounded-lg shadow-lg py-2">
+              <div className='absolute right-0 top-full pt-2'>
+                <div className='w-48 bg-white rounded-lg shadow-lg py-2'>
                   {profileItems.map((item) => (
                     <Link
                       key={item.label}
                       to={item.href}
-                      className="px-4 py-2 text-gray-800 hover:bg-gray-100 flex items-center gap-3"
+                      className='px-4 py-2 text-gray-800 hover:bg-gray-100 flex items-center gap-3'
                       onClick={handleMenuItemClick}
                     >
                       {item.icon}
@@ -121,13 +122,13 @@ const Auth = () => {
                     </Link>
                   ))}
                   <button
-                    className="w-full px-4 py-2 text-gray-800 hover:bg-gray-100 flex items-center gap-3"
+                    className='w-full px-4 py-2 text-gray-800 hover:bg-gray-100 flex items-center gap-3'
                     onClick={() => {
                       handleMenuItemClick();
                       handleLogout();
                     }}
                   >
-                    <IoLogOutOutline className="text-xl" />
+                    <IoLogOutOutline className='text-xl' />
                     Logout
                   </button>
                 </div>
@@ -138,14 +139,14 @@ const Auth = () => {
       ) : (
         <>
           <Link
-            className="text-black px-4 py-2 border border-black rounded-full font-normal text-sm hover:bg-primary hover:text-black hover:border-primary duration-300 transition-all"
-            to="/signin"
+            className='text-black px-4 py-2 border border-black rounded-full font-normal text-sm hover:bg-primary hover:text-black hover:border-primary duration-300 transition-all'
+            to='/signin'
           >
             Sign In
           </Link>
           <Link
-            className="px-4 py-2 rounded-full bg-black/95 hover:bg-primary text-white font-normal text-sm duration-300 transition-all"
-            to="/signup"
+            className='px-4 py-2 rounded-full bg-black/95 hover:bg-primary text-white font-normal text-sm duration-300 transition-all'
+            to='/signup'
           >
             Sign Up
           </Link>
@@ -156,4 +157,3 @@ const Auth = () => {
 };
 
 export default Auth;
-
