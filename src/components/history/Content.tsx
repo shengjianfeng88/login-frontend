@@ -98,7 +98,8 @@ const ProductCard: React.FC<ProductProps> = ({
   isFavorite,
   onToggleFavorite
 }) => (
-  <div className="relative bg-white rounded-2xl overflow-hidden shadow-lg w-full hover:shadow-xl transition cursor-pointer">
+  <div className="relative bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition cursor-pointer flex flex-col h-full">
+    {/* Favorite Button */}
     <div
       onClick={(e) => {
         e.stopPropagation();
@@ -108,20 +109,31 @@ const ProductCard: React.FC<ProductProps> = ({
     >
       <Heart className={`w-5 h-5 ${isFavorite ? 'fill-red-500 text-red-500' : 'text-gray-400'}`} />
     </div>
+
+    {/* Timestamp Badge */}
     <div className="absolute top-2 left-2 bg-gray-100 text-xs px-2 py-1 rounded z-10 text-gray-600">
       {new Date(timestamp).toLocaleDateString()}
     </div>
-    <img src={image} alt="Product" className="w-full h-64 object-cover rounded-t-2xl" />
-    <div className="p-4">
+
+    {/* Image */}
+    <div className="w-full h-72 bg-white flex items-center justify-center rounded-t-2xl">
+      <img src={image} alt="Product" className="h-full object-contain" />
+    </div>
+
+    {/* Product Details */}
+    <div className="p-4 flex flex-col justify-between flex-grow">
       <p className="text-gray-500 text-xs uppercase tracking-wide font-medium mb-1">{brand}</p>
       <p className="text-lg font-semibold text-gray-900 truncate">{name}</p>
       <div className="flex items-center gap-2 mt-2">
         <span className="text-lg font-bold text-black">{price}</span>
-        {/* {originalPrice && <span className="text-sm text-gray-400 line-through">{originalPrice}</span>} */}
+        {/* Uncomment if showing original price
+        {originalPrice && <span className="text-sm text-gray-400 line-through">{originalPrice}</span>} 
+        */}
       </div>
     </div>
   </div>
 );
+
 
 interface ProductItem {
   record_id: string;
@@ -137,7 +149,11 @@ interface ProductItem {
   };
 }
 
-const Content: React.FC = () => {
+interface ContentProps {
+  searchQuery: string;
+}
+
+const Content: React.FC<ContentProps> = ({ searchQuery }) => {
   const [products, setProducts] = useState<ProductItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedProduct, setSelectedProduct] = useState<ProductItem | null>(null);
@@ -150,13 +166,75 @@ const Content: React.FC = () => {
   useEffect(() => {
     const fetchHistory = async () => {
       try {
-        const res = await axios.get<ProductItem[]>('https://tryon-history.faishion.ai/history', {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
-        });
+        // const res = await axios.get<ProductItem[]>('https://tryon-history.faishion.ai/history', {
+        //   headers: {
+        //     Authorization: `Bearer ${accessToken}`,
+        //   },
+        // });
         
-        setProducts(res.data);
+        // setProducts(res.data);
+
+        const res = [
+        {
+            "product_info": {
+                "brand_name": "EDSTAR",
+                "domain": "www.amazon.com",
+                "price": "$28.99",
+                "product_name": "EDSTAR Women Dolman Batwing Sleeves Knitted Sweaters Winter Boat Neck Pullovers Tops",
+                "product_url": "https://www.amazon.com/dp/B0F32M72LL/ref=sspa_dk_browse_0/?_encoding=UTF8&ie=UTF8&psc=1&sp_csd=d2lkZ2V0TmFtZT1zcF9icm93c2VfdGhlbWF0aWM%3D&pd_rd_w=Sq7Tv&content-id=amzn1.sym.3f42e3f9-f82f-42ca-8d18-eb6a0d6a19a3&pf_rd_p=3f42e3f9-f82f-42ca-8d18-eb6a0d6a19a3&pf_rd_r=9VJ45X8VCVTEHQ813PCH&pd_rd_wg=TnjhF&pd_rd_r=7930e71e-1ec3-4f5e-b388-4a51de94ae78&ref_=sspa_dk_browse"
+            },
+            "record_id": "685a5e7faf846498603250f1",
+            "result_image_url": "https://faishionai.s3.amazonaws.com/tryon-results/1750752848.png",
+            "timestamp": "2025-06-24T08:14:55.689000",
+            "user_email": "alinapanyue@gmail.com",
+            "user_id": "680befac49e3107d70440d3d"
+        },
+        {
+            "product_info": {
+                "brand_name": "Fuinloth",
+                "domain": "www.amazon.com",
+                "price": "$35.99",
+                "product_name": "Fuinloth Women's Cardigan Sweater, Oversized Chunky Knit Button Closure with Pockets",
+                "product_url": "https://www.amazon.com/Fuinloth-Cardigan-Sweater-Oversized-Closure/dp/B08V233315?ref_=pd_ci_mcx_mh_pe_rm_d1_cai_p_2_0&pd_rd_i=B08V21TRWZ&pd_rd_w=gNgk1&content-id=amzn1.sym.57b80066-10e8-4be7-a5f2-ce3f1faa4959&pf_rd_p=57b80066-10e8-4be7-a5f2-ce3f1faa4959&pf_rd_r=3E887D4ZNKKQYJVPVAFJ&pd_rd_wg=FjLM5&pd_rd_r=270dead3-8624-4dae-888e-3c0b267a0bab&th=1"
+            },
+            "record_id": "68577d0d1cfb2fbd5687536e",
+            "result_image_url": "https://faishionai.s3.amazonaws.com/tryon-results/1750564061.png",
+            "timestamp": "2025-06-22T03:48:29.401000",
+            "user_email": "alinapanyue@gmail.com",
+            "user_id": "680befac49e3107d70440d3d"
+        },
+        {
+            "product_info": {
+                "brand_name": "EDSTAR",
+                "domain": "www.amazon.com",
+                "price": "$28.99",
+                "product_name": "EDSTAR Women Dolman Batwing Sleeves Knitted Sweaters Winter Boat Neck Pullovers Tops",
+                "product_url": "https://www.amazon.com/dp/B0CWRDP7WT/ref=sspa_dk_browse_0/?_encoding=UTF8&ie=UTF8&sp_csd=d2lkZ2V0TmFtZT1zcF9icm93c2VfdGhlbWF0aWM%3D&pd_rd_w=Sq7Tv&content-id=amzn1.sym.3f42e3f9-f82f-42ca-8d18-eb6a0d6a19a3&pf_rd_p=3f42e3f9-f82f-42ca-8d18-eb6a0d6a19a3&pf_rd_r=9VJ45X8VCVTEHQ813PCH&pd_rd_wg=TnjhF&pd_rd_r=7930e71e-1ec3-4f5e-b388-4a51de94ae78&ref_=sspa_dk_browse&th=1&psc=1"
+            },
+            "record_id": "68576a071cfb2fbd5687536d",
+            "result_image_url": "https://faishionai.s3.amazonaws.com/tryon-results/1750559194.png",
+            "timestamp": "2025-06-22T02:27:19.062000",
+            "user_email": "alinapanyue@gmail.com",
+            "user_id": "680befac49e3107d70440d3d"
+        },
+        {
+            "product_info": {
+                "brand_name": "Fuinloth",
+                "domain": "www.amazon.com",
+                "price": "$35.99",
+                "product_name": "Fuinloth Women's Cardigan Sweater, Oversized Chunky Knit Button Closure with Pockets",
+                "product_url": "https://www.amazon.com/Fuinloth-Cardigan-Sweater-Oversized-Closure/dp/B08V21TRWZ?ref_=pd_ci_mcx_mh_pe_rm_d1_cai_p_2_0&pd_rd_i=B08V21TRWZ&pd_rd_w=gNgk1&content-id=amzn1.sym.57b80066-10e8-4be7-a5f2-ce3f1faa4959&pf_rd_p=57b80066-10e8-4be7-a5f2-ce3f1faa4959&pf_rd_r=3E887D4ZNKKQYJVPVAFJ&pd_rd_wg=FjLM5&pd_rd_r=270dead3-8624-4dae-888e-3c0b267a0bab&th=1&psc=1"
+            },
+            "record_id": "6856e18d1cfb2fbd5687536c",
+            "result_image_url": "https://faishionai.s3.amazonaws.com/tryon-results/1750524252.png",
+            "timestamp": "2025-06-21T16:45:01.022000",
+            "user_email": "alinapanyue@gmail.com",
+            "user_id": "680befac49e3107d70440d3d"
+        }
+      ];
+
+      setProducts(res);
+
       } catch (error) {
         console.error('Error fetching history:', error);
       } finally {
@@ -177,9 +255,18 @@ const Content: React.FC = () => {
 
   const NoHistory = !loading && products.length === 0;
 
-  const filteredProducts = showOnlyFavorites
+  const filteredProducts = (showOnlyFavorites
     ? products.filter(p => favorites.has(p.record_id))
-    : products;
+    : products
+  ).filter((p) => {
+    const info = p.product_info || {};
+    const name = (info.product_name || info.name || '').toLowerCase();
+    const brand = (info.brand_name || '').toLowerCase();
+    return (
+      name.includes(searchQuery.toLowerCase()) ||
+      brand.includes(searchQuery.toLowerCase())
+    );
+  });
 
   const sortedProducts = [...filteredProducts].sort((a, b) => {
     const priceA = parseFloat(a.product_info?.price?.toString().replace('$', '') || '0');

@@ -27,16 +27,16 @@ export const profileItems: ProfileItem[] = [
     href: '/tryon-history',
     icon: <AiOutlineHeart className='text-xl' />,
   },
-  // {
-  //   label: "Profile",
-  //   href: "/profile",
-  //   icon: <CgProfile className="text-xl" />,
-  // },
-  // {
-  //   label: "Settings",
-  //   href: "/settings",
-  //   icon: <IoMdSettings className="text-xl" />,
-  // },
+  {
+    label: 'Profile',
+    href: '/profile',
+    icon: <CgProfile className='text-xl' />,
+  },
+  {
+    label: 'Settings',
+    href: '/settings',
+    icon: <IoMdSettings className='text-xl' />,
+  },
 ];
 
 const Auth = () => {
