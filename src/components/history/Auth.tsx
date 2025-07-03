@@ -49,7 +49,7 @@ const Auth = () => {
   useEffect(() => {
     setIsMounted(true); // Set to true when the component is mounted on the client
   }, []);
-
+  console.log(user);
   const handleLogout = async () => {
     try {
       const apiUrl = 'https://auth.faishion.ai';
