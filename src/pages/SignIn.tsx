@@ -26,6 +26,8 @@ const SignIn = () => {
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const navigate = useNavigate();
 
   //Image carrousel
@@ -66,64 +68,43 @@ const SignIn = () => {
     return () => clearInterval(interval);
   }, [activeSlide, isTransitioning, isPaused, changeSlide]);
 
+  useEffect(() => {
+    const remembered = localStorage.getItem('rememberMe') === 'true';
+    const rememberedEmail = localStorage.getItem('rememberedEmail') || '';
+    setRememberMe(remembered);
+    setEmail(remembered ? rememberedEmail : '');
+  }, []);
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError("");
     setIsLoading(true);
-    const formData = new FormData(e.currentTarget);
     const data = {
-      email: formData.get("email"),
-      password: formData.get("password"),
-      rememberMe: rememberMe,
+      email,
+      password,
+      rememberMe,
     };
 
     try {
       const validatedData = signInSchema.parse(data);
-      // <<<<<<< HEAD
-      //       const apiUrl = "https://api-auth.faishion.ai";
-
-      //       // Call login API using axios
-      //       const response = await axios.post(
-      //         apiUrl + "/api/auth/login",
-      //         validatedData
-      //       );
-
-      //       if (response.data) {
-      //         const accessToken = response.data.accessToken;
-      //         // Store token in localStorage
-      //         localStorage.setItem("accessToken", accessToken);
-
-      //         // Decode token and log the contents
-      //         const decodedToken = jwtDecode(accessToken);
-      //         console.log("Decoded token:", decodedToken);
-
-      //         sendMessageToExtension({
-      //           email: "",
-      //           picture: "",
-      //           accessToken: accessToken,
-      //         });
-
-      //         navigate("/done");
-      //       }
-      //     } catch (err) {
-      //       if (err instanceof z.ZodError) {
-      //         setError(err.errors[0].message);
-      //       } else if (axios.isAxiosError(err)) {
-      //         setError(err.response?.data?.message || "Invalid email or password");
-      //       } else {
-      //         setError("An error occurred. Please try again.");
-      // =======
       const res = await axiosInstance.post("/auth/login", {
         ...validatedData,
         rememberMe,
       });
-      localStorage.setItem("accessToken", res.data.accessToken);
-      localStorage.setItem("userId", res.data.userId);
       sendMessageToExtension({
         email: res.data.email,
         picture: res.data.picture,
         accessToken: res.data.accessToken,
       });
+      // 处理 rememberMe 本地存储
+      if (rememberMe) {
+        localStorage.setItem('accessToken', res.data.accessToken);
+        sessionStorage.removeItem('accessToken');
+      } else {
+        sessionStorage.setItem('accessToken', res.data.accessToken);
+        localStorage.removeItem('accessToken');
+      }
+      localStorage.setItem("userId", res.data.userId);
       navigate("/done");
     } catch (err: any) {
       if (err instanceof z.ZodError) {
@@ -213,6 +194,8 @@ const SignIn = () => {
                     placeholder="Email"
                     className="w-full h-10 border border-[#DADCE0] rounded-lg px-4 text-sm"
                     autoComplete="email"
+                    value={email}
+                    onChange={e => setEmail(e.target.value)}
                   />
                 </div>
 
@@ -224,6 +207,8 @@ const SignIn = () => {
                     placeholder="Password"
                     className="w-full h-10 border border-[#DADCE0] rounded-lg px-4 text-sm"
                     autoComplete="current-password"
+                    value={password}
+                    onChange={e => setPassword(e.target.value)}
                   />
                 </div>
 
@@ -234,7 +219,13 @@ const SignIn = () => {
                       type="checkbox"
                       id="remember"
                       checked={rememberMe}
-                      onChange={() => setRememberMe(!rememberMe)}
+                      onChange={e => {
+                        setRememberMe(e.target.checked);
+                        if (!e.target.checked) {
+                          localStorage.removeItem('rememberMe');
+                          localStorage.removeItem('rememberedEmail');
+                        }
+                      }}
                       className="w-[14px] h-[14px] border-[0.5px] border-[#A6A6A6] rounded-[2px]"
                     />
                     <label
