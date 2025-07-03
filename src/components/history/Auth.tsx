@@ -55,7 +55,7 @@ const Auth = () => {
     try {
       const apiUrl = 'https://auth.faishion.ai';
 
-      await axios.post(apiUrl + '/auth/logout', {}, { withCredentials: true });
+      await axios.get(apiUrl + '/auth/logout', { withCredentials: true });
 
       // Clear access token from localStorage
       localStorage.removeItem('accessToken');
