@@ -1,5 +1,5 @@
 import React from 'react';
-import { IoSearchOutline } from "react-icons/io5";
+import { IoSearchOutline } from 'react-icons/io5';
 import Auth from './Auth';
 
 interface HeaderProps {
@@ -17,7 +17,7 @@ const Header: React.FC<HeaderProps> = ({ searchQuery, setSearchQuery }) => {
         <div className='flex items-center gap-2 border border-gray-300 focus-within:border-black focus-within:shadow-md focus-within:border-[2px] rounded-md px-2 py-1.5 w-[400px]'>
           <IoSearchOutline size={15} className='text-gray-500' />
           <input
-            type="text"
+            type='text'
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder='Search your try-on history'

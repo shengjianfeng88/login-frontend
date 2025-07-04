@@ -4,9 +4,8 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { FaUserCircle } from 'react-icons/fa';
-import { IoMdNotifications, IoMdSettings } from 'react-icons/io';
+import { IoMdNotifications } from 'react-icons/io';
 import { IoLogOutOutline } from 'react-icons/io5';
-import { CgProfile } from 'react-icons/cg';
 import { AiOutlineHeart } from 'react-icons/ai';
 import { RiMenuFill } from 'react-icons/ri';
 import { RootState } from '@/store/store';
@@ -50,12 +49,11 @@ const Auth = () => {
   useEffect(() => {
     setIsMounted(true); // Set to true when the component is mounted on the client
   }, []);
-
+  console.log(user);
   const handleLogout = async () => {
     try {
       const apiUrl = 'https://auth.faishion.ai';
 
-      // Call logout API using axios
       await axios.get(apiUrl + '/auth/logout', { withCredentials: true });
 
       // Clear access token from localStorage
@@ -84,7 +82,6 @@ const Auth = () => {
     <div className='flex justify-center items-center gap-5'>
       {user?.email ? (
         <>
-          <IoMdNotifications className='text-gray-700 text-3xl cursor-pointer hover:text-primary duration-300 transition-all' />
           <div
             className='relative z-50'
             ref={menuRef}

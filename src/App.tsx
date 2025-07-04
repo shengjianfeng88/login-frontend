@@ -41,6 +41,7 @@ function App() {
               <Route path='/confirm-register' element={<ConfirmRegister />} />
               <Route path='/auto-test/*' element={<AutoTest />} />
               <Route path='/faishion-chatbot' element={<ChatWidget />} />
+              <Route path='/chat' element={<ChatWidget />} />
               <Route
                 path='/image-convert-test'
                 element={<ImageConvertTest />}

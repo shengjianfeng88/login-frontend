@@ -3,7 +3,7 @@ import Header from '@/components/history/Header';
 import Content from '@/components/history/Content';
 
 const History: React.FC = () => {
-  const [searchQuery, setSearchQuery] = useState<string>(''); 
+  const [searchQuery, setSearchQuery] = useState<string>('');
 
   return (
     <main>
