@@ -98,7 +98,8 @@ const ProductCard: React.FC<ProductProps> = ({
   isFavorite,
   onToggleFavorite
 }) => (
-  <div className="relative bg-white rounded-2xl overflow-hidden shadow-lg w-full hover:shadow-xl transition cursor-pointer">
+  <div className="relative bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition cursor-pointer flex flex-col h-full">
+    {/* Favorite Button */}
     <div
       onClick={(e) => {
         e.stopPropagation();
@@ -108,20 +109,31 @@ const ProductCard: React.FC<ProductProps> = ({
     >
       <Heart className={`w-5 h-5 ${isFavorite ? 'fill-red-500 text-red-500' : 'text-gray-400'}`} />
     </div>
+
+    {/* Timestamp Badge */}
     <div className="absolute top-2 left-2 bg-gray-100 text-xs px-2 py-1 rounded z-10 text-gray-600">
       {new Date(timestamp).toLocaleDateString()}
     </div>
-    <img src={image} alt="Product" className="w-full h-64 object-cover rounded-t-2xl" />
-    <div className="p-4">
+
+    {/* Image */}
+    <div className="w-full h-72 bg-white flex items-center justify-center rounded-t-2xl">
+      <img src={image} alt="Product" className="h-full object-contain" />
+    </div>
+
+    {/* Product Details */}
+    <div className="p-4 flex flex-col justify-between flex-grow">
       <p className="text-gray-500 text-xs uppercase tracking-wide font-medium mb-1">{brand}</p>
       <p className="text-lg font-semibold text-gray-900 truncate">{name}</p>
       <div className="flex items-center gap-2 mt-2">
         <span className="text-lg font-bold text-black">{price}</span>
-        {/* {originalPrice && <span className="text-sm text-gray-400 line-through">{originalPrice}</span>} */}
+        {/* Uncomment if showing original price
+        {originalPrice && <span className="text-sm text-gray-400 line-through">{originalPrice}</span>} 
+        */}
       </div>
     </div>
   </div>
 );
+
 
 interface ProductItem {
   record_id: string;
@@ -137,7 +149,11 @@ interface ProductItem {
   };
 }
 
-const Content: React.FC = () => {
+interface ContentProps {
+  searchQuery: string;
+}
+
+const Content: React.FC<ContentProps> = ({ searchQuery }) => {
   const [products, setProducts] = useState<ProductItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedProduct, setSelectedProduct] = useState<ProductItem | null>(null);
@@ -157,6 +173,7 @@ const Content: React.FC = () => {
         });
         
         setProducts(res.data);
+
       } catch (error) {
         console.error('Error fetching history:', error);
       } finally {
@@ -177,9 +194,18 @@ const Content: React.FC = () => {
 
   const NoHistory = !loading && products.length === 0;
 
-  const filteredProducts = showOnlyFavorites
+  const filteredProducts = (showOnlyFavorites
     ? products.filter(p => favorites.has(p.record_id))
-    : products;
+    : products
+  ).filter((p) => {
+    const info = p.product_info || {};
+    const name = (info.product_name || info.name || '').toLowerCase();
+    const brand = (info.brand_name || '').toLowerCase();
+    return (
+      name.includes(searchQuery.toLowerCase()) ||
+      brand.includes(searchQuery.toLowerCase())
+    );
+  });
 
   const sortedProducts = [...filteredProducts].sort((a, b) => {
     const priceA = parseFloat(a.product_info?.price?.toString().replace('$', '') || '0');

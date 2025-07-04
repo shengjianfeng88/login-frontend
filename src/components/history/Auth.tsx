@@ -82,7 +82,6 @@ const Auth = () => {
     <div className='flex justify-center items-center gap-5'>
       {user?.email ? (
         <>
-          <IoMdNotifications className='text-gray-700 text-3xl cursor-pointer hover:text-primary duration-300 transition-all' />
           <div
             className='relative z-50'
             ref={menuRef}
