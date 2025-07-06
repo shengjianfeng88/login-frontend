@@ -12,6 +12,80 @@ import {
   DatePicker,
   Descriptions,
 } from 'antd';
+import { StarFilled, StarOutlined } from '@ant-design/icons';
+
+// 自定义样式
+const customModalStyles = `
+  .custom-preview-modal .ant-modal-close {
+    top: -5px !important;
+    right: -5px !important;
+  }
+  .custom-preview-modal .ant-modal-close-x {
+    width: 32px !important;
+    height: 32px !important;
+    line-height: 32px !important;
+    font-size: 18px !important;
+  }
+`;
+
+// 注入样式
+if (typeof document !== 'undefined') {
+  const styleElement = document.createElement('style');
+  styleElement.textContent = customModalStyles;
+  document.head.appendChild(styleElement);
+}
+
+// 五星评分组件
+const StarRating: React.FC<{
+  value: number;
+  onChange: (value: number) => void;
+  disabled?: boolean;
+}> = ({ value, onChange, disabled = false }) => {
+  const [hoverValue, setHoverValue] = useState<number>(0);
+
+  const handleStarClick = (starValue: number) => {
+    if (!disabled) {
+      onChange(starValue);
+    }
+  };
+
+  const handleStarHover = (starValue: number) => {
+    if (!disabled) {
+      setHoverValue(starValue);
+    }
+  };
+
+  const handleMouseLeave = () => {
+    if (!disabled) {
+      setHoverValue(0);
+    }
+  };
+
+  const displayValue = hoverValue || value;
+
+  return (
+    <div
+      className="flex items-center gap-1"
+      onMouseLeave={handleMouseLeave}
+    >
+      {[1, 2, 3, 4, 5].map((star) => (
+        <span
+          key={star}
+          className={`cursor-pointer transition-colors duration-200 ${disabled ? 'cursor-not-allowed' : ''
+            }`}
+          onClick={() => handleStarClick(star)}
+          onMouseEnter={() => handleStarHover(star)}
+        >
+          {displayValue >= star ? (
+            <StarFilled className="text-yellow-400 text-lg" />
+          ) : (
+            <StarOutlined className="text-gray-300 text-lg hover:text-yellow-400" />
+          )}
+        </span>
+      ))}
+    </div>
+  );
+};
 import {
   ArrowLeftOutlined,
   SearchOutlined,
@@ -26,6 +100,57 @@ import dayjs from 'dayjs';
 
 const { Title, Text } = Typography;
 const { RangePicker } = DatePicker;
+
+// 自定义预览组件
+const CustomImagePreview: React.FC<{
+  userImage: string;
+  clothingImage: string;
+  generatedResult?: string;
+  status?: string;
+}> = ({ userImage, clothingImage, generatedResult, status }) => {
+  return (
+    <div className='flex gap-4 justify-center items-center p-4 bg-black'>
+      <div className='text-center'>
+        <div className='text-white text-sm mb-2'>INPUT 1 (USER IMAGE)</div>
+        <img
+          src={userImage}
+          alt='User'
+          className='max-w-md max-h-[1800px] object-contain'
+        />
+      </div>
+      <div className='text-center'>
+        <div className='text-white text-sm mb-2'>INPUT 2 (CLOTHING)</div>
+        <img
+          src={clothingImage}
+          alt='Clothing'
+          className='max-w-md max-h-[1800px] object-contain'
+        />
+      </div>
+      <div className='text-center'>
+        <div className='text-white text-sm mb-2'>GENERATED RESULT</div>
+        {status === 'success' && generatedResult ? (
+          <img
+            src={generatedResult}
+            alt='Generated Result'
+            className='max-w-md max-h-[1800px] object-contain'
+          />
+        ) : status === 'FAILED' ? (
+          <div className='max-w-md max-h-[1800px] flex items-center justify-center bg-gray-800 text-red-400'>
+            Failed
+          </div>
+        ) : status === 'CANCELLED' ? (
+          <div className='max-w-md max-h-[1800px] flex items-center justify-center bg-gray-800 text-orange-400'>
+            Cancelled
+          </div>
+        ) : (
+          <div className='max-w-md max-h-[1800px] flex items-center justify-center bg-gray-800 text-gray-400'>
+            Waiting
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
 
 interface HistoryTableProps {
   testResults: TestResult[];
@@ -57,22 +182,15 @@ const HistoryTable: React.FC<HistoryTableProps> = ({
   pagination,
   onTableChange,
 }) => {
-  const [scoringTaskId, setScoringTaskId] = useState<string | null>(null);
-  const [scoreValue, setScoreValue] = useState<number>(0);
+  const [previewVisible, setPreviewVisible] = useState(false);
+  const [previewData, setPreviewData] = useState<TestResult | null>(null);
 
-  const handleScoreSubmit = async (taskId: string) => {
-    if (onScoreUpdate) {
-      try {
-        await onScoreUpdate(taskId, scoreValue);
-        setScoringTaskId(null);
-        setScoreValue(0);
-        message.success('Score updated successfully');
-      } catch (error) {
-        console.error('Score update failed:', error);
-        message.error('Score update failed');
-      }
-    }
+  const handlePreview = (record: TestResult) => {
+    setPreviewData(record);
+    setPreviewVisible(true);
   };
+
+
 
   const handleDeleteButtonClick = () => {
     if (selectedRowKeys.length === 0) {
@@ -113,17 +231,21 @@ const HistoryTable: React.FC<HistoryTableProps> = ({
       dataIndex: 'userImage',
       key: 'userImage',
       width: 150,
-      render: (image) => (
-        <div className='w-28 h-36 overflow-hidden'>
-          <Image
+      render: (image, record: TestResult) => (
+        <div
+          className='w-28 h-36 overflow-hidden cursor-pointer'
+          onClick={() => handlePreview(record)}
+        >
+          <img
             src={image}
             alt='User'
             className='w-full h-full object-cover object-top'
-            preview={{
-              mask: 'Click to preview',
-              maskClassName: 'flex items-center justify-center',
-            }}
           />
+          <div className='absolute inset-0 bg-black bg-opacity-0 hover:bg-opacity-20 transition-all duration-200 flex items-center justify-center'>
+            <span className='text-white text-xs opacity-0 hover:opacity-100 transition-opacity duration-200'>
+              Click to preview all
+            </span>
+          </div>
         </div>
       ),
     },
@@ -132,17 +254,21 @@ const HistoryTable: React.FC<HistoryTableProps> = ({
       dataIndex: 'clothingImage',
       key: 'clothingImage',
       width: 150,
-      render: (image) => (
-        <div className='w-28 h-36 overflow-hidden'>
-          <Image
+      render: (image, record: TestResult) => (
+        <div
+          className='w-28 h-36 overflow-hidden cursor-pointer'
+          onClick={() => handlePreview(record)}
+        >
+          <img
             src={image}
             alt='Clothing'
             className='w-full h-full object-cover object-top'
-            preview={{
-              mask: 'Click to preview',
-              maskClassName: 'flex items-center justify-center',
-            }}
           />
+          <div className='absolute inset-0 bg-black bg-opacity-0 hover:bg-opacity-20 transition-all duration-200 flex items-center justify-center'>
+            <span className='text-white text-xs opacity-0 hover:opacity-100 transition-opacity duration-200'>
+              Click to preview all
+            </span>
+          </div>
         </div>
       ),
     },
@@ -152,22 +278,30 @@ const HistoryTable: React.FC<HistoryTableProps> = ({
       key: 'generatedResult',
       width: 150,
       render: (image, record: TestResult) => (
-        <div className='w-28 h-36 overflow-hidden relative'>
+        <div
+          className='w-28 h-36 overflow-hidden relative cursor-pointer'
+          onClick={() => handlePreview(record)}
+        >
           {record.status === 'success' && image ? (
-            <Image
+            <img
               src={image}
               alt='Generated Result'
               className='w-full h-full object-cover object-top'
-              preview={{
-                mask: 'Click to preview',
-                maskClassName: 'flex items-center justify-center',
-              }}
             />
           ) : record.status === 'FAILED' ? (
-            <Text type='danger'>Failed</Text>
+            <div className='w-full h-full bg-red-100 flex items-center justify-center'>
+              <Text type='danger'>Failed</Text>
+            </div>
           ) : (
-            <Text type='secondary'>Waiting</Text>
+            <div className='w-full h-full bg-gray-100 flex items-center justify-center'>
+              <Text type='secondary'>Waiting</Text>
+            </div>
           )}
+          <div className='absolute inset-0 bg-black bg-opacity-0 hover:bg-opacity-20 transition-all duration-200 flex items-center justify-center'>
+            <span className='text-white text-xs opacity-0 hover:opacity-100 transition-opacity duration-200'>
+              Click to preview all
+            </span>
+          </div>
         </div>
       ),
     },
@@ -198,7 +332,7 @@ const HistoryTable: React.FC<HistoryTableProps> = ({
       title: 'Score',
       dataIndex: 'score',
       key: 'score',
-      width: 120,
+      width: 150,
       sorter: (a, b) => {
         // 处理 undefined 和 null 值
         const scoreA = a.score || 0;
@@ -210,55 +344,26 @@ const HistoryTable: React.FC<HistoryTableProps> = ({
           return <span className='text-gray-400'>-</span>;
         }
 
-        if (scoringTaskId === record.taskId) {
-          return (
-            <div className='flex items-center gap-2'>
-              <input
-                type='number'
-                min='0'
-                max='100'
-                value={scoreValue}
-                onChange={(e) => setScoreValue(Number(e.target.value))}
-                className='w-16 px-2 py-1 border rounded text-sm'
-                placeholder='Score'
-              />
-              <Button
-                size='small'
-                type='primary'
-                onClick={() => handleScoreSubmit(record.taskId!)}
-                className='!rounded-button'
-              >
-                Submit
-              </Button>
-              <Button
-                size='small'
-                onClick={() => {
-                  setScoringTaskId(null);
-                  setScoreValue(0);
-                }}
-                className='!rounded-button'
-              >
-                Cancel
-              </Button>
-            </div>
-          );
-        }
+        const handleScoreChange = async (newScore: number) => {
+          if (onScoreUpdate && record.taskId) {
+            try {
+              await onScoreUpdate(record.taskId, newScore);
+              message.success(`Score updated to ${newScore}`);
+            } catch (error) {
+              console.error('Score update failed:', error);
+              message.error('Score update failed');
+            }
+          }
+        };
 
         return (
-          <div className='flex items-center gap-2'>
-            <span className='font-medium'>{score || '-'}</span>
-            {record.taskId && (
-              <Button
-                size='small'
-                onClick={() => {
-                  setScoringTaskId(record.taskId!);
-                  setScoreValue(score || 0);
-                }}
-                className='!rounded-button'
-              >
-                Score
-              </Button>
-            )}
+          <div className="flex items-center gap-2">
+            <StarRating
+              value={score || 0}
+              onChange={handleScoreChange}
+              disabled={false}
+            />
+            {score && <span className="text-sm text-gray-500">({score})</span>}
           </div>
         );
       },
@@ -353,6 +458,26 @@ const HistoryTable: React.FC<HistoryTableProps> = ({
         className='test-results-table'
         onChange={onTableChange}
       />
+
+      {/* 自定义预览模态框 */}
+      <Modal
+        open={previewVisible}
+        onCancel={() => setPreviewVisible(false)}
+        footer={null}
+        width={2000}
+        centered
+        destroyOnClose
+        className="custom-preview-modal"
+      >
+        {previewData && (
+          <CustomImagePreview
+            userImage={previewData.userImage}
+            clothingImage={previewData.clothingImage}
+            generatedResult={previewData.generatedResult}
+            status={previewData.status}
+          />
+        )}
+      </Modal>
     </div>
   );
 };
