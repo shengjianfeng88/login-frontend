@@ -62,7 +62,7 @@ export const TestResultsTable: React.FC<TestResultsTableProps> = ({
 }) => {
   const handleDeleteButtonClick = () => {
     if (selectedRowKeys.length === 0) {
-      message.warning('请选择要删除的项目');
+      message.warning('Please select items to delete');
       return;
     }
 
@@ -72,10 +72,10 @@ export const TestResultsTable: React.FC<TestResultsTableProps> = ({
     );
 
     Modal.confirm({
-      title: '确认删除',
-      content: `确定要删除选中的 ${selectedItems.length} 个测试结果吗？此操作不可撤销。`,
-      okText: '确认删除',
-      cancelText: '取消',
+      title: 'Confirm Delete',
+      content: `Are you sure you want to delete the selected ${selectedItems.length} test results? This action cannot be undone.`,
+      okText: 'Confirm Delete',
+      cancelText: 'Cancel',
       okType: 'danger',
       onOk: async () => {
         if (onDeleteSelected) {
@@ -85,8 +85,8 @@ export const TestResultsTable: React.FC<TestResultsTableProps> = ({
             await onDeleteSelected(selectedKeys);
             // 成功消息在 onDeleteSelected 中处理
           } catch (error) {
-            console.error('删除失败:', error);
-            message.error('删除失败');
+            console.error('Delete failed:', error);
+            message.error('Delete failed');
           }
         }
       },
@@ -106,7 +106,7 @@ export const TestResultsTable: React.FC<TestResultsTableProps> = ({
             alt='User'
             className='w-full h-full object-cover object-top'
             preview={{
-              mask: '点击预览',
+              mask: 'Click to preview',
               maskClassName: 'flex items-center justify-center',
             }}
           />
@@ -125,7 +125,7 @@ export const TestResultsTable: React.FC<TestResultsTableProps> = ({
             alt='Clothing'
             className='w-full h-full object-cover object-top'
             preview={{
-              mask: '点击预览',
+              mask: 'Click to preview',
               maskClassName: 'flex items-center justify-center',
             }}
           />
@@ -145,14 +145,14 @@ export const TestResultsTable: React.FC<TestResultsTableProps> = ({
               alt='Generated Result'
               className='w-full h-full object-cover object-top'
               preview={{
-                mask: '点击预览',
+                mask: 'Click to preview',
                 maskClassName: 'flex items-center justify-center',
               }}
             />
           ) : record.status === 'FAILED' ? (
             <Text type='danger'>Failed</Text>
           ) : record.status === 'CANCELLED' ? (
-            <Text type='warning'>已终止</Text>
+            <Text type='warning'>Cancelled</Text>
           ) : (
             <Text type='secondary'>Waiting</Text>
           )}
@@ -160,7 +160,7 @@ export const TestResultsTable: React.FC<TestResultsTableProps> = ({
       ),
     },
     {
-      title: '耗时',
+      title: 'Execution Time',
       dataIndex: 'executionTime',
       key: 'executionTime',
       width: 120,
@@ -169,17 +169,17 @@ export const TestResultsTable: React.FC<TestResultsTableProps> = ({
         if (record.status === 'success' && time) {
           return `${(time / 1000).toFixed(2)}s`;
         } else if (record.status === 'FAILED') {
-          return <span className='text-red-500'>失败</span>;
+          return <span className='text-red-500'>Failed</span>;
         } else if (record.status === 'IN_PROGRESS') {
-          return <span className='text-blue-500'>处理中</span>;
+          return <span className='text-blue-500'>Processing</span>;
         } else if (record.status === 'CANCELLED') {
-          return <span className='text-orange-500'>已终止</span>;
+          return <span className='text-orange-500'>Cancelled</span>;
         }
         return '-';
       },
     },
     {
-      title: '分数',
+      title: 'Score',
       dataIndex: 'score',
       key: 'score',
       width: 120,
@@ -236,7 +236,7 @@ export const TestResultsTable: React.FC<TestResultsTableProps> = ({
             onClick={handleDeleteButtonClick}
             className='!rounded-button whitespace-nowrap'
           >
-            删除选中 ({selectedRowKeys.length})
+            Delete Selected ({selectedRowKeys.length})
           </Button>
         )}
       </div>
@@ -309,13 +309,12 @@ const ResultsPage: React.FC<ResultsProps> = ({
 
   const handleTestSelected = async () => {
     if (selectedRowKeys.length === 0) {
-      message.warning('请选择要测试的项目');
+      message.warning('Please select items to test');
       return;
     }
 
     setLoading(true);
     setIsCancelling(false);
-    // 创建新的 AbortController
     abortControllerRef.current = new AbortController();
 
     const selectedResults = testResults.filter((item) =>
@@ -324,16 +323,16 @@ const ResultsPage: React.FC<ResultsProps> = ({
 
     try {
       for (const test of selectedResults) {
-        // 检查是否被终止
+        // Check if cancelled
         if (abortControllerRef.current?.signal.aborted) {
           break;
         }
 
         try {
-          // 记录开始时间
+          // Record start time
           const startTime = Date.now();
 
-          // 设置初始状态为处理中
+          // Set initial status to processing
           setTestResults((prev) =>
             prev.map((item) => {
               if (item.key === test.key) {
@@ -346,28 +345,28 @@ const ResultsPage: React.FC<ResultsProps> = ({
             })
           );
 
-          // 调用试穿接口，传入 signal 用于终止
+          // Call tryon API, pass signal for abort
           const response = await tryonApi.startTryon(
             test.userImage,
             test.clothingImage,
             abortControllerRef.current?.signal
           );
 
-          // 添加调试信息
-          console.log('API 响应:', response);
-          console.log('image 字段:', response.image);
-          console.log('result_image_url 字段:', response.result_image_url);
+          // Add debug information
+          console.log('API response:', response);
+          console.log('image field:', response.image);
+          console.log('result_image_url field:', response.result_image_url);
 
-          // 检查是否被终止
+          // Check if cancelled
           if (abortControllerRef.current?.signal.aborted) {
-            // 更新状态为已终止
+            // Update status to cancelled
             setTestResults((prev) =>
               prev.map((item) => {
                 if (item.key === test.key) {
                   return {
                     ...item,
                     status: 'CANCELLED',
-                    error: '用户终止了生成',
+                    error: 'User cancelled generation',
                     savedAt: new Date().toISOString(),
                   };
                 }
@@ -377,10 +376,10 @@ const ResultsPage: React.FC<ResultsProps> = ({
             break;
           }
 
-          // 计算耗时
+          // Calculate execution time
           const executionTime = Date.now() - startTime;
 
-          // 更新测试结果状态
+          // Update test result status
           setTestResults((prev) =>
             prev.map((item) => {
               if (item.key === test.key) {
@@ -398,16 +397,16 @@ const ResultsPage: React.FC<ResultsProps> = ({
             })
           );
         } catch (error) {
-          // 检查是否是终止错误
+          // Check if abort error
           if (error instanceof Error && error.name === 'AbortError') {
-            // 更新状态为已终止
+            // Update status to cancelled
             setTestResults((prev) =>
               prev.map((item) => {
                 if (item.key === test.key) {
                   return {
                     ...item,
                     status: 'CANCELLED',
-                    error: '用户终止了生成',
+                    error: 'User cancelled generation',
                     savedAt: new Date().toISOString(),
                   };
                 }
@@ -417,17 +416,17 @@ const ResultsPage: React.FC<ResultsProps> = ({
             break;
           }
 
-          console.error('测试失败:', error);
-          message.error(`测试 ${test.key} 失败`);
+          console.error('Test failed:', error);
+          message.error(`Test ${test.key} failed`);
 
-          // 更新失败状态
+          // Update failed status
           setTestResults((prev) =>
             prev.map((item) => {
               if (item.key === test.key) {
                 return {
                   ...item,
                   status: 'FAILED',
-                  error: error instanceof Error ? error.message : '未知错误',
+                  error: error instanceof Error ? error.message : 'Unknown error',
                   savedAt: new Date().toISOString(),
                 };
               }
@@ -437,8 +436,8 @@ const ResultsPage: React.FC<ResultsProps> = ({
         }
       }
     } catch (error) {
-      console.error('批量测试失败:', error);
-      message.error('批量测试失败');
+      console.error('Batch test failed:', error);
+      message.error('Batch test failed');
     } finally {
       setLoading(false);
       setIsCancelling(false);
@@ -457,58 +456,6 @@ const ResultsPage: React.FC<ResultsProps> = ({
   const onSelectChange = (newSelectedRowKeys: React.Key[]) => {
     setSelectedRowKeys(newSelectedRowKeys);
   };
-
-  // useEffect(() => {
-  //     const chartDom = document.getElementById('improvement-chart');
-  //     if (chartDom) {
-  //         const myChart = echarts.init(chartDom);
-  //         const option = {
-  //             animation: false,
-  //             tooltip: {
-  //                 trigger: 'axis',
-  //                 axisPointer: {
-  //                     type: 'shadow'
-  //                 }
-  //             },
-  //             grid: {
-  //                 left: '3%',
-  //                 right: '4%',
-  //                 bottom: '3%',
-  //                 containLabel: true
-  //             },
-  //             xAxis: [
-  //                 {
-  //                     type: 'category',
-  //                     data: ['v8', 'v9', 'v10', 'v11'],
-  //                     axisTick: {
-  //                         alignWithLabel: true
-  //                     }
-  //                 }
-  //             ],
-  //             yAxis: [
-  //                 {
-  //                     type: 'value',
-  //                     min: 3,
-  //                     max: 5
-  //                 }
-  //             ],
-  //             series: [
-  //                 {
-  //                     name: 'Average Score',
-  //                     type: 'bar',
-  //                     barWidth: '60%',
-  //                     data: [
-  //                         { value: 3.2, itemStyle: { color: '#8884d8' } },
-  //                         { value: 3.5, itemStyle: { color: '#8884d8' } },
-  //                         { value: 3.8, itemStyle: { color: '#8884d8' } },
-  //                         { value: 4.2, itemStyle: { color: '#4caf50' } }
-  //                     ]
-  //                 }
-  //             ]
-  //         };
-  //         myChart.setOption(option);
-  //     }
-  // }, []);
 
   const handleViewHistory = () => {
     navigate('/auto-test/history');
@@ -534,7 +481,7 @@ const ResultsPage: React.FC<ResultsProps> = ({
 
   const handleSaveResults = async () => {
     if (selectedRowKeys.length === 0) {
-      message.warning('请选择要保存的测试结果');
+      message.warning('Please select test results to save');
       return;
     }
 
@@ -551,7 +498,7 @@ const ResultsPage: React.FC<ResultsProps> = ({
       );
 
       if (completedResults.length === 0) {
-        message.warning('选中的项目中没有已完成的测试结果可保存');
+        message.warning('No completed test results to save among selected items');
         return;
       }
 
@@ -569,10 +516,10 @@ const ResultsPage: React.FC<ResultsProps> = ({
 
       // 调用保存接口
       await tryonApi.saveTestResults(apiResults);
-      message.success(`成功保存 ${completedResults.length} 个测试结果`);
+      message.success(`Successfully saved ${completedResults.length} test results`);
     } catch (error) {
-      console.error('保存测试结果失败:', error);
-      message.error('保存测试结果失败');
+      console.error('Failed to save test results:', error);
+      message.error('Failed to save test results');
     } finally {
       setSaving(false);
     }

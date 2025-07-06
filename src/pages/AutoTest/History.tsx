@@ -66,17 +66,17 @@ const HistoryTable: React.FC<HistoryTableProps> = ({
         await onScoreUpdate(taskId, scoreValue);
         setScoringTaskId(null);
         setScoreValue(0);
-        message.success('分数更新成功');
+        message.success('Score updated successfully');
       } catch (error) {
-        console.error('分数更新失败:', error);
-        message.error('分数更新失败');
+        console.error('Score update failed:', error);
+        message.error('Score update failed');
       }
     }
   };
 
   const handleDeleteButtonClick = () => {
     if (selectedRowKeys.length === 0) {
-      message.warning('请选择要删除的项目');
+      message.warning('Please select items to delete');
       return;
     }
 
@@ -86,10 +86,10 @@ const HistoryTable: React.FC<HistoryTableProps> = ({
     );
 
     Modal.confirm({
-      title: '确认删除',
-      content: `确定要删除选中的 ${selectedItems.length} 个测试结果吗？此操作不可撤销。`,
-      okText: '确认删除',
-      cancelText: '取消',
+      title: 'Confirm Delete',
+      content: `Are you sure you want to delete the selected ${selectedItems.length} test results? This action cannot be undone.`,
+      okText: 'Confirm Delete',
+      cancelText: 'Cancel',
       okType: 'danger',
       onOk: async () => {
         if (onDeleteSelected) {
@@ -99,8 +99,8 @@ const HistoryTable: React.FC<HistoryTableProps> = ({
             await onDeleteSelected(selectedKeys);
             // 成功消息在 onDeleteSelected 中处理
           } catch (error) {
-            console.error('删除失败:', error);
-            message.error('删除失败');
+            console.error('Delete failed:', error);
+            message.error('Delete failed');
           }
         }
       },
@@ -120,7 +120,7 @@ const HistoryTable: React.FC<HistoryTableProps> = ({
             alt='User'
             className='w-full h-full object-cover object-top'
             preview={{
-              mask: '点击预览',
+              mask: 'Click to preview',
               maskClassName: 'flex items-center justify-center',
             }}
           />
@@ -139,7 +139,7 @@ const HistoryTable: React.FC<HistoryTableProps> = ({
             alt='Clothing'
             className='w-full h-full object-cover object-top'
             preview={{
-              mask: '点击预览',
+              mask: 'Click to preview',
               maskClassName: 'flex items-center justify-center',
             }}
           />
@@ -159,7 +159,7 @@ const HistoryTable: React.FC<HistoryTableProps> = ({
               alt='Generated Result'
               className='w-full h-full object-cover object-top'
               preview={{
-                mask: '点击预览',
+                mask: 'Click to preview',
                 maskClassName: 'flex items-center justify-center',
               }}
             />
@@ -172,7 +172,7 @@ const HistoryTable: React.FC<HistoryTableProps> = ({
       ),
     },
     {
-      title: '耗时',
+      title: 'Execution Time',
       dataIndex: 'executionTime',
       key: 'executionTime',
       width: 120,
@@ -187,15 +187,15 @@ const HistoryTable: React.FC<HistoryTableProps> = ({
         if (record.status === 'success' && time) {
           return `${(time / 1000).toFixed(2)}s`;
         } else if (record.status === 'FAILED') {
-          return <span className='text-red-500'>失败</span>;
+          return <span className='text-red-500'>Failed</span>;
         } else if (record.status === 'IN_PROGRESS') {
-          return <span className='text-blue-500'>处理中</span>;
+          return <span className='text-blue-500'>Processing</span>;
         }
         return '-';
       },
     },
     {
-      title: '分数',
+      title: 'Score',
       dataIndex: 'score',
       key: 'score',
       width: 120,
@@ -220,7 +220,7 @@ const HistoryTable: React.FC<HistoryTableProps> = ({
                 value={scoreValue}
                 onChange={(e) => setScoreValue(Number(e.target.value))}
                 className='w-16 px-2 py-1 border rounded text-sm'
-                placeholder='分数'
+                placeholder='Score'
               />
               <Button
                 size='small'
@@ -228,7 +228,7 @@ const HistoryTable: React.FC<HistoryTableProps> = ({
                 onClick={() => handleScoreSubmit(record.taskId!)}
                 className='!rounded-button'
               >
-                提交
+                Submit
               </Button>
               <Button
                 size='small'
@@ -238,7 +238,7 @@ const HistoryTable: React.FC<HistoryTableProps> = ({
                 }}
                 className='!rounded-button'
               >
-                取消
+                Cancel
               </Button>
             </div>
           );
@@ -256,7 +256,7 @@ const HistoryTable: React.FC<HistoryTableProps> = ({
                 }}
                 className='!rounded-button'
               >
-                打分
+                Score
               </Button>
             )}
           </div>
@@ -284,7 +284,7 @@ const HistoryTable: React.FC<HistoryTableProps> = ({
       },
     },
     {
-      title: '保存时间',
+      title: 'Saved Time',
       dataIndex: 'savedAt',
       key: 'savedAt',
       width: 180,
@@ -310,7 +310,7 @@ const HistoryTable: React.FC<HistoryTableProps> = ({
             </div>
           );
         } catch {
-          return <span className='text-gray-400'>格式错误</span>;
+          return <span className='text-gray-400'>Format Error</span>;
         }
       },
     },
@@ -340,7 +340,7 @@ const HistoryTable: React.FC<HistoryTableProps> = ({
             onClick={handleDeleteButtonClick}
             className='!rounded-button whitespace-nowrap'
           >
-            删除选中 ({selectedRowKeys.length})
+            Delete Selected ({selectedRowKeys.length})
           </Button>
         )}
       </div>
@@ -510,7 +510,7 @@ const HistoryPage: React.FC = () => {
     const hasTimeRange = timeRange && timeRange[0] && timeRange[1];
 
     if (!hasTaskId && !hasModelId && !hasTimeRange) {
-      message.warning('请输入至少一个筛选条件（TaskId、Model ID 或时间范围）');
+      message.warning('Please enter at least one filter condition (TaskId, Model ID, or time range)');
       return;
     }
 
@@ -564,12 +564,12 @@ const HistoryPage: React.FC = () => {
       }
       setIsFiltered(true);
       message.success(
-        `找到 ${response.pagination?.total || formattedResults.length} 条记录`
+        `Found ${response.pagination?.total || formattedResults.length} records`
       );
     } catch (error) {
       const e = error as Error;
-      console.error('筛选失败:', e);
-      message.error(`筛选失败: ${e.message}`);
+      console.error('Filter failed:', e);
+      message.error(`Filter failed: ${e.message}`);
     } finally {
       setSearchLoading(false);
     }
@@ -640,8 +640,8 @@ const HistoryPage: React.FC = () => {
         })
         .catch((error) => {
           const e = error as Error;
-          console.error('筛选分页失败:', e);
-          message.error(`获取数据失败: ${e.message}`);
+          console.error('Filter pagination failed:', e);
+          message.error(`Failed to get data: ${e.message}`);
         })
         .finally(() => {
           setSearchLoading(false);
@@ -679,8 +679,8 @@ const HistoryPage: React.FC = () => {
       return updatedResult;
     } catch (error) {
       const e = error as Error;
-      console.error('更新分数失败:', e);
-      message.error(`更新分数失败: ${e.message}`);
+      console.error('Score update failed:', e);
+      message.error(`Score update failed: ${e.message}`);
       throw error;
     }
   };
@@ -698,7 +698,7 @@ const HistoryPage: React.FC = () => {
         .filter(Boolean) as string[];
 
       if (selectedTaskIds.length === 0) {
-        message.warning('选中的项目没有有效的 taskId');
+        message.warning('Selected items do not have valid taskId');
         return;
       }
 
@@ -710,11 +710,11 @@ const HistoryPage: React.FC = () => {
       // 清空选中状态
       setSelectedRowKeys([]);
 
-      message.success(`成功删除 ${result.deletedCount} 个测试结果`);
+      message.success(`Successfully deleted ${result.deletedCount} test results`);
     } catch (error) {
       const e = error as Error;
-      console.error('删除测试结果失败:', e);
-      message.error(`删除测试结果失败: ${e.message}`);
+      console.error('Failed to delete test results:', e);
+      message.error(`Failed to delete test results: ${e.message}`);
       throw error;
     }
   };
@@ -733,10 +733,10 @@ const HistoryPage: React.FC = () => {
               onClick={handleBack}
               className='!rounded-button'
             >
-              返回
+              Back
             </Button>
             <Title level={3} className='m-0'>
-              测试历史记录
+              Test History Records
             </Title>
           </div>
         </div>
@@ -751,7 +751,7 @@ const HistoryPage: React.FC = () => {
                   Task ID:
                 </Text>
                 <Input
-                  placeholder='请输入 taskId'
+                  placeholder='Please enter taskId'
                   value={searchTaskId}
                   onChange={(e) => setSearchTaskId(e.target.value)}
                   onPressEnter={handleFilterSearch}
@@ -763,7 +763,7 @@ const HistoryPage: React.FC = () => {
                   Model ID:
                 </Text>
                 <Input
-                  placeholder='请输入 modelId'
+                  placeholder='Please enter modelId'
                   value={searchModelId}
                   onChange={(e) => setSearchModelId(e.target.value)}
                   onPressEnter={handleFilterSearch}
@@ -772,14 +772,14 @@ const HistoryPage: React.FC = () => {
               </div>
               <div className='flex items-center gap-2' style={{ flex: 1.5 }}>
                 <Text className='font-semibold whitespace-nowrap'>
-                  时间范围:
+                  Time Range:
                 </Text>
                 <RangePicker
                   value={timeRange}
                   onChange={handleTimeRangeChange}
                   showTime
                   format='YYYY-MM-DD HH:mm:ss'
-                  placeholder={['开始时间', '结束时间']}
+                  placeholder={['Start Time', 'End Time']}
                   className='!rounded-button w-full'
                 />
               </div>
@@ -794,27 +794,26 @@ const HistoryPage: React.FC = () => {
                 loading={searchLoading}
                 className='!rounded-button'
               >
-                筛选
+                Filter
               </Button>
               <Button
                 icon={<BarChartOutlined />}
                 onClick={calculateAverages}
                 className='!rounded-button'
               >
-                统计
+                Statistics
               </Button>
               <Button
                 icon={<ReloadOutlined />}
                 onClick={handleResetSearch}
                 className='!rounded-button'
               >
-                重置
+                Reset
               </Button>
             </div>
           </div>
           <div className='mt-4 text-sm text-gray-500'>
-            提示：可同时输入 TaskId、Model ID
-            和时间范围进行组合筛选，点击重置恢复所有记录
+            Tip: You can enter TaskId, Model ID, and time range for combined filtering. Click Reset to restore all records
           </div>
         </Card>
 
@@ -834,18 +833,18 @@ const HistoryPage: React.FC = () => {
                 showSizeChanger: true,
                 showQuickJumper: true,
                 showTotal: (total, range) =>
-                  `第 ${range[0]}-${range[1]} 条，共 ${total} 条`,
+                  `Items ${range[0]}-${range[1]} of ${total} total`,
                 pageSizeOptions: ['10', '20', '50', '100'],
                 hideOnSinglePage: false,
                 onShowSizeChange: (current, size) => {
-                  console.log('页面大小改变:', { current, size });
+                  console.log('Page size changed:', { current, size });
                 },
               }}
               onTableChange={handleTableChange}
             />
             {loading && (
               <div className='text-center py-4'>
-                <span>正在加载历史记录...</span>
+                <span>Loading history records...</span>
               </div>
             )}
           </div>
@@ -853,7 +852,7 @@ const HistoryPage: React.FC = () => {
       </div>
 
       <Modal
-        title='当前列表数据统计'
+        title='Current List Data Statistics'
         open={isStatModalVisible}
         onCancel={() => setIsStatModalVisible(false)}
         footer={[
@@ -862,46 +861,46 @@ const HistoryPage: React.FC = () => {
             onClick={() => setIsStatModalVisible(false)}
             className='!rounded-button'
           >
-            关闭
+            Close
           </Button>,
         ]}
         width={600}
       >
         <Descriptions bordered column={2} className='mt-6 mb-4'>
-          <Descriptions.Item label='平均耗时' span={2}>
+          <Descriptions.Item label='Average Execution Time' span={2}>
             <span className='text-blue-600 font-bold'>{averages.avgTime}</span>{' '}
-            秒
+            seconds
           </Descriptions.Item>
-          <Descriptions.Item label='最小耗时'>
+          <Descriptions.Item label='Min Execution Time'>
             <span className='text-blue-600 font-bold'>{averages.minTime}</span>{' '}
-            秒
+            seconds
           </Descriptions.Item>
-          <Descriptions.Item label='最大耗时'>
+          <Descriptions.Item label='Max Execution Time'>
             <span className='text-blue-600 font-bold'>{averages.maxTime}</span>{' '}
-            秒
+            seconds
           </Descriptions.Item>
 
-          <Descriptions.Item label='平均得分' span={2}>
+          <Descriptions.Item label='Average Score' span={2}>
             <span className='text-green-600 font-bold'>
               {averages.avgScore}
             </span>
           </Descriptions.Item>
-          <Descriptions.Item label='最小得分'>
+          <Descriptions.Item label='Min Score'>
             <span className='text-green-600 font-bold'>
               {averages.minScore}
             </span>
           </Descriptions.Item>
-          <Descriptions.Item label='最大得分'>
+          <Descriptions.Item label='Max Score'>
             <span className='text-green-600 font-bold'>
               {averages.maxScore}
             </span>
           </Descriptions.Item>
         </Descriptions>
         <p className='text-sm text-gray-500'>
-          * 耗时统计基于 {averages.successCount} 条成功的记录。
+          * Execution time statistics based on {averages.successCount} successful records.
         </p>
         <p className='text-sm text-gray-500'>
-          * 得分统计基于 {averages.scoreCount} 条有效评分 (分数大于0) 的记录。
+          * Score statistics based on {averages.scoreCount} valid scored records (score &gt; 0).
         </p>
       </Modal>
     </div>

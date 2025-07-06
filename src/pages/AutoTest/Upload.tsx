@@ -51,7 +51,7 @@ const UploadPage: React.FC<UploadProps> = ({ onImagesSelected }) => {
       onImagesSelected(userImages, clothingImages);
       navigate('/auto-test/results');
     } else {
-      message.warning('请至少上传一张用户图片和一张服装图片');
+      message.warning('Please upload at least one user image and one clothing image');
     }
   };
 
@@ -76,18 +76,18 @@ const UploadPage: React.FC<UploadProps> = ({ onImagesSelected }) => {
           } else {
             setClothingImages((prev) => [...prev, response.url!]);
           }
-          message.success('图片上传成功');
+          message.success('Image uploaded successfully');
         } else {
-          message.error(response.error || '图片上传失败');
+          message.error(response.error || 'Image upload failed');
         }
       } catch (error) {
-        console.error('图片上传失败:', error);
-        message.error('图片上传失败，请重试');
+        console.error('Image upload failed:', error);
+        message.error('Image upload failed, please try again');
       } finally {
         setUploading(false);
       }
 
-      return false; // 阻止默认上传行为
+      return false; // Prevent default upload behavior
     },
     showUploadList: false,
     onChange: (info: UploadChangeParam<UploadFile>) => {
@@ -110,7 +110,7 @@ const UploadPage: React.FC<UploadProps> = ({ onImagesSelected }) => {
             onClick={handleViewHistory}
             className='!rounded-button whitespace-nowrap'
           >
-            查看历史记录
+            View History
           </Button>
         </div>
         <div className='grid grid-cols-2 gap-8 mb-8'>
@@ -249,7 +249,7 @@ const UploadPage: React.FC<UploadProps> = ({ onImagesSelected }) => {
               </p>
               <p className='ant-upload-text'>
                 {uploading
-                  ? '正在上传...'
+                  ? 'Uploading...'
                   : 'Click or drag files to this area to upload'}
               </p>
               <p className='ant-upload-hint'>
