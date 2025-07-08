@@ -1,5 +1,5 @@
 import React, { useEffect, useState, Fragment } from 'react';
-import { Camera, Heart, ChevronDown, X } from 'lucide-react';
+import { Camera, Heart, ChevronDown, X, Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Menu, Transition } from '@headlessui/react';
 import empty from '/empty.png';
 import axios from 'axios';
@@ -86,6 +86,8 @@ interface ProductProps {
   url: string;
   isFavorite: boolean;
   onToggleFavorite: () => void;
+  // onDelete: () => void;
+  imageCount: number;
 }
 
 const ProductCard: React.FC<ProductProps> = ({
@@ -96,7 +98,9 @@ const ProductCard: React.FC<ProductProps> = ({
   originalPrice,
   timestamp,
   isFavorite,
-  onToggleFavorite
+  onToggleFavorite,
+  // onDelete,
+  imageCount
 }) => (
   <div className="relative bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition cursor-pointer flex flex-col h-full">
     {/* Favorite Button */}
@@ -110,10 +114,28 @@ const ProductCard: React.FC<ProductProps> = ({
       <Heart className={`w-5 h-5 ${isFavorite ? 'fill-red-500 text-red-500' : 'text-gray-400'}`} />
     </div>
 
-    {/* Timestamp Badge */}
+    {/* Delete Button */}
+    {/* <div
+      onClick={(e) => {
+        e.stopPropagation();
+        onDelete();
+      }}
+      className="absolute bottom-2 right-2 z-10 cursor-pointer p-1 hover:bg-red-50 rounded transition-colors"
+    >
+      <Trash2 className="w-5 h-5 text-red-500 hover:text-red-600" />
+    </div> */}
+
+{/* Timestamp Badge */}
     <div className="absolute top-2 left-2 bg-gray-100 text-xs px-2 py-1 rounded z-10 text-gray-600">
       {new Date(timestamp).toLocaleDateString()}
     </div>
+
+    {/* Image Count Badge */}
+    {imageCount > 1 && (
+      <div className="absolute top-10 left-2 bg-blue-500 text-white text-xs px-2 py-1 rounded z-10 font-medium">
+        {imageCount} images
+      </div>
+    )}
 
     {/* Image */}
     <div className="w-full h-72 bg-white flex items-center justify-center rounded-t-2xl">
@@ -134,6 +156,130 @@ const ProductCard: React.FC<ProductProps> = ({
   </div>
 );
 
+// Image Slider Component
+const ImageSlider: React.FC<{
+  images: { url: string; timestamp: string | number | Date; recordId: string }[];
+  currentIndex: number;
+  onIndexChange: (index: number) => void;
+}> = ({ images, currentIndex, onIndexChange }) => {
+  const goToPrevious = () => {
+    onIndexChange(currentIndex === 0 ? images.length - 1 : currentIndex - 1);
+  };
+
+  const goToNext = () => {
+    onIndexChange(currentIndex === images.length - 1 ? 0 : currentIndex + 1);
+  };
+
+  return (
+    <div className="relative">
+      <div className="w-full h-96 bg-gray-100 rounded-xl flex items-center justify-center overflow-hidden">
+        <img
+          src={images[currentIndex].url}
+          alt="Product"
+          className="w-full h-full object-contain"
+        />
+      </div>
+      
+      {images.length > 1 && (
+        <>
+          {/* Navigation Arrows */}
+          <button
+            onClick={goToPrevious}
+            className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-white rounded-full p-2 shadow-lg hover:bg-gray-100 transition"
+          >
+            <ChevronLeft className="w-5 h-5 text-gray-600" />
+          </button>
+          <button
+            onClick={goToNext}
+            className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-white rounded-full p-2 shadow-lg hover:bg-gray-100 transition"
+          >
+            <ChevronRight className="w-5 h-5 text-gray-600" />
+          </button>
+
+          {/* Dots Indicator */}
+          <div className="flex justify-center mt-4 gap-2">
+            {images.map((_, index) => (
+              <button
+                key={index}
+                onClick={() => onIndexChange(index)}
+                className={`w-2 h-2 rounded-full transition ${
+                  index === currentIndex ? 'bg-blue-500' : 'bg-gray-300'
+                }`}
+              />
+            ))}
+          </div>
+
+          {/* Image Counter */}
+          <div className="absolute top-2 right-2 bg-black bg-opacity-60 text-white text-xs px-2 py-1 rounded">
+            {currentIndex + 1} / {images.length}
+          </div>
+        </>
+      )}
+
+      {/* Timestamp for current image */}
+      <p className="text-gray-500 text-sm mt-2 text-center">
+        Try-on date: {new Date(images[currentIndex].timestamp).toLocaleDateString()}
+      </p>
+    </div>
+  );
+};
+
+// Delete Confirmation Modal Component
+const DeleteConfirmationModal: React.FC<{
+  isOpen: boolean;
+  onClose: () => void;
+  onConfirm: () => void;
+  productName: string;
+  isDeleting: boolean;
+  deleteAll: boolean;
+  imageCount: number;
+}> = ({ isOpen, onClose, onConfirm, productName, isDeleting, deleteAll, imageCount }) => {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+      <div className="bg-white rounded-2xl p-6 max-w-md w-full mx-4 shadow-xl">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="p-2 bg-red-100 rounded-full">
+            <Trash2 className="w-6 h-6 text-red-600" />
+          </div>
+          <h3 className="text-lg font-semibold text-gray-900">Delete Try-on</h3>
+        </div>
+        
+        <p className="text-gray-600 mb-6">
+          {deleteAll 
+            ? `Are you sure you want to delete all ${imageCount} try-on${imageCount > 1 ? 's' : ''} for "${productName}"? This action cannot be undone.`
+            : `Are you sure you want to delete "${productName}" from your try-on history? This action cannot be undone.`
+          }
+        </p>
+        
+        <div className="flex gap-3 justify-end">
+          <button
+            onClick={onClose}
+            disabled={isDeleting}
+            className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition disabled:opacity-50"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={onConfirm}
+            disabled={isDeleting}
+            className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition disabled:opacity-50 flex items-center gap-2"
+          >
+            {isDeleting ? (
+              <>
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                Deleting...
+              </>
+            ) : (
+              'Delete'
+            )}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 interface ProductItem {
   record_id: string;
@@ -149,6 +295,17 @@ interface ProductItem {
   };
 }
 
+interface GroupedProduct {
+  productUrl: string;
+  productInfo: ProductItem['product_info'];
+  images: Array<{
+    url: string;
+    timestamp: string | number | Date;
+    recordId: string;
+  }>;
+  latestTimestamp: string | number | Date;
+}
+
 interface ContentProps {
   searchQuery: string;
 }
@@ -156,11 +313,22 @@ interface ContentProps {
 const Content: React.FC<ContentProps> = ({ searchQuery }) => {
   const [products, setProducts] = useState<ProductItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedProduct, setSelectedProduct] = useState<ProductItem | null>(null);
+  const [selectedProduct, setSelectedProduct] = useState<GroupedProduct | null>(null);
   const [showModal, setShowModal] = useState(false);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [sortOrder, setSortOrder] = useState<'low-to-high' | 'high-to-low' | null>(null);
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
   const [showOnlyFavorites, setShowOnlyFavorites] = useState(false);
+  const [deleteModal, setDeleteModal] = useState<{
+    isOpen: boolean;
+    product: GroupedProduct | null;
+    isDeleting: boolean;
+  }>({
+    isOpen: false,
+    product: null,
+    isDeleting: false
+  });
+  
   const accessToken = localStorage.getItem('accessToken');
 
   useEffect(() => {
@@ -174,6 +342,151 @@ const Content: React.FC<ContentProps> = ({ searchQuery }) => {
         
         setProducts(res.data);
 
+//         const res = [
+//     {
+//         "product_info": {
+//             "brand_name": "Sandro Paris",
+//             "domain": "uk.sandro-paris.com",
+//             "price": "GBP439.00",
+//             "product_name": "Striped tailored jacket",
+//             "product_url": "https://uk.sandro-paris.com/en/p/striped-tailored-jacket/SFPVE01213_47.html"
+//         },
+//         "record_id": "6867836f965964492a187d5e",
+//         "result_image_url": "https://faishionai.s3.amazonaws.com/tryon-results/1751614216.png",
+//         "timestamp": "2025-07-04T07:31:59.528000",
+//         "user_email": "info.faishion@gmail.com",
+//         "user_id": "682e58d3b329b52413d8d4df"
+//     },
+//     {
+//         "product_info": {
+//             "brand_name": "Sandro Paris",
+//             "domain": "uk.sandro-paris.com",
+//             "price": "GBP439.00",
+//             "product_name": "Striped tailored jacket",
+//             "product_url": "https://uk.sandro-paris.com/en/p/striped-tailored-jacket/SFPVE01213_47.html"
+//         },
+//         "record_id": "68678341965964492a187d5d",
+//         "result_image_url": "https://faishionai.s3.amazonaws.com/tryon-results/1751614203.png",
+//         "timestamp": "2025-07-04T07:31:13.657000",
+//         "user_email": "info.faishion@gmail.com",
+//         "user_id": "682e58d3b329b52413d8d4df"
+//     },
+//     {
+//         "product_info": {
+//             "brand_name": "Maje",
+//             "domain": "us.maje.com",
+//             "price": "USD530.00",
+//             "product_name": "Mini embroidered strap dress",
+//             "product_url": "https://us.maje.com/en/p/mini-embroidered-strap-dress/MFPRO04250_1002.html"
+//         },
+//         "record_id": "6867830f965964492a187d5c",
+//         "result_image_url": "https://faishionai.s3.amazonaws.com/tryon-results/1751614158.png",
+//         "timestamp": "2025-07-04T07:30:23.018000",
+//         "user_email": "info.faishion@gmail.com",
+//         "user_id": "682e58d3b329b52413d8d4df"
+//     },
+//     {
+//         "product_info": {
+//             "brand_name": "Maje",
+//             "domain": "us.maje.com",
+//             "price": "USD530.00",
+//             "product_name": "Mini embroidered strap dress",
+//             "product_url": "https://us.maje.com/en/p/mini-embroidered-strap-dress/MFPRO04250_1002.html"
+//         },
+//         "record_id": "686782df965964492a187d5b",
+//         "result_image_url": "https://faishionai.s3.amazonaws.com/tryon-results/1751614106.png",
+//         "timestamp": "2025-07-04T07:29:35.200000",
+//         "user_email": "info.faishion@gmail.com",
+//         "user_id": "682e58d3b329b52413d8d4df"
+//     },
+//     {
+//         "product_info": {
+//             "brand_name": "Maje",
+//             "domain": "us.maje.com",
+//             "price": "USD530.00",
+//             "product_name": "Mini embroidered strap dress",
+//             "product_url": "https://us.maje.com/en/p/mini-embroidered-strap-dress/MFPRO04250_1002.html"
+//         },
+//         "record_id": "68678276965964492a187d5a",
+//         "result_image_url": "https://faishionai.s3.amazonaws.com/tryon-results/1751614013.png",
+//         "timestamp": "2025-07-04T07:27:50.234000",
+//         "user_email": "info.faishion@gmail.com",
+//         "user_id": "682e58d3b329b52413d8d4df"
+//     },
+//     {
+//         "product_info": {
+//             "brand_name": "Maje",
+//             "domain": "us.maje.com",
+//             "price": "USD530.00",
+//             "product_name": "Mini embroidered strap dress",
+//             "product_url": "https://us.maje.com/en/p/mini-embroidered-strap-dress/MFPRO04250_1002.html"
+//         },
+//         "record_id": "68678247965964492a187d59",
+//         "result_image_url": "https://faishionai.s3.amazonaws.com/tryon-results/1751613973.png",
+//         "timestamp": "2025-07-04T07:27:03.093000",
+//         "user_email": "info.faishion@gmail.com",
+//         "user_id": "682e58d3b329b52413d8d4df"
+//     },
+//     {
+//         "product_info": {
+//             "brand_name": "Unknown Brand",
+//             "domain": "edikted.com",
+//             "price": "USD211",
+//             "product_name": "Cowl Neck Drop Waist Mini Dress",
+//             "product_url": "https://edikted.com/collections/dresses/products/s19095_gray"
+//         },
+//         "record_id": "686746b5965964492a187d4d",
+//         "result_image_url": "https://faishionai.s3.amazonaws.com/tryon-results/1751598721.png",
+//         "timestamp": "2025-07-04T03:12:53.263000",
+//         "user_email": "info.faishion@gmail.com",
+//         "user_id": "682e58d3b329b52413d8d4df"
+//     },
+//     {
+//         "product_info": {
+//             "brand_name": "Rhone",
+//             "domain": "www.nordstrom.com",
+//             "price": "USD82.6-118",
+//             "product_name": "Course to Court Sport Dress",
+//             "product_url": "https://www.nordstrom.com/s/course-to-court-sport-dress/7852495?origin=category-personalizedsort&breadcrumb=Home%2FWomen%2FClothing%2FActivewear&color=405"
+//         },
+//         "record_id": "6866c831965964492a187d23",
+//         "result_image_url": "https://faishionai.s3.amazonaws.com/tryon-results/1751566330.png",
+//         "timestamp": "2025-07-03T18:13:05.261000",
+//         "user_email": "info.faishion@gmail.com",
+//         "user_id": "682e58d3b329b52413d8d4df"
+//     },
+//     {
+//         "product_info": {
+//             "brand_name": "Vuori",
+//             "domain": "www.nordstrom.com",
+//             "price": "USD43-54",
+//             "product_name": "Energy Top Long",
+//             "product_url": "https://www.nordstrom.com/s/energy-top-long/7796072?origin=category-personalizedsort&breadcrumb=Home%2FWomen%2FClothing%2FActivewear&color=001"
+//         },
+//         "record_id": "6866c7c9965964492a187d22",
+//         "result_image_url": "https://faishionai.s3.amazonaws.com/tryon-results/1751566228.png",
+//         "timestamp": "2025-07-03T18:11:21.288000",
+//         "user_email": "info.faishion@gmail.com",
+//         "user_id": "682e58d3b329b52413d8d4df"
+//     },
+//     {
+//         "product_info": {
+//             "brand_name": "Zella",
+//             "domain": "www.nordstrom.com",
+//             "price": "USD39.6-54.45",
+//             "product_name": "Studio Luxe Performance Jacket",
+//             "product_url": "https://www.nordstrom.com/s/zella-studio-luxe-performance-jacket/7184423?origin=category-personalizedsort&breadcrumb=Home%2FWomen%2FClothing%2FActivewear&color=001"
+//         },
+//         "record_id": "6866c775965964492a187d21",
+//         "result_image_url": "https://faishionai.s3.amazonaws.com/tryon-results/1751566092.png",
+//         "timestamp": "2025-07-03T18:09:57.178000",
+//         "user_email": "info.faishion@gmail.com",
+//         "user_id": "682e58d3b329b52413d8d4df"
+//     }
+// ]
+
+//         setProducts(res);
+
       } catch (error) {
         console.error('Error fetching history:', error);
       } finally {
@@ -183,22 +496,119 @@ const Content: React.FC<ContentProps> = ({ searchQuery }) => {
     fetchHistory();
   }, [accessToken]);
 
-  const toggleFavorite = (recordId: string) => {
+  // Group products by product URL
+  const groupedProducts = React.useMemo(() => {
+    const grouped = new Map<string, GroupedProduct>();
+    
+    products.forEach(product => {
+      const productUrl = product.product_info?.product_url || product.product_info?.url || 'unknown';
+      
+      if (grouped.has(productUrl)) {
+        const existing = grouped.get(productUrl)!;
+        existing.images.push({
+          url: product.result_image_url,
+          timestamp: product.timestamp,
+          recordId: product.record_id
+        });
+        // Update latest timestamp if this one is newer
+        if (new Date(product.timestamp) > new Date(existing.latestTimestamp)) {
+          existing.latestTimestamp = product.timestamp;
+        }
+      } else {
+        grouped.set(productUrl, {
+          productUrl,
+          productInfo: product.product_info,
+          images: [{
+            url: product.result_image_url,
+            timestamp: product.timestamp,
+            recordId: product.record_id
+          }],
+          latestTimestamp: product.timestamp
+        });
+      }
+    });
+    
+    // Sort images within each group by timestamp (newest first)
+    grouped.forEach(group => {
+      group.images.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+    });
+    
+    return Array.from(grouped.values());
+  }, [products]);
+
+  const toggleFavorite = (productUrl: string) => {
     setFavorites(prev => {
       const updated = new Set(prev);
-      if (updated.has(recordId)) updated.delete(recordId);
-      else updated.add(recordId);
+      if (updated.has(productUrl)) updated.delete(productUrl);
+      else updated.add(productUrl);
       return updated;
     });
   };
 
-  const NoHistory = !loading && products.length === 0;
+  const handleDeleteClick = (product: GroupedProduct) => {
+    setDeleteModal({
+      isOpen: true,
+      product,
+      isDeleting: false
+    });
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!deleteModal.product) return;
+
+    setDeleteModal(prev => ({ ...prev, isDeleting: true }));
+
+    try {
+      // Delete all images/records for this product
+      const deletePromises = deleteModal.product.images.map(image =>
+        axios.delete(`https://tryon-history.faishion.ai/history/${image.recordId}`, {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        })
+      );
+
+      await Promise.all(deletePromises);
+
+      // Remove all deleted records from the local state
+      const recordIdsToDelete = deleteModal.product.images.map(img => img.recordId);
+      setProducts(prev => prev.filter(p => !recordIdsToDelete.includes(p.record_id)));
+      
+      // Remove from favorites if it was favorited
+      setFavorites(prev => {
+        const updated = new Set(prev);
+        updated.delete(deleteModal.product!.productUrl);
+        return updated;
+      });
+
+      // Close the modal
+      setDeleteModal({
+        isOpen: false,
+        product: null,
+        isDeleting: false
+      });
+
+    } catch (error) {
+      console.error('Error deleting product:', error);
+      setDeleteModal(prev => ({ ...prev, isDeleting: false }));
+    }
+  };
+
+  const handleDeleteCancel = () => {
+    setDeleteModal({
+      isOpen: false,
+      product: null,
+      isDeleting: false
+    });
+  };
+
+  const NoHistory = !loading && groupedProducts.length === 0;
 
   const filteredProducts = (showOnlyFavorites
-    ? products.filter(p => favorites.has(p.record_id))
-    : products
+    ? groupedProducts.filter(p => favorites.has(p.productUrl))
+    : groupedProducts
   ).filter((p) => {
-    const info = p.product_info || {};
+    const info = p.productInfo || {};
     const name = (info.product_name || info.name || '').toLowerCase();
     const brand = (info.brand_name || '').toLowerCase();
     return (
@@ -208,8 +618,8 @@ const Content: React.FC<ContentProps> = ({ searchQuery }) => {
   });
 
   const sortedProducts = [...filteredProducts].sort((a, b) => {
-    const priceA = parseFloat(a.product_info?.price?.toString().replace('$', '') || '0');
-    const priceB = parseFloat(b.product_info?.price?.toString().replace('$', '') || '0');
+    const priceA = parseFloat(a.productInfo?.price?.toString().replace(/[^\d.]/g, '') || '0');
+    const priceB = parseFloat(b.productInfo?.price?.toString().replace(/[^\d.]/g, '') || '0');
     if (sortOrder === 'low-to-high') return priceA - priceB;
     if (sortOrder === 'high-to-low') return priceB - priceA;
     return 0;
@@ -232,25 +642,28 @@ const Content: React.FC<ContentProps> = ({ searchQuery }) => {
             />
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8 w-full">
               {sortedProducts.map(item => {
-                const info = item.product_info || {};
+                const info = item.productInfo || {};
                 return (
                   <div
-                    key={item.record_id}
+                    key={item.productUrl}
                     onClick={() => {
                       setSelectedProduct(item);
+                      setCurrentImageIndex(0);
                       setShowModal(true);
                     }}
                   >
                     <ProductCard
-                      image={item.result_image_url}
+                      image={item.images[0].url} // Show the latest image
                       brand={info.brand_name || 'Unknown'}
                       name={info.product_name || info.name || 'Product Name'}
                       price={info.price || 'N/A'}
                       originalPrice={129.0}
-                      timestamp={item.timestamp}
-                      url={info.product_url || info.url || '#'}
-                      isFavorite={favorites.has(item.record_id)}
-                      onToggleFavorite={() => toggleFavorite(item.record_id)}
+                      timestamp={item.latestTimestamp}
+                      url={item.productUrl}
+                      isFavorite={favorites.has(item.productUrl)}
+                      onToggleFavorite={() => toggleFavorite(item.productUrl)}
+                      // onDelete={() => handleDeleteClick(item)}
+                      imageCount={item.images.length}
                     />
                   </div>
                 );
@@ -259,6 +672,17 @@ const Content: React.FC<ContentProps> = ({ searchQuery }) => {
           </>
         )}
       </div>
+
+      {/* Delete Confirmation Modal */}
+      <DeleteConfirmationModal
+        isOpen={deleteModal.isOpen}
+        onClose={handleDeleteCancel}
+        onConfirm={handleDeleteConfirm}
+        productName={deleteModal.product?.productInfo?.product_name || deleteModal.product?.productInfo?.name || 'this item'}
+        isDeleting={deleteModal.isDeleting}
+        deleteAll={true}
+        imageCount={deleteModal.product?.images.length || 0}
+      />
 
       {showModal && selectedProduct && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
@@ -270,27 +694,29 @@ const Content: React.FC<ContentProps> = ({ searchQuery }) => {
               <X className="w-6 h-6" />
             </button>
             <div className="w-1/2">
-              <img
-                src={selectedProduct.result_image_url}
-                alt="Product"
-                className="rounded-xl w-full object-cover"
+              <ImageSlider
+                images={selectedProduct.images}
+                currentIndex={currentImageIndex}
+                onIndexChange={setCurrentImageIndex}
               />
             </div>
             <div className="w-1/2 flex flex-col justify-center gap-4">
               <h2 className="text-2xl font-bold text-gray-900">
-                {selectedProduct.product_info?.brand_name || 'Brand'} -{' '}
-                {selectedProduct.product_info?.product_name || 'Product Name'}
+                {selectedProduct.productInfo?.brand_name || 'Brand'} -{' '}
+                {selectedProduct.productInfo?.product_name || 'Product Name'}
               </h2>
               <div className="flex items-center gap-3">
                 <span className="text-2xl font-bold text-black">
-                  {selectedProduct.product_info?.price}
+                  {selectedProduct.productInfo?.price}
                 </span>
               </div>
-              <p className="text-gray-600 text-sm">
-                Try-on date: {new Date(selectedProduct.timestamp).toLocaleDateString()}
-              </p>
+              {selectedProduct.images.length > 1 && (
+                <p className="text-blue-600 text-sm font-medium">
+                  {selectedProduct.images.length} try-on variations available
+                </p>
+              )}
               <a
-                href={selectedProduct.product_info?.product_url || '#'}
+                href={selectedProduct.productUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="mt-3 bg-black text-white px-6 py-3 rounded-lg hover:bg-gray-800 text-center w-fit"
