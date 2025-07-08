@@ -161,7 +161,8 @@ const ImageSlider: React.FC<{
   images: { url: string; timestamp: string | number | Date; recordId: string }[];
   currentIndex: number;
   onIndexChange: (index: number) => void;
-}> = ({ images, currentIndex, onIndexChange }) => {
+  onDeleteImage?: (recordId: string) => void;
+}> = ({ images, currentIndex, onIndexChange, onDeleteImage }) => {
   const goToPrevious = () => {
     onIndexChange(currentIndex === 0 ? images.length - 1 : currentIndex - 1);
   };
@@ -172,12 +173,25 @@ const ImageSlider: React.FC<{
 
   return (
     <div className="relative">
-      <div className="w-full h-96 bg-gray-100 rounded-xl flex items-center justify-center overflow-hidden">
+      <div className="w-full h-96 bg-gray-100 rounded-xl flex items-center justify-center overflow-hidden relative">
         <img
           src={images[currentIndex].url}
           alt="Product"
           className="w-full h-full object-contain"
         />
+        
+        {/* Delete Button for Individual Image */}
+        {onDeleteImage && (
+          <div
+            onClick={(e) => {
+              e.stopPropagation();
+              onDeleteImage(images[currentIndex].recordId);
+            }}
+            className="absolute bottom-4 right-4 z-10 cursor-pointer p-2 hover:bg-red-50 rounded-full bg-white shadow-lg hover:shadow-xl transition-all"
+          >
+            <Trash2 className="w-5 h-5 text-red-500 hover:text-red-600" />
+          </div>
+        )}
       </div>
       
       {images.length > 1 && (
@@ -237,7 +251,7 @@ const DeleteConfirmationModal: React.FC<{
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black bg-opacity-50">
       <div className="bg-white rounded-2xl p-6 max-w-md w-full mx-4 shadow-xl">
         <div className="flex items-center gap-3 mb-4">
           <div className="p-2 bg-red-100 rounded-full">
@@ -326,6 +340,16 @@ const Content: React.FC<ContentProps> = ({ searchQuery }) => {
   }>({
     isOpen: false,
     product: null,
+    isDeleting: false
+  });
+  
+  const [deleteImageModal, setDeleteImageModal] = useState<{
+    isOpen: boolean;
+    recordId: string | null;
+    isDeleting: boolean;
+  }>({
+    isOpen: false,
+    recordId: null,
     isDeleting: false
   });
   
@@ -602,6 +626,82 @@ const Content: React.FC<ContentProps> = ({ searchQuery }) => {
     });
   };
 
+  const handleDeleteImage = (recordId: string) => {
+    setDeleteImageModal({
+      isOpen: true,
+      recordId,
+      isDeleting: false
+    });
+  };
+
+  const handleDeleteImageConfirm = async () => {
+    if (!deleteImageModal.recordId) return;
+
+    setDeleteImageModal(prev => ({ ...prev, isDeleting: true }));
+
+    try {
+      await axios.delete(`https://tryon-history.faishion.ai/history/${deleteImageModal.recordId}`, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+
+      // Remove the deleted record from the local state
+      setProducts(prev => prev.filter(p => p.record_id !== deleteImageModal.recordId));
+      
+      // Update the selected product's images if it's currently open
+      if (selectedProduct) {
+        const updatedImages = selectedProduct.images.filter(img => img.recordId !== deleteImageModal.recordId);
+        if (updatedImages.length === 0) {
+          // If no images left, close the modal and remove the entire card
+          setShowModal(false);
+          setSelectedProduct(null);
+          
+          // Remove the entire product from the products list
+          // Find all record IDs for this product and remove them
+          const recordIdsToRemove = selectedProduct.images.map(img => img.recordId);
+          setProducts(prev => prev.filter(p => !recordIdsToRemove.includes(p.record_id)));
+          
+          // Remove from favorites if it was favorited
+          setFavorites(prev => {
+            const updated = new Set(prev);
+            updated.delete(selectedProduct.productUrl);
+            return updated;
+          });
+        } else {
+          // Update the selected product with remaining images
+          setSelectedProduct({
+            ...selectedProduct,
+            images: updatedImages
+          });
+          // Adjust current image index if needed
+          if (currentImageIndex >= updatedImages.length) {
+            setCurrentImageIndex(updatedImages.length - 1);
+          }
+        }
+      }
+
+      // Close the modal
+      setDeleteImageModal({
+        isOpen: false,
+        recordId: null,
+        isDeleting: false
+      });
+
+    } catch (error) {
+      console.error('Error deleting image:', error);
+      setDeleteImageModal(prev => ({ ...prev, isDeleting: false }));
+    }
+  };
+
+  const handleDeleteImageCancel = () => {
+    setDeleteImageModal({
+      isOpen: false,
+      recordId: null,
+      isDeleting: false
+    });
+  };
+
   const NoHistory = !loading && groupedProducts.length === 0;
 
   const filteredProducts = (showOnlyFavorites
@@ -618,8 +718,32 @@ const Content: React.FC<ContentProps> = ({ searchQuery }) => {
   });
 
   const sortedProducts = [...filteredProducts].sort((a, b) => {
-    const priceA = parseFloat(a.productInfo?.price?.toString().replace(/[^\d.]/g, '') || '0');
-    const priceB = parseFloat(b.productInfo?.price?.toString().replace(/[^\d.]/g, '') || '0');
+    // Helper function to extract numeric price value
+    const extractPriceValue = (priceStr: string | number | undefined): number => {
+      if (!priceStr) return 0;
+      
+      const price = priceStr.toString();
+      
+      // Handle range format like "USD43-54" - extract the median (midpoint)
+      const rangeMatch = price.match(/(\d+)-(\d+)/);
+      if (rangeMatch) {
+        const lower = parseFloat(rangeMatch[1]);
+        const upper = parseFloat(rangeMatch[2]);
+        return (lower + upper) / 2; // Return the median (midpoint)
+      }
+      
+      // Handle regular format like "USD530.00" or "GBP439.00"
+      const numericMatch = price.match(/(\d+(?:\.\d+)?)/);
+      if (numericMatch) {
+        return parseFloat(numericMatch[1]);
+      }
+      
+      return 0;
+    };
+    
+    const priceA = extractPriceValue(a.productInfo?.price);
+    const priceB = extractPriceValue(b.productInfo?.price);
+    
     if (sortOrder === 'low-to-high') return priceA - priceB;
     if (sortOrder === 'high-to-low') return priceB - priceA;
     return 0;
@@ -684,6 +808,17 @@ const Content: React.FC<ContentProps> = ({ searchQuery }) => {
         imageCount={deleteModal.product?.images.length || 0}
       />
 
+      {/* Delete Image Confirmation Modal */}
+      <DeleteConfirmationModal
+        isOpen={deleteImageModal.isOpen}
+        onClose={handleDeleteImageCancel}
+        onConfirm={handleDeleteImageConfirm}
+        productName={selectedProduct?.productInfo?.product_name || selectedProduct?.productInfo?.name || 'this try-on image'}
+        isDeleting={deleteImageModal.isDeleting}
+        deleteAll={false}
+        imageCount={1}
+      />
+
       {showModal && selectedProduct && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
           <div className="bg-white rounded-2xl p-8 max-w-5xl w-full flex gap-8 relative shadow-xl">
@@ -698,6 +833,7 @@ const Content: React.FC<ContentProps> = ({ searchQuery }) => {
                 images={selectedProduct.images}
                 currentIndex={currentImageIndex}
                 onIndexChange={setCurrentImageIndex}
+                onDeleteImage={handleDeleteImage}
               />
             </div>
             <div className="w-1/2 flex flex-col justify-center gap-4">
