@@ -81,6 +81,7 @@ interface ProductProps {
   brand: string;
   name: string;
   price: number | string;
+  currency?: string;
   originalPrice?: number | string | null;
   timestamp: string | number | Date;
   url: string;
@@ -95,6 +96,7 @@ const ProductCard: React.FC<ProductProps> = ({
   brand,
   name,
   price,
+  currency,
   originalPrice,
   timestamp,
   isFavorite,
@@ -147,7 +149,7 @@ const ProductCard: React.FC<ProductProps> = ({
       <p className="text-gray-500 text-xs uppercase tracking-wide font-medium mb-1">{brand}</p>
       <p className="text-lg font-semibold text-gray-900 truncate">{name}</p>
       <div className="flex items-center gap-2 mt-2">
-        <span className="text-lg font-bold text-black">${price}</span>
+        <span className="text-lg font-bold text-black">{currency}{price}</span>
         {/* Uncomment if showing original price
         {originalPrice && <span className="text-sm text-gray-400 line-through">{originalPrice}</span>} 
         */}
@@ -304,6 +306,7 @@ interface ProductItem {
     product_name?: string;
     name?: string;
     price?: number | string;
+    currency?: string;
     product_url?: string;
     url?: string;
   };
@@ -372,6 +375,7 @@ const Content: React.FC<ContentProps> = ({ searchQuery }) => {
 //             "brand_name": "Sandro Paris",
 //             "domain": "uk.sandro-paris.com",
 //             "price": "GBP439.00",
+//             "currency": "$",
 //             "product_name": "Striped tailored jacket",
 //             "product_url": "https://uk.sandro-paris.com/en/p/striped-tailored-jacket/SFPVE01213_47.html"
 //         },
@@ -509,7 +513,7 @@ const Content: React.FC<ContentProps> = ({ searchQuery }) => {
 //     }
 // ]
 
-//         setProducts(res);
+        // setProducts(res);
 
       } catch (error) {
         console.error('Error fetching history:', error);
@@ -781,6 +785,7 @@ const Content: React.FC<ContentProps> = ({ searchQuery }) => {
                       brand={info.brand_name || 'Unknown'}
                       name={info.product_name || info.name || 'Product Name'}
                       price={info.price || 'N/A'}
+                      currency={info.currency}
                       originalPrice={129.0}
                       timestamp={item.latestTimestamp}
                       url={item.productUrl}
