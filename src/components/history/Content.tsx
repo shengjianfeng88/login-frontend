@@ -86,7 +86,7 @@ interface ProductProps {
   url: string;
   isFavorite: boolean;
   onToggleFavorite: () => void;
-  // onDelete: () => void;
+  onDelete: () => void;
   imageCount: number;
 }
 
@@ -99,7 +99,7 @@ const ProductCard: React.FC<ProductProps> = ({
   timestamp,
   isFavorite,
   onToggleFavorite,
-  // onDelete,
+  onDelete,
   imageCount
 }) => (
   <div className="relative bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition cursor-pointer flex flex-col h-full">
@@ -115,7 +115,7 @@ const ProductCard: React.FC<ProductProps> = ({
     </div>
 
     {/* Delete Button */}
-    {/* <div
+    <div
       onClick={(e) => {
         e.stopPropagation();
         onDelete();
@@ -123,7 +123,7 @@ const ProductCard: React.FC<ProductProps> = ({
       className="absolute bottom-2 right-2 z-10 cursor-pointer p-1 hover:bg-red-50 rounded transition-colors"
     >
       <Trash2 className="w-5 h-5 text-red-500 hover:text-red-600" />
-    </div> */}
+    </div>
 
 {/* Timestamp Badge */}
     <div className="absolute top-2 left-2 bg-gray-100 text-xs px-2 py-1 rounded z-10 text-gray-600">
@@ -147,7 +147,7 @@ const ProductCard: React.FC<ProductProps> = ({
       <p className="text-gray-500 text-xs uppercase tracking-wide font-medium mb-1">{brand}</p>
       <p className="text-lg font-semibold text-gray-900 truncate">{name}</p>
       <div className="flex items-center gap-2 mt-2">
-        <span className="text-lg font-bold text-black">{price}</span>
+        <span className="text-lg font-bold text-black">${price}</span>
         {/* Uncomment if showing original price
         {originalPrice && <span className="text-sm text-gray-400 line-through">{originalPrice}</span>} 
         */}
@@ -786,7 +786,7 @@ const Content: React.FC<ContentProps> = ({ searchQuery }) => {
                       url={item.productUrl}
                       isFavorite={favorites.has(item.productUrl)}
                       onToggleFavorite={() => toggleFavorite(item.productUrl)}
-                      // onDelete={() => handleDeleteClick(item)}
+                      onDelete={() => handleDeleteClick(item)}
                       imageCount={item.images.length}
                     />
                   </div>
