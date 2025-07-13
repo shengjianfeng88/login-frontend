@@ -374,7 +374,7 @@ const Content: React.FC<ContentProps> = ({ searchQuery }) => {
 //         "product_info": {
 //             "brand_name": "Sandro Paris",
 //             "domain": "uk.sandro-paris.com",
-//             "price": "GBP439.00",
+//             "price": "439.00",
 //             "currency": "$",
 //             "product_name": "Striped tailored jacket",
 //             "product_url": "https://uk.sandro-paris.com/en/p/striped-tailored-jacket/SFPVE01213_47.html"
@@ -389,7 +389,8 @@ const Content: React.FC<ContentProps> = ({ searchQuery }) => {
 //         "product_info": {
 //             "brand_name": "Sandro Paris",
 //             "domain": "uk.sandro-paris.com",
-//             "price": "GBP439.00",
+//             "price": "439.00",
+//             "currency": "$",
 //             "product_name": "Striped tailored jacket",
 //             "product_url": "https://uk.sandro-paris.com/en/p/striped-tailored-jacket/SFPVE01213_47.html"
 //         },
@@ -403,7 +404,8 @@ const Content: React.FC<ContentProps> = ({ searchQuery }) => {
 //         "product_info": {
 //             "brand_name": "Maje",
 //             "domain": "us.maje.com",
-//             "price": "USD530.00",
+//             "price": "530.00",
+//             "currency": "$",
 //             "product_name": "Mini embroidered strap dress",
 //             "product_url": "https://us.maje.com/en/p/mini-embroidered-strap-dress/MFPRO04250_1002.html"
 //         },
@@ -417,7 +419,8 @@ const Content: React.FC<ContentProps> = ({ searchQuery }) => {
 //         "product_info": {
 //             "brand_name": "Maje",
 //             "domain": "us.maje.com",
-//             "price": "USD530.00",
+//             "price": "530.00",
+//             "currency": "$",
 //             "product_name": "Mini embroidered strap dress",
 //             "product_url": "https://us.maje.com/en/p/mini-embroidered-strap-dress/MFPRO04250_1002.html"
 //         },
@@ -431,7 +434,8 @@ const Content: React.FC<ContentProps> = ({ searchQuery }) => {
 //         "product_info": {
 //             "brand_name": "Maje",
 //             "domain": "us.maje.com",
-//             "price": "USD530.00",
+//             "price": "530.00",
+//             "currency": "$",
 //             "product_name": "Mini embroidered strap dress",
 //             "product_url": "https://us.maje.com/en/p/mini-embroidered-strap-dress/MFPRO04250_1002.html"
 //         },
@@ -445,7 +449,8 @@ const Content: React.FC<ContentProps> = ({ searchQuery }) => {
 //         "product_info": {
 //             "brand_name": "Maje",
 //             "domain": "us.maje.com",
-//             "price": "USD530.00",
+//             "price": "530.00",
+//             "currency": "$",
 //             "product_name": "Mini embroidered strap dress",
 //             "product_url": "https://us.maje.com/en/p/mini-embroidered-strap-dress/MFPRO04250_1002.html"
 //         },
@@ -459,7 +464,8 @@ const Content: React.FC<ContentProps> = ({ searchQuery }) => {
 //         "product_info": {
 //             "brand_name": "Unknown Brand",
 //             "domain": "edikted.com",
-//             "price": "USD211",
+//             "price": "211",
+//             "currency": "$",
 //             "product_name": "Cowl Neck Drop Waist Mini Dress",
 //             "product_url": "https://edikted.com/collections/dresses/products/s19095_gray"
 //         },
@@ -473,7 +479,8 @@ const Content: React.FC<ContentProps> = ({ searchQuery }) => {
 //         "product_info": {
 //             "brand_name": "Rhone",
 //             "domain": "www.nordstrom.com",
-//             "price": "USD82.6-118",
+//             "price": "82.6-118",
+//             "currency": "$",
 //             "product_name": "Course to Court Sport Dress",
 //             "product_url": "https://www.nordstrom.com/s/course-to-court-sport-dress/7852495?origin=category-personalizedsort&breadcrumb=Home%2FWomen%2FClothing%2FActivewear&color=405"
 //         },
@@ -487,7 +494,8 @@ const Content: React.FC<ContentProps> = ({ searchQuery }) => {
 //         "product_info": {
 //             "brand_name": "Vuori",
 //             "domain": "www.nordstrom.com",
-//             "price": "USD43-54",
+//             "price": "43-54",
+//             "currency": "$",
 //             "product_name": "Energy Top Long",
 //             "product_url": "https://www.nordstrom.com/s/energy-top-long/7796072?origin=category-personalizedsort&breadcrumb=Home%2FWomen%2FClothing%2FActivewear&color=001"
 //         },
@@ -501,7 +509,8 @@ const Content: React.FC<ContentProps> = ({ searchQuery }) => {
 //         "product_info": {
 //             "brand_name": "Zella",
 //             "domain": "www.nordstrom.com",
-//             "price": "USD39.6-54.45",
+//             "price": "39.6-54.45",
+//             "currency": "$",
 //             "product_name": "Studio Luxe Performance Jacket",
 //             "product_url": "https://www.nordstrom.com/s/zella-studio-luxe-performance-jacket/7184423?origin=category-personalizedsort&breadcrumb=Home%2FWomen%2FClothing%2FActivewear&color=001"
 //         },
@@ -513,10 +522,10 @@ const Content: React.FC<ContentProps> = ({ searchQuery }) => {
 //     }
 // ]
 
-        // setProducts(res);
+//         setProducts(res);
 
       } catch (error) {
-        console.error('Error fetching history:', error);
+        console.error('Error fetching history: ', error);
       } finally {
         setLoading(false);
       }
