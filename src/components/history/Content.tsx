@@ -81,12 +81,13 @@ interface ProductProps {
   brand: string;
   name: string;
   price: number | string;
+  currency?: string;
   originalPrice?: number | string | null;
   timestamp: string | number | Date;
   url: string;
   isFavorite: boolean;
   onToggleFavorite: () => void;
-  // onDelete: () => void;
+  onDelete: () => void;
   imageCount: number;
 }
 
@@ -95,11 +96,12 @@ const ProductCard: React.FC<ProductProps> = ({
   brand,
   name,
   price,
+  currency,
   originalPrice,
   timestamp,
   isFavorite,
   onToggleFavorite,
-  // onDelete,
+  onDelete,
   imageCount
 }) => (
   <div className="relative bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition cursor-pointer flex flex-col h-full">
@@ -115,7 +117,7 @@ const ProductCard: React.FC<ProductProps> = ({
     </div>
 
     {/* Delete Button */}
-    {/* <div
+    <div
       onClick={(e) => {
         e.stopPropagation();
         onDelete();
@@ -123,7 +125,7 @@ const ProductCard: React.FC<ProductProps> = ({
       className="absolute bottom-2 right-2 z-10 cursor-pointer p-1 hover:bg-red-50 rounded transition-colors"
     >
       <Trash2 className="w-5 h-5 text-red-500 hover:text-red-600" />
-    </div> */}
+    </div>
 
 {/* Timestamp Badge */}
     <div className="absolute top-2 left-2 bg-gray-100 text-xs px-2 py-1 rounded z-10 text-gray-600">
@@ -147,7 +149,7 @@ const ProductCard: React.FC<ProductProps> = ({
       <p className="text-gray-500 text-xs uppercase tracking-wide font-medium mb-1">{brand}</p>
       <p className="text-lg font-semibold text-gray-900 truncate">{name}</p>
       <div className="flex items-center gap-2 mt-2">
-        <span className="text-lg font-bold text-black">{price}</span>
+        <span className="text-lg font-bold text-black">{currency}{price}</span>
         {/* Uncomment if showing original price
         {originalPrice && <span className="text-sm text-gray-400 line-through">{originalPrice}</span>} 
         */}
@@ -304,6 +306,7 @@ interface ProductItem {
     product_name?: string;
     name?: string;
     price?: number | string;
+    currency?: string;
     product_url?: string;
     url?: string;
   };
@@ -371,7 +374,8 @@ const Content: React.FC<ContentProps> = ({ searchQuery }) => {
 //         "product_info": {
 //             "brand_name": "Sandro Paris",
 //             "domain": "uk.sandro-paris.com",
-//             "price": "GBP439.00",
+//             "price": "439.00",
+//             "currency": "$",
 //             "product_name": "Striped tailored jacket",
 //             "product_url": "https://uk.sandro-paris.com/en/p/striped-tailored-jacket/SFPVE01213_47.html"
 //         },
@@ -385,7 +389,8 @@ const Content: React.FC<ContentProps> = ({ searchQuery }) => {
 //         "product_info": {
 //             "brand_name": "Sandro Paris",
 //             "domain": "uk.sandro-paris.com",
-//             "price": "GBP439.00",
+//             "price": "439.00",
+//             "currency": "$",
 //             "product_name": "Striped tailored jacket",
 //             "product_url": "https://uk.sandro-paris.com/en/p/striped-tailored-jacket/SFPVE01213_47.html"
 //         },
@@ -399,7 +404,8 @@ const Content: React.FC<ContentProps> = ({ searchQuery }) => {
 //         "product_info": {
 //             "brand_name": "Maje",
 //             "domain": "us.maje.com",
-//             "price": "USD530.00",
+//             "price": "530.00",
+//             "currency": "$",
 //             "product_name": "Mini embroidered strap dress",
 //             "product_url": "https://us.maje.com/en/p/mini-embroidered-strap-dress/MFPRO04250_1002.html"
 //         },
@@ -413,7 +419,8 @@ const Content: React.FC<ContentProps> = ({ searchQuery }) => {
 //         "product_info": {
 //             "brand_name": "Maje",
 //             "domain": "us.maje.com",
-//             "price": "USD530.00",
+//             "price": "530.00",
+//             "currency": "$",
 //             "product_name": "Mini embroidered strap dress",
 //             "product_url": "https://us.maje.com/en/p/mini-embroidered-strap-dress/MFPRO04250_1002.html"
 //         },
@@ -427,7 +434,8 @@ const Content: React.FC<ContentProps> = ({ searchQuery }) => {
 //         "product_info": {
 //             "brand_name": "Maje",
 //             "domain": "us.maje.com",
-//             "price": "USD530.00",
+//             "price": "530.00",
+//             "currency": "$",
 //             "product_name": "Mini embroidered strap dress",
 //             "product_url": "https://us.maje.com/en/p/mini-embroidered-strap-dress/MFPRO04250_1002.html"
 //         },
@@ -441,7 +449,8 @@ const Content: React.FC<ContentProps> = ({ searchQuery }) => {
 //         "product_info": {
 //             "brand_name": "Maje",
 //             "domain": "us.maje.com",
-//             "price": "USD530.00",
+//             "price": "530.00",
+//             "currency": "$",
 //             "product_name": "Mini embroidered strap dress",
 //             "product_url": "https://us.maje.com/en/p/mini-embroidered-strap-dress/MFPRO04250_1002.html"
 //         },
@@ -455,7 +464,8 @@ const Content: React.FC<ContentProps> = ({ searchQuery }) => {
 //         "product_info": {
 //             "brand_name": "Unknown Brand",
 //             "domain": "edikted.com",
-//             "price": "USD211",
+//             "price": "211",
+//             "currency": "$",
 //             "product_name": "Cowl Neck Drop Waist Mini Dress",
 //             "product_url": "https://edikted.com/collections/dresses/products/s19095_gray"
 //         },
@@ -469,7 +479,8 @@ const Content: React.FC<ContentProps> = ({ searchQuery }) => {
 //         "product_info": {
 //             "brand_name": "Rhone",
 //             "domain": "www.nordstrom.com",
-//             "price": "USD82.6-118",
+//             "price": "82.6-118",
+//             "currency": "$",
 //             "product_name": "Course to Court Sport Dress",
 //             "product_url": "https://www.nordstrom.com/s/course-to-court-sport-dress/7852495?origin=category-personalizedsort&breadcrumb=Home%2FWomen%2FClothing%2FActivewear&color=405"
 //         },
@@ -483,7 +494,8 @@ const Content: React.FC<ContentProps> = ({ searchQuery }) => {
 //         "product_info": {
 //             "brand_name": "Vuori",
 //             "domain": "www.nordstrom.com",
-//             "price": "USD43-54",
+//             "price": "43-54",
+//             "currency": "$",
 //             "product_name": "Energy Top Long",
 //             "product_url": "https://www.nordstrom.com/s/energy-top-long/7796072?origin=category-personalizedsort&breadcrumb=Home%2FWomen%2FClothing%2FActivewear&color=001"
 //         },
@@ -497,7 +509,8 @@ const Content: React.FC<ContentProps> = ({ searchQuery }) => {
 //         "product_info": {
 //             "brand_name": "Zella",
 //             "domain": "www.nordstrom.com",
-//             "price": "USD39.6-54.45",
+//             "price": "39.6-54.45",
+//             "currency": "$",
 //             "product_name": "Studio Luxe Performance Jacket",
 //             "product_url": "https://www.nordstrom.com/s/zella-studio-luxe-performance-jacket/7184423?origin=category-personalizedsort&breadcrumb=Home%2FWomen%2FClothing%2FActivewear&color=001"
 //         },
@@ -512,7 +525,7 @@ const Content: React.FC<ContentProps> = ({ searchQuery }) => {
 //         setProducts(res);
 
       } catch (error) {
-        console.error('Error fetching history:', error);
+        console.error('Error fetching history: ', error);
       } finally {
         setLoading(false);
       }
@@ -781,12 +794,13 @@ const Content: React.FC<ContentProps> = ({ searchQuery }) => {
                       brand={info.brand_name || 'Unknown'}
                       name={info.product_name || info.name || 'Product Name'}
                       price={info.price || 'N/A'}
+                      currency={info.currency}
                       originalPrice={129.0}
                       timestamp={item.latestTimestamp}
                       url={item.productUrl}
                       isFavorite={favorites.has(item.productUrl)}
                       onToggleFavorite={() => toggleFavorite(item.productUrl)}
-                      // onDelete={() => handleDeleteClick(item)}
+                      onDelete={() => handleDeleteClick(item)}
                       imageCount={item.images.length}
                     />
                   </div>
