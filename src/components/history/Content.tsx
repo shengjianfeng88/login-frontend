@@ -857,7 +857,7 @@ const Content: React.FC<ContentProps> = ({ searchQuery }) => {
               </h2>
               <div className="flex items-center gap-3">
                 <span className="text-2xl font-bold text-black">
-                  {selectedProduct.productInfo?.price}
+                  {selectedProduct.productInfo?.currency}{selectedProduct.productInfo?.price}
                 </span>
               </div>
               {selectedProduct.images.length > 1 && (
