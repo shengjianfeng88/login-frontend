@@ -18,9 +18,8 @@ const TryOnSubHeader: React.FC<{
       <div className="flex items-center gap-4">
         <button
           onClick={() => setShowOnlyFavorites(!showOnlyFavorites)}
-          className={`flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg transition ${
-            showOnlyFavorites ? 'bg-red-100 text-red-600 border-red-300' : 'text-gray-700 hover:bg-gray-100'
-          }`}
+          className={`flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg transition ${showOnlyFavorites ? 'bg-red-100 text-red-600 border-red-300' : 'text-gray-700 hover:bg-gray-100'
+            }`}
         >
           <Heart className={`w-4 h-4 ${showOnlyFavorites ? 'fill-red-500 text-red-500' : ''}`} />
           Favorites
@@ -47,9 +46,8 @@ const TryOnSubHeader: React.FC<{
                   {({ active }) => (
                     <button
                       onClick={() => onSortChange('low-to-high')}
-                      className={`${
-                        active ? 'bg-gray-100 text-gray-900' : 'text-gray-700'
-                      } block px-4 py-2 text-sm w-full text-left`}
+                      className={`${active ? 'bg-gray-100 text-gray-900' : 'text-gray-700'
+                        } block px-4 py-2 text-sm w-full text-left`}
                     >
                       Price: Low to High
                     </button>
@@ -59,9 +57,8 @@ const TryOnSubHeader: React.FC<{
                   {({ active }) => (
                     <button
                       onClick={() => onSortChange('high-to-low')}
-                      className={`${
-                        active ? 'bg-gray-100 text-gray-900' : 'text-gray-700'
-                      } block px-4 py-2 text-sm w-full text-left`}
+                      className={`${active ? 'bg-gray-100 text-gray-900' : 'text-gray-700'
+                        } block px-4 py-2 text-sm w-full text-left`}
                     >
                       Price: High to Low
                     </button>
@@ -127,7 +124,7 @@ const ProductCard: React.FC<ProductProps> = ({
       <Trash2 className="w-5 h-5 text-red-500 hover:text-red-600" />
     </div>
 
-{/* Timestamp Badge */}
+    {/* Timestamp Badge */}
     <div className="absolute top-2 left-2 bg-gray-100 text-xs px-2 py-1 rounded z-10 text-gray-600">
       {new Date(timestamp).toLocaleDateString()}
     </div>
@@ -181,7 +178,7 @@ const ImageSlider: React.FC<{
           alt="Product"
           className="w-full h-full object-contain"
         />
-        
+
         {/* Delete Button for Individual Image */}
         {onDeleteImage && (
           <div
@@ -195,7 +192,7 @@ const ImageSlider: React.FC<{
           </div>
         )}
       </div>
-      
+
       {images.length > 1 && (
         <>
           {/* Navigation Arrows */}
@@ -218,9 +215,8 @@ const ImageSlider: React.FC<{
               <button
                 key={index}
                 onClick={() => onIndexChange(index)}
-                className={`w-2 h-2 rounded-full transition ${
-                  index === currentIndex ? 'bg-blue-500' : 'bg-gray-300'
-                }`}
+                className={`w-2 h-2 rounded-full transition ${index === currentIndex ? 'bg-blue-500' : 'bg-gray-300'
+                  }`}
               />
             ))}
           </div>
@@ -261,14 +257,14 @@ const DeleteConfirmationModal: React.FC<{
           </div>
           <h3 className="text-lg font-semibold text-gray-900">Delete Try-on</h3>
         </div>
-        
+
         <p className="text-gray-600 mb-6">
-          {deleteAll 
+          {deleteAll
             ? `Are you sure you want to delete all ${imageCount} try-on${imageCount > 1 ? 's' : ''} for "${productName}"? This action cannot be undone.`
             : `Are you sure you want to delete "${productName}" from your try-on history? This action cannot be undone.`
           }
         </p>
-        
+
         <div className="flex gap-3 justify-end">
           <button
             onClick={onClose}
@@ -301,6 +297,7 @@ interface ProductItem {
   record_id: string;
   result_image_url: string;
   timestamp: string | number | Date;
+  isValid?: boolean; // Added isValid property
   product_info?: {
     brand_name?: string;
     product_name?: string;
@@ -309,7 +306,6 @@ interface ProductItem {
     currency?: string;
     product_url?: string;
     url?: string;
-    isValid?: boolean; // Added isValid property
   };
 }
 
@@ -346,7 +342,7 @@ const Content: React.FC<ContentProps> = ({ searchQuery }) => {
     product: null,
     isDeleting: false
   });
-  
+
   const [deleteImageModal, setDeleteImageModal] = useState<{
     isOpen: boolean;
     recordId: string | null;
@@ -356,7 +352,7 @@ const Content: React.FC<ContentProps> = ({ searchQuery }) => {
     recordId: null,
     isDeleting: false
   });
-  
+
   const accessToken = localStorage.getItem('accessToken');
 
   // Pagination state
@@ -376,7 +372,7 @@ const Content: React.FC<ContentProps> = ({ searchQuery }) => {
           },
         });
         // Only keep products where product_info.isValid === true
-        const filtered = res.data.filter(p => p.product_info && p.product_info.isValid === true);
+        const filtered = res.data.filter(p => p.isValid === true);
         setProducts(filtered);
         setHasMore(filtered.length === pageSize);
       } catch (error) {
@@ -391,10 +387,10 @@ const Content: React.FC<ContentProps> = ({ searchQuery }) => {
   // Group products by product URL
   const groupedProducts = React.useMemo(() => {
     const grouped = new Map<string, GroupedProduct>();
-    
+
     products.forEach(product => {
       const productUrl = product.product_info?.product_url || product.product_info?.url || 'unknown';
-      
+
       if (grouped.has(productUrl)) {
         const existing = grouped.get(productUrl)!;
         existing.images.push({
@@ -419,12 +415,12 @@ const Content: React.FC<ContentProps> = ({ searchQuery }) => {
         });
       }
     });
-    
+
     // Sort images within each group by timestamp (newest first)
     grouped.forEach(group => {
       group.images.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
     });
-    
+
     return Array.from(grouped.values());
   }, [products]);
 
@@ -465,7 +461,7 @@ const Content: React.FC<ContentProps> = ({ searchQuery }) => {
       // Remove all deleted records from the local state
       const recordIdsToDelete = deleteModal.product.images.map(img => img.recordId);
       setProducts(prev => prev.filter(p => !recordIdsToDelete.includes(p.record_id)));
-      
+
       // Remove from favorites if it was favorited
       setFavorites(prev => {
         const updated = new Set(prev);
@@ -516,7 +512,7 @@ const Content: React.FC<ContentProps> = ({ searchQuery }) => {
 
       // Remove the deleted record from the local state
       setProducts(prev => prev.filter(p => p.record_id !== deleteImageModal.recordId));
-      
+
       // Update the selected product's images if it's currently open
       if (selectedProduct) {
         const updatedImages = selectedProduct.images.filter(img => img.recordId !== deleteImageModal.recordId);
@@ -524,12 +520,12 @@ const Content: React.FC<ContentProps> = ({ searchQuery }) => {
           // If no images left, close the modal and remove the entire card
           setShowModal(false);
           setSelectedProduct(null);
-          
+
           // Remove the entire product from the products list
           // Find all record IDs for this product and remove them
           const recordIdsToRemove = selectedProduct.images.map(img => img.recordId);
           setProducts(prev => prev.filter(p => !recordIdsToRemove.includes(p.record_id)));
-          
+
           // Remove from favorites if it was favorited
           setFavorites(prev => {
             const updated = new Set(prev);
@@ -589,9 +585,9 @@ const Content: React.FC<ContentProps> = ({ searchQuery }) => {
     // Helper function to extract numeric price value
     const extractPriceValue = (priceStr: string | number | undefined): number => {
       if (!priceStr) return 0;
-      
+
       const price = priceStr.toString();
-      
+
       // Handle range format like "USD43-54" - extract the median (midpoint)
       const rangeMatch = price.match(/(\d+)-(\d+)/);
       if (rangeMatch) {
@@ -599,19 +595,19 @@ const Content: React.FC<ContentProps> = ({ searchQuery }) => {
         const upper = parseFloat(rangeMatch[2]);
         return (lower + upper) / 2; // Return the median (midpoint)
       }
-      
+
       // Handle regular format like "USD530.00" or "GBP439.00"
       const numericMatch = price.match(/(\d+(?:\.\d+)?)/);
       if (numericMatch) {
         return parseFloat(numericMatch[1]);
       }
-      
+
       return 0;
     };
-    
+
     const priceA = extractPriceValue(a.productInfo?.price);
     const priceB = extractPriceValue(b.productInfo?.price);
-    
+
     if (sortOrder === 'low-to-high') return priceA - priceB;
     if (sortOrder === 'high-to-low') return priceB - priceA;
     return 0;
