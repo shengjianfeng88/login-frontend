@@ -361,168 +361,168 @@ const Content: React.FC<ContentProps> = ({ searchQuery }) => {
   useEffect(() => {
     const fetchHistory = async () => {
       try {
-        const res = await axios.get<ProductItem[]>('https://tryon-history.faishion.ai/history', {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
-        });
+        // const res = await axios.get<ProductItem[]>('https://tryon-history.faishion.ai/history', {
+        //   headers: {
+        //     Authorization: `Bearer ${accessToken}`,
+        //   },
+        // });
         
-        setProducts(res.data);
+        // setProducts(res.data);
 
-//         const res = [
-//     {
-//         "product_info": {
-//             "brand_name": "Sandro Paris",
-//             "domain": "uk.sandro-paris.com",
-//             "price": "439.00",
-//             "currency": "$",
-//             "product_name": "Striped tailored jacket",
-//             "product_url": "https://uk.sandro-paris.com/en/p/striped-tailored-jacket/SFPVE01213_47.html"
-//         },
-//         "record_id": "6867836f965964492a187d5e",
-//         "result_image_url": "https://faishionai.s3.amazonaws.com/tryon-results/1751614216.png",
-//         "timestamp": "2025-07-04T07:31:59.528000",
-//         "user_email": "info.faishion@gmail.com",
-//         "user_id": "682e58d3b329b52413d8d4df"
-//     },
-//     {
-//         "product_info": {
-//             "brand_name": "Sandro Paris",
-//             "domain": "uk.sandro-paris.com",
-//             "price": "439.00",
-//             "currency": "$",
-//             "product_name": "Striped tailored jacket",
-//             "product_url": "https://uk.sandro-paris.com/en/p/striped-tailored-jacket/SFPVE01213_47.html"
-//         },
-//         "record_id": "68678341965964492a187d5d",
-//         "result_image_url": "https://faishionai.s3.amazonaws.com/tryon-results/1751614203.png",
-//         "timestamp": "2025-07-04T07:31:13.657000",
-//         "user_email": "info.faishion@gmail.com",
-//         "user_id": "682e58d3b329b52413d8d4df"
-//     },
-//     {
-//         "product_info": {
-//             "brand_name": "Maje",
-//             "domain": "us.maje.com",
-//             "price": "530.00",
-//             "currency": "$",
-//             "product_name": "Mini embroidered strap dress",
-//             "product_url": "https://us.maje.com/en/p/mini-embroidered-strap-dress/MFPRO04250_1002.html"
-//         },
-//         "record_id": "6867830f965964492a187d5c",
-//         "result_image_url": "https://faishionai.s3.amazonaws.com/tryon-results/1751614158.png",
-//         "timestamp": "2025-07-04T07:30:23.018000",
-//         "user_email": "info.faishion@gmail.com",
-//         "user_id": "682e58d3b329b52413d8d4df"
-//     },
-//     {
-//         "product_info": {
-//             "brand_name": "Maje",
-//             "domain": "us.maje.com",
-//             "price": "530.00",
-//             "currency": "$",
-//             "product_name": "Mini embroidered strap dress",
-//             "product_url": "https://us.maje.com/en/p/mini-embroidered-strap-dress/MFPRO04250_1002.html"
-//         },
-//         "record_id": "686782df965964492a187d5b",
-//         "result_image_url": "https://faishionai.s3.amazonaws.com/tryon-results/1751614106.png",
-//         "timestamp": "2025-07-04T07:29:35.200000",
-//         "user_email": "info.faishion@gmail.com",
-//         "user_id": "682e58d3b329b52413d8d4df"
-//     },
-//     {
-//         "product_info": {
-//             "brand_name": "Maje",
-//             "domain": "us.maje.com",
-//             "price": "530.00",
-//             "currency": "$",
-//             "product_name": "Mini embroidered strap dress",
-//             "product_url": "https://us.maje.com/en/p/mini-embroidered-strap-dress/MFPRO04250_1002.html"
-//         },
-//         "record_id": "68678276965964492a187d5a",
-//         "result_image_url": "https://faishionai.s3.amazonaws.com/tryon-results/1751614013.png",
-//         "timestamp": "2025-07-04T07:27:50.234000",
-//         "user_email": "info.faishion@gmail.com",
-//         "user_id": "682e58d3b329b52413d8d4df"
-//     },
-//     {
-//         "product_info": {
-//             "brand_name": "Maje",
-//             "domain": "us.maje.com",
-//             "price": "530.00",
-//             "currency": "$",
-//             "product_name": "Mini embroidered strap dress",
-//             "product_url": "https://us.maje.com/en/p/mini-embroidered-strap-dress/MFPRO04250_1002.html"
-//         },
-//         "record_id": "68678247965964492a187d59",
-//         "result_image_url": "https://faishionai.s3.amazonaws.com/tryon-results/1751613973.png",
-//         "timestamp": "2025-07-04T07:27:03.093000",
-//         "user_email": "info.faishion@gmail.com",
-//         "user_id": "682e58d3b329b52413d8d4df"
-//     },
-//     {
-//         "product_info": {
-//             "brand_name": "Unknown Brand",
-//             "domain": "edikted.com",
-//             "price": "211",
-//             "currency": "$",
-//             "product_name": "Cowl Neck Drop Waist Mini Dress",
-//             "product_url": "https://edikted.com/collections/dresses/products/s19095_gray"
-//         },
-//         "record_id": "686746b5965964492a187d4d",
-//         "result_image_url": "https://faishionai.s3.amazonaws.com/tryon-results/1751598721.png",
-//         "timestamp": "2025-07-04T03:12:53.263000",
-//         "user_email": "info.faishion@gmail.com",
-//         "user_id": "682e58d3b329b52413d8d4df"
-//     },
-//     {
-//         "product_info": {
-//             "brand_name": "Rhone",
-//             "domain": "www.nordstrom.com",
-//             "price": "82.6-118",
-//             "currency": "$",
-//             "product_name": "Course to Court Sport Dress",
-//             "product_url": "https://www.nordstrom.com/s/course-to-court-sport-dress/7852495?origin=category-personalizedsort&breadcrumb=Home%2FWomen%2FClothing%2FActivewear&color=405"
-//         },
-//         "record_id": "6866c831965964492a187d23",
-//         "result_image_url": "https://faishionai.s3.amazonaws.com/tryon-results/1751566330.png",
-//         "timestamp": "2025-07-03T18:13:05.261000",
-//         "user_email": "info.faishion@gmail.com",
-//         "user_id": "682e58d3b329b52413d8d4df"
-//     },
-//     {
-//         "product_info": {
-//             "brand_name": "Vuori",
-//             "domain": "www.nordstrom.com",
-//             "price": "43-54",
-//             "currency": "$",
-//             "product_name": "Energy Top Long",
-//             "product_url": "https://www.nordstrom.com/s/energy-top-long/7796072?origin=category-personalizedsort&breadcrumb=Home%2FWomen%2FClothing%2FActivewear&color=001"
-//         },
-//         "record_id": "6866c7c9965964492a187d22",
-//         "result_image_url": "https://faishionai.s3.amazonaws.com/tryon-results/1751566228.png",
-//         "timestamp": "2025-07-03T18:11:21.288000",
-//         "user_email": "info.faishion@gmail.com",
-//         "user_id": "682e58d3b329b52413d8d4df"
-//     },
-//     {
-//         "product_info": {
-//             "brand_name": "Zella",
-//             "domain": "www.nordstrom.com",
-//             "price": "39.6-54.45",
-//             "currency": "$",
-//             "product_name": "Studio Luxe Performance Jacket",
-//             "product_url": "https://www.nordstrom.com/s/zella-studio-luxe-performance-jacket/7184423?origin=category-personalizedsort&breadcrumb=Home%2FWomen%2FClothing%2FActivewear&color=001"
-//         },
-//         "record_id": "6866c775965964492a187d21",
-//         "result_image_url": "https://faishionai.s3.amazonaws.com/tryon-results/1751566092.png",
-//         "timestamp": "2025-07-03T18:09:57.178000",
-//         "user_email": "info.faishion@gmail.com",
-//         "user_id": "682e58d3b329b52413d8d4df"
-//     }
-// ]
+        const res = [
+    {
+        "product_info": {
+            "brand_name": "Sandro Paris",
+            "domain": "uk.sandro-paris.com",
+            "price": "439.00",
+            "currency": "$",
+            "product_name": "Striped tailored jacket",
+            "product_url": "https://uk.sandro-paris.com/en/p/striped-tailored-jacket/SFPVE01213_47.html"
+        },
+        "record_id": "6867836f965964492a187d5e",
+        "result_image_url": "https://faishionai.s3.amazonaws.com/tryon-results/1751614216.png",
+        "timestamp": "2025-07-04T07:31:59.528000",
+        "user_email": "info.faishion@gmail.com",
+        "user_id": "682e58d3b329b52413d8d4df"
+    },
+    {
+        "product_info": {
+            "brand_name": "Sandro Paris",
+            "domain": "uk.sandro-paris.com",
+            "price": "439.00",
+            "currency": "$",
+            "product_name": "Striped tailored jacket",
+            "product_url": "https://uk.sandro-paris.com/en/p/striped-tailored-jacket/SFPVE01213_47.html"
+        },
+        "record_id": "68678341965964492a187d5d",
+        "result_image_url": "https://faishionai.s3.amazonaws.com/tryon-results/1751614203.png",
+        "timestamp": "2025-07-04T07:31:13.657000",
+        "user_email": "info.faishion@gmail.com",
+        "user_id": "682e58d3b329b52413d8d4df"
+    },
+    {
+        "product_info": {
+            "brand_name": "Maje",
+            "domain": "us.maje.com",
+            "price": "530.00",
+            "currency": "$",
+            "product_name": "Mini embroidered strap dress",
+            "product_url": "https://us.maje.com/en/p/mini-embroidered-strap-dress/MFPRO04250_1002.html"
+        },
+        "record_id": "6867830f965964492a187d5c",
+        "result_image_url": "https://faishionai.s3.amazonaws.com/tryon-results/1751614158.png",
+        "timestamp": "2025-07-04T07:30:23.018000",
+        "user_email": "info.faishion@gmail.com",
+        "user_id": "682e58d3b329b52413d8d4df"
+    },
+    {
+        "product_info": {
+            "brand_name": "Maje",
+            "domain": "us.maje.com",
+            "price": "530.00",
+            "currency": "$",
+            "product_name": "Mini embroidered strap dress",
+            "product_url": "https://us.maje.com/en/p/mini-embroidered-strap-dress/MFPRO04250_1002.html"
+        },
+        "record_id": "686782df965964492a187d5b",
+        "result_image_url": "https://faishionai.s3.amazonaws.com/tryon-results/1751614106.png",
+        "timestamp": "2025-07-04T07:29:35.200000",
+        "user_email": "info.faishion@gmail.com",
+        "user_id": "682e58d3b329b52413d8d4df"
+    },
+    {
+        "product_info": {
+            "brand_name": "Maje",
+            "domain": "us.maje.com",
+            "price": "530.00",
+            "currency": "$",
+            "product_name": "Mini embroidered strap dress",
+            "product_url": "https://us.maje.com/en/p/mini-embroidered-strap-dress/MFPRO04250_1002.html"
+        },
+        "record_id": "68678276965964492a187d5a",
+        "result_image_url": "https://faishionai.s3.amazonaws.com/tryon-results/1751614013.png",
+        "timestamp": "2025-07-04T07:27:50.234000",
+        "user_email": "info.faishion@gmail.com",
+        "user_id": "682e58d3b329b52413d8d4df"
+    },
+    {
+        "product_info": {
+            "brand_name": "Maje",
+            "domain": "us.maje.com",
+            "price": "530.00",
+            "currency": "$",
+            "product_name": "Mini embroidered strap dress",
+            "product_url": "https://us.maje.com/en/p/mini-embroidered-strap-dress/MFPRO04250_1002.html"
+        },
+        "record_id": "68678247965964492a187d59",
+        "result_image_url": "https://faishionai.s3.amazonaws.com/tryon-results/1751613973.png",
+        "timestamp": "2025-07-04T07:27:03.093000",
+        "user_email": "info.faishion@gmail.com",
+        "user_id": "682e58d3b329b52413d8d4df"
+    },
+    {
+        "product_info": {
+            "brand_name": "Unknown Brand",
+            "domain": "edikted.com",
+            "price": "211",
+            "currency": "$",
+            "product_name": "Cowl Neck Drop Waist Mini Dress",
+            "product_url": "https://edikted.com/collections/dresses/products/s19095_gray"
+        },
+        "record_id": "686746b5965964492a187d4d",
+        "result_image_url": "https://faishionai.s3.amazonaws.com/tryon-results/1751598721.png",
+        "timestamp": "2025-07-04T03:12:53.263000",
+        "user_email": "info.faishion@gmail.com",
+        "user_id": "682e58d3b329b52413d8d4df"
+    },
+    {
+        "product_info": {
+            "brand_name": "Rhone",
+            "domain": "www.nordstrom.com",
+            "price": "82.6-118",
+            "currency": "$",
+            "product_name": "Course to Court Sport Dress",
+            "product_url": "https://www.nordstrom.com/s/course-to-court-sport-dress/7852495?origin=category-personalizedsort&breadcrumb=Home%2FWomen%2FClothing%2FActivewear&color=405"
+        },
+        "record_id": "6866c831965964492a187d23",
+        "result_image_url": "https://faishionai.s3.amazonaws.com/tryon-results/1751566330.png",
+        "timestamp": "2025-07-03T18:13:05.261000",
+        "user_email": "info.faishion@gmail.com",
+        "user_id": "682e58d3b329b52413d8d4df"
+    },
+    {
+        "product_info": {
+            "brand_name": "Vuori",
+            "domain": "www.nordstrom.com",
+            "price": "43-54",
+            "currency": "$",
+            "product_name": "Energy Top Long",
+            "product_url": "https://www.nordstrom.com/s/energy-top-long/7796072?origin=category-personalizedsort&breadcrumb=Home%2FWomen%2FClothing%2FActivewear&color=001"
+        },
+        "record_id": "6866c7c9965964492a187d22",
+        "result_image_url": "https://faishionai.s3.amazonaws.com/tryon-results/1751566228.png",
+        "timestamp": "2025-07-03T18:11:21.288000",
+        "user_email": "info.faishion@gmail.com",
+        "user_id": "682e58d3b329b52413d8d4df"
+    },
+    {
+        "product_info": {
+            "brand_name": "Zella",
+            "domain": "www.nordstrom.com",
+            "price": "39.6-54.45",
+            "currency": "$",
+            "product_name": "Studio Luxe Performance Jacket",
+            "product_url": "https://www.nordstrom.com/s/zella-studio-luxe-performance-jacket/7184423?origin=category-personalizedsort&breadcrumb=Home%2FWomen%2FClothing%2FActivewear&color=001"
+        },
+        "record_id": "6866c775965964492a187d21",
+        "result_image_url": "https://faishionai.s3.amazonaws.com/tryon-results/1751566092.png",
+        "timestamp": "2025-07-03T18:09:57.178000",
+        "user_email": "info.faishion@gmail.com",
+        "user_id": "682e58d3b329b52413d8d4df"
+    }
+]
 
-//         setProducts(res);
+        setProducts(res);
 
       } catch (error) {
         console.error('Error fetching history: ', error);
@@ -872,6 +872,14 @@ const Content: React.FC<ContentProps> = ({ searchQuery }) => {
                 className="mt-3 bg-black text-white px-6 py-3 rounded-lg hover:bg-gray-800 text-center w-fit"
               >
                 Shop Now
+              </a>
+                            <a
+                href={`https://www.facebook.com/sharer/sharer.php?u=${selectedProduct.images[currentImageIndex].url}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-3 bg-black text-white px-6 py-3 rounded-lg hover:bg-gray-800 text-center w-fit"
+              >
+                Share to Facebook
               </a>
             </div>
           </div>
