@@ -1,5 +1,5 @@
 import React, { useEffect, useState, Fragment } from 'react';
-import { Camera, Heart, ChevronDown, X, Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Camera, Heart, ChevronDown, X, Trash2, Download, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Menu, Transition } from '@headlessui/react';
 import empty from '/empty.png';
 import axios from 'axios';
@@ -194,6 +194,18 @@ const ImageSlider: React.FC<{
             <Trash2 className="w-5 h-5 text-red-500 hover:text-red-600" />
           </div>
         )}
+
+        <a
+          href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(images[currentIndex].url)}`}
+          download
+          target="_blank"
+          rel="noopener noreferrer"
+          className="absolute top-4 right-4 z-10 cursor-pointer p-2 hover:bg-red-50 rounded-full bg-white shadow-lg hover:shadow-xl transition-all"
+        >
+          <Download className="w-5 h-5 text-red-500 hover:text-red-600" />
+        </a>
+
+        
       </div>
       
       {images.length > 1 && (
@@ -872,14 +884,6 @@ const Content: React.FC<ContentProps> = ({ searchQuery }) => {
                 className="mt-3 bg-black text-white px-6 py-3 rounded-lg hover:bg-gray-800 text-center w-fit"
               >
                 Shop Now
-              </a>
-                            <a
-                href={`https://www.facebook.com/sharer/sharer.php?u=${selectedProduct.images[currentImageIndex].url}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="mt-3 bg-black text-white px-6 py-3 rounded-lg hover:bg-gray-800 text-center w-fit"
-              >
-                Share to Facebook
               </a>
             </div>
           </div>
