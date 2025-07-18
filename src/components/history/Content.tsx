@@ -195,15 +195,18 @@ const ImageSlider: React.FC<{
           </div>
         )}
 
-        <a
-          href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(images[currentIndex].url)}`}
-          download
-          target="_blank"
-          rel="noopener noreferrer"
-          className="absolute top-4 right-4 z-10 cursor-pointer p-2 hover:bg-red-50 rounded-full bg-white shadow-lg hover:shadow-xl transition-all"
-        >
-          <Download className="w-5 h-5 text-red-500 hover:text-red-600" />
-        </a>
+        {/* Share to Facebook Button */}
+        {images[currentIndex].url && (
+          <a
+            href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(images[currentIndex].url)}`}
+            download
+            target="_blank"
+            rel="noopener noreferrer"
+            className="absolute top-4 right-4 z-10 cursor-pointer p-2 hover:bg-red-50 rounded-full bg-white shadow-lg hover:shadow-xl transition-all"
+          >
+            <Download className="w-5 h-5 text-red-500 hover:text-red-600" />
+          </a>
+        )}
 
         
       </div>
