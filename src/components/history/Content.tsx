@@ -364,29 +364,206 @@ const Content: React.FC<ContentProps> = ({ searchQuery }) => {
   const pageSize = 10;
   const [hasMore, setHasMore] = useState(true);
 
-  useEffect(() => {
-    const fetchHistory = async () => {
-      setLoading(true);
-      try {
-        const skip = (currentPage - 1) * pageSize;
-        const url = `https://tryon-history.faishion.ai/history?limit=${pageSize}&skip=${skip}`;
-        const res = await axios.get<ProductItem[]>(url, {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
-        });
-        // Only keep products where product_info.isValid === true
-        const filtered = res.data.filter(p => p.product_info && p.product_info.isValid === true);
+  // Fetch and append products
+  const fetchHistory = async (page: number, append = false) => {
+    try {
+      const skip = (page - 1) * pageSize;
+      const url = `https://tryon-history.faishion.ai/history?limit=${pageSize}&skip=${skip}`;
+      const res = await axios.get<ProductItem[]>(url, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+      const filtered = res.data.filter(p => p.product_info && p.product_info.isValid === true);
+      // const filtered = [
+      //     {
+      //         "isValid": true,
+      //         "product_info": {
+      //             "brand_name": "Nike",
+      //             "currency": "$",
+      //             "domain": "www.nike.com",
+      //             "price": 100.0,
+      //             "product_name": "Nike Pro Women s Mid-Rise 3  Mesh-Paneled Shorts",
+      //             "product_url": "https://www.nike.com/t/pro-womens-mid-rise-3-mesh-paneled-shorts-J3NKSd/FN3336-634"
+      //         },
+      //         "record_id": "687976211f9f9deb30c7e4c6",
+      //         "result_image_url": "https://faishionai.s3.amazonaws.com/tryon-results/1752790508.png",
+      //         "timestamp": "2025-07-17T22:16:01.305000",
+      //         "user_email": "info.faishion@gmail.com",
+      //         "user_id": "682e58d3b329b52413d8d4df"
+      //     },
+      //     {
+      //         "isValid": true,
+      //         "product_info": {
+      //             "brand_name": "TOPGH",
+      //             "currency": "$",
+      //             "domain": "www.amazon.com",
+      //             "price": 52.99,
+      //             "product_name": "Womens Pant Suit Velvet 2 pcs Peak Lapel Double Breasted Women s Suiting for Work Professional",
+      //             "product_url": "https://www.amazon.com/dp/B0BLXWVYQ9/ref=sspa_dk_detail_6?pf_rd_p=7446a9d1-25fe-4460-b135-a60336bad2c9&pf_rd_r=QC55GDWMRMNZFEQ8FMJ3&pd_rd_wg=oVZ5l&pd_rd_w=eMDUh&content-id=amzn1.sym.7446a9d1-25fe-4460-b135-a60336bad2c9&pd_rd_r=56bd9c49-98f6-4a41-8c17-d9221d2b0256&sp_csd=d2lkZ2V0TmFtZT1zcF9kZXRhaWw&th=1&psc=1"
+      //         },
+      //         "record_id": "687948291f9f9deb30c7e4b0",
+      //         "result_image_url": "https://faishionai.s3.amazonaws.com/tryon-results/1752778704.png",
+      //         "timestamp": "2025-07-17T18:59:53.760000",
+      //         "user_email": "info.faishion@gmail.com",
+      //         "user_id": "682e58d3b329b52413d8d4df"
+      //     },
+      //     {
+      //         "isValid": true,
+      //         "product_info": {
+      //             "brand_name": "TOPGH",
+      //             "currency": "$",
+      //             "domain": "www.amazon.com",
+      //             "price": 52.99,
+      //             "product_name": "Womens Pant Suit Velvet 2 pcs Peak Lapel Double Breasted Women s Suiting for Work Professional",
+      //             "product_url": "https://www.amazon.com/dp/B0DKHHHZQK/ref=sspa_dk_detail_6?pf_rd_p=7446a9d1-25fe-4460-b135-a60336bad2c9&pf_rd_r=QC55GDWMRMNZFEQ8FMJ3&pd_rd_wg=oVZ5l&pd_rd_w=eMDUh&content-id=amzn1.sym.7446a9d1-25fe-4460-b135-a60336bad2c9&pd_rd_r=56bd9c49-98f6-4a41-8c17-d9221d2b0256&sp_csd=d2lkZ2V0TmFtZT1zcF9kZXRhaWw&th=1&psc=1"
+      //         },
+      //         "record_id": "687947721f9f9deb30c7e4ad",
+      //         "result_image_url": "https://faishionai.s3.amazonaws.com/tryon-results/1752778467.png",
+      //         "timestamp": "2025-07-17T18:56:50.873000",
+      //         "user_email": "info.faishion@gmail.com",
+      //         "user_id": "682e58d3b329b52413d8d4df"
+      //     },
+      //     {
+      //         "isValid": true,
+      //         "product_info": {
+      //             "brand_name": "LEWIJO",
+      //             "currency": "$",
+      //             "domain": "www.amazon.com",
+      //             "price": 84.99,
+      //             "product_name": "Elegant Pant Suits for Women Dressy 2 Piece Womens Suit with Belt Casual Shawl Collar Prom Tuxedo for Wedding Guest",
+      //             "product_url": "https://www.amazon.com/dp/B0F8HQ2VD4/ref=sspa_dk_detail_4?psc=1&pd_rd_i=B0F8HQ2VD4&pd_rd_w=FdYA8&content-id=amzn1.sym.7446a9d1-25fe-4460-b135-a60336bad2c9&pf_rd_p=7446a9d1-25fe-4460-b135-a60336bad2c9&pf_rd_r=DNQC5DJEMP4GDRWQYEXZ&pd_rd_wg=EMnrv&pd_rd_r=745d00e8-aade-4a88-97db-8b6084a3825e&sp_csd=d2lkZ2V0TmFtZT1zcF9kZXRhaWw"
+      //         },
+      //         "record_id": "6879470d1f9f9deb30c7e4ab",
+      //         "result_image_url": "https://faishionai.s3.amazonaws.com/tryon-results/1752778397.png",
+      //         "timestamp": "2025-07-17T18:55:09.834000",
+      //         "user_email": "info.faishion@gmail.com",
+      //         "user_id": "682e58d3b329b52413d8d4df"
+      //     },
+      //     {
+      //         "isValid": true,
+      //         "product_info": {
+      //             "brand_name": "TOPGH",
+      //             "currency": "$",
+      //             "domain": "www.amazon.com",
+      //             "price": 79.99,
+      //             "product_name": "Womens Pant Suit Velvet 2 pcs Peak Lapel Double Breasted Women s Suiting for Work Professional",
+      //             "product_url": "https://www.amazon.com/dp/B0BLXYH4ZT/ref=sspa_dk_detail_6?pf_rd_p=7446a9d1-25fe-4460-b135-a60336bad2c9&pf_rd_r=QC55GDWMRMNZFEQ8FMJ3&pd_rd_wg=oVZ5l&pd_rd_w=eMDUh&content-id=amzn1.sym.7446a9d1-25fe-4460-b135-a60336bad2c9&pd_rd_r=56bd9c49-98f6-4a41-8c17-d9221d2b0256&sp_csd=d2lkZ2V0TmFtZT1zcF9kZXRhaWw&th=1&psc=1"
+      //         },
+      //         "record_id": "687946d81f9f9deb30c7e4aa",
+      //         "result_image_url": "https://faishionai.s3.amazonaws.com/tryon-results/1752778389.png",
+      //         "timestamp": "2025-07-17T18:54:16.490000",
+      //         "user_email": "info.faishion@gmail.com",
+      //         "user_id": "682e58d3b329b52413d8d4df"
+      //     },
+      //     {
+      //         "isValid": true,
+      //         "product_info": {
+      //             "brand_name": "HMYDPH",
+      //             "currency": "$",
+      //             "domain": "www.amazon.com",
+      //             "price": 49.99,
+      //             "product_name": "Womens Suit 2 Piece Slim Fit Outfits Suits Professional Blazer with Pants Dressy Casual Suiting Business Office Sets for Work",
+      //             "product_url": "https://www.amazon.com/dp/B0DX1VY9NN/ref=sspa_dk_detail_6?pd_rd_i=B0DX1VY9NN&pd_rd_w=eMDUh&content-id=amzn1.sym.7446a9d1-25fe-4460-b135-a60336bad2c9&pf_rd_p=7446a9d1-25fe-4460-b135-a60336bad2c9&pf_rd_r=QC55GDWMRMNZFEQ8FMJ3&pd_rd_wg=oVZ5l&pd_rd_r=56bd9c49-98f6-4a41-8c17-d9221d2b0256&sp_csd=d2lkZ2V0TmFtZT1zcF9kZXRhaWw&th=1&psc=1"
+      //         },
+      //         "record_id": "687946a41f9f9deb30c7e4a9",
+      //         "result_image_url": "https://faishionai.s3.amazonaws.com/tryon-results/1752778283.png",
+      //         "timestamp": "2025-07-17T18:53:24.787000",
+      //         "user_email": "info.faishion@gmail.com",
+      //         "user_id": "682e58d3b329b52413d8d4df"
+      //     },
+      //     {
+      //         "isValid": true,
+      //         "product_info": {
+      //             "brand_name": "DXSHCV",
+      //             "currency": "$",
+      //             "domain": "www.amazon.com",
+      //             "price": 52.99,
+      //             "product_name": "Womens Tuxedo 3 Piece Suit Sets for Women Blazer Pants Vest Set Womens Business Professional Outfits",
+      //             "product_url": "https://www.amazon.com/dp/B0DPKP6H7N/ref=sspa_dk_detail_4?pd_rd_i=B0DPKP65BH&pd_rd_w=S6Zyf&content-id=amzn1.sym.bbb3fb5e-28ad-4062-a3ba-1f7b9f2e4371&pf_rd_p=bbb3fb5e-28ad-4062-a3ba-1f7b9f2e4371&pf_rd_r=J63JTQ48NV2EHGRR4188&pd_rd_wg=dBlFE&pd_rd_r=6ef3a0cb-f9da-4376-9880-fd92a7c3c07a&sp_csd=d2lkZ2V0TmFtZT1zcF9kZXRhaWxfdGhlbWF0aWM&th=1&psc=1"
+      //         },
+      //         "record_id": "6879466f1f9f9deb30c7e4a8",
+      //         "result_image_url": "https://faishionai.s3.amazonaws.com/tryon-results/1752778273.png",
+      //         "timestamp": "2025-07-17T18:52:31.120000",
+      //         "user_email": "info.faishion@gmail.com",
+      //         "user_id": "682e58d3b329b52413d8d4df"
+      //     },
+      //     {
+      //         "isValid": true,
+      //         "product_info": {
+      //             "brand_name": "DXSHCV",
+      //             "currency": "$",
+      //             "domain": "www.amazon.com",
+      //             "price": 52.99,
+      //             "product_name": "Womens Tuxedo 3 Piece Suit Sets for Women Blazer Pants Vest Set Womens Business Professional Outfits",
+      //             "product_url": "https://www.amazon.com/dp/B0DPKPLG3Z/ref=sspa_dk_detail_4?pd_rd_i=B0DPKP65BH&pd_rd_w=S6Zyf&content-id=amzn1.sym.bbb3fb5e-28ad-4062-a3ba-1f7b9f2e4371&pf_rd_p=bbb3fb5e-28ad-4062-a3ba-1f7b9f2e4371&pf_rd_r=J63JTQ48NV2EHGRR4188&pd_rd_wg=dBlFE&pd_rd_r=6ef3a0cb-f9da-4376-9880-fd92a7c3c07a&sp_csd=d2lkZ2V0TmFtZT1zcF9kZXRhaWxfdGhlbWF0aWM&th=1&psc=1"
+      //         },
+      //         "record_id": "6879459a1f9f9deb30c7e4a5",
+      //         "result_image_url": "https://faishionai.s3.amazonaws.com/tryon-results/1752778085.png",
+      //         "timestamp": "2025-07-17T18:48:58.277000",
+      //         "user_email": "info.faishion@gmail.com",
+      //         "user_id": "682e58d3b329b52413d8d4df"
+      //     },
+      //     {
+      //         "isValid": true,
+      //         "product_info": {
+      //             "brand_name": "DXSHCV",
+      //             "currency": "$",
+      //             "domain": "www.amazon.com",
+      //             "price": 52.99,
+      //             "product_name": "Womens Tuxedo 3 Piece Suit Sets for Women Blazer Pants Vest Set Womens Business Professional Outfits",
+      //             "product_url": "https://www.amazon.com/dp/B0DPKN495L/ref=sspa_dk_detail_4?pd_rd_i=B0DPKP65BH&pd_rd_w=S6Zyf&content-id=amzn1.sym.bbb3fb5e-28ad-4062-a3ba-1f7b9f2e4371&pf_rd_p=bbb3fb5e-28ad-4062-a3ba-1f7b9f2e4371&pf_rd_r=J63JTQ48NV2EHGRR4188&pd_rd_wg=dBlFE&pd_rd_r=6ef3a0cb-f9da-4376-9880-fd92a7c3c07a&sp_csd=d2lkZ2V0TmFtZT1zcF9kZXRhaWxfdGhlbWF0aWM&th=1&psc=1"
+      //         },
+      //         "record_id": "687945051f9f9deb30c7e4a3",
+      //         "result_image_url": "https://faishionai.s3.amazonaws.com/tryon-results/1752777937.png",
+      //         "timestamp": "2025-07-17T18:46:29.989000",
+      //         "user_email": "info.faishion@gmail.com",
+      //         "user_id": "682e58d3b329b52413d8d4df"
+      //     },
+      //     {
+      //         "isValid": true,
+      //         "product_info": {
+      //             "brand_name": "elescat",
+      //             "currency": "$",
+      //             "domain": "www.amazon.com",
+      //             "price": 19.99,
+      //             "product_name": "Summer Dresses for Women Casual Tshirt Short Sleeve Floral Sundress Beach Cover Ups with Pockets",
+      //             "product_url": "https://www.amazon.com/dp/B0CM5QJX4M/ref=sspa_dk_detail_0?psc=1&pd_rd_i=B0CM5QJX4M&pd_rd_w=eJG3s&content-id=amzn1.sym.85ceacba-39b1-4243-8f28-2e014f9512c7&pf_rd_p=85ceacba-39b1-4243-8f28-2e014f9512c7&pf_rd_r=KYV48EME8WFHSCGM68QR&pd_rd_wg=TIvVV&pd_rd_r=5e380851-f3df-4baf-b1aa-76ebec9875ef&sp_csd=d2lkZ2V0TmFtZT1zcF9kZXRhaWxfdGhlbWF0aWM"
+      //         },
+      //         "record_id": "687943641f9f9deb30c7e49e",
+      //         "result_image_url": "https://faishionai.s3.amazonaws.com/tryon-results/1752777500.png",
+      //         "timestamp": "2025-07-17T18:39:32.034000",
+      //         "user_email": "info.faishion@gmail.com",
+      //         "user_id": "682e58d3b329b52413d8d4df"
+      //     }
+      // ]
+      if (append) {
+        setProducts(prev => [...prev, ...filtered]);
+      } else {
         setProducts(filtered);
-        setHasMore(filtered.length === pageSize);
-      } catch (error) {
-        console.error('Error fetching history: ', error);
-      } finally {
-        setLoading(false);
       }
-    };
-    fetchHistory();
-  }, [accessToken, currentPage]);
+      setHasMore(filtered.length === pageSize);
+    } catch (error) {
+      console.error('Error fetching history: ', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Initial and page change effect
+  useEffect(() => {
+    setLoading(true);
+    fetchHistory(currentPage, currentPage > 1);
+    // eslint-disable-next-line
+  }, [currentPage]);
+
+  // Reset to first page on search/filter change
+  useEffect(() => {
+    setCurrentPage(1);
+    setLoading(true);
+    fetchHistory(1, false);
+    // eslint-disable-next-line
+  }, [searchQuery, showOnlyFavorites, sortOrder]);
 
   // Group products by product URL
   const groupedProducts = React.useMemo(() => {
@@ -451,19 +628,21 @@ const Content: React.FC<ContentProps> = ({ searchQuery }) => {
     setDeleteModal(prev => ({ ...prev, isDeleting: true }));
 
     try {
-      // Delete all images/records for this product
-      const deletePromises = deleteModal.product.images.map(image =>
-        axios.delete(`https://tryon-history.faishion.ai/history/${image.recordId}`, {
+      // Collect all record IDs for this product
+      const recordIdsToDelete = deleteModal.product.images.map(image => image.recordId);
+      // Send a single POST request to batch-delete endpoint
+      await axios.post(
+        'https://tryon-history.faishion.ai/history/batch-delete',
+        { record_ids: recordIdsToDelete },
+        {
           headers: {
             Authorization: `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
           },
-        })
+        }
       );
 
-      await Promise.all(deletePromises);
-
       // Remove all deleted records from the local state
-      const recordIdsToDelete = deleteModal.product.images.map(img => img.recordId);
       setProducts(prev => prev.filter(p => !recordIdsToDelete.includes(p.record_id)));
       
       // Remove from favorites if it was favorited
@@ -664,22 +843,17 @@ const Content: React.FC<ContentProps> = ({ searchQuery }) => {
             </div>
           </>
         )}
-        {/* Pagination Controls */}
-        {products.length > 0 && !loading && (
-          <div className="flex justify-center items-center gap-2 mt-8">
+        {/* Load More Button */}
+        {hasMore && !loading && products.length > 0 && (
+          <div className="flex justify-center items-center mt-8">
             <button
-              className="px-4 py-2 bg-gray-200 rounded disabled:opacity-50"
-              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-              disabled={currentPage === 1 || loading}
+              className="px-6 py-3 bg-[#6C5DD3] text-white rounded font-semibold hover:bg-[#5746b3] transition"
+              onClick={() => {
+                setLoading(true);
+                setCurrentPage((p) => p + 1);
+              }}
             >
-              Previous
-            </button>
-            <button
-              className="px-4 py-2 bg-gray-200 rounded disabled:opacity-50"
-              onClick={() => setCurrentPage((p) => hasMore ? p + 1 : p)}
-              disabled={!hasMore || loading || products.length === 0}
-            >
-              Next
+              Load More
             </button>
           </div>
         )}
