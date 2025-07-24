@@ -1,5 +1,5 @@
 import React, { useEffect, useState, Fragment } from 'react';
-import { Camera, Heart, ChevronDown, X, Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Camera, Heart, ChevronDown, X, Trash2, Download, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Menu, Transition } from '@headlessui/react';
 import empty from '/empty.png';
 import axios from 'axios';
@@ -194,6 +194,21 @@ const ImageSlider: React.FC<{
             <Trash2 className="w-5 h-5 text-red-500 hover:text-red-600" />
           </div>
         )}
+
+        {/* Share to Facebook Button */}
+        {images[currentIndex].url && (
+          <a
+            href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(images[currentIndex].url)}`}
+            download
+            target="_blank"
+            rel="noopener noreferrer"
+            className="absolute top-12 right-4 z-10 cursor-pointer p-2 hover:bg-red-50 rounded-full bg-white shadow-lg hover:shadow-xl transition-all"
+          >
+            <Download className="w-5 h-5 text-red-500 hover:text-red-600" />
+          </a>
+        )}
+
+        
       </div>
       
       {images.length > 1 && (
