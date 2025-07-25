@@ -309,8 +309,9 @@ interface ProductItem {
     currency?: string;
     product_url?: string;
     url?: string;
-    isValid?: boolean; // Added isValid property
+    isValid?: boolean; // Added isValid property (if needed in product_info)
   };
+  isValid?: boolean; // <-- Add this line to match API response
 }
 
 interface GroupedProduct {
@@ -369,12 +370,14 @@ const Content: React.FC<ContentProps> = ({ searchQuery }) => {
     try {
       const skip = (page - 1) * pageSize;
       const url = `https://tryon-history.faishion.ai/history?limit=${pageSize}&skip=${skip}`;
+      // const url = `/history?limit=${pageSize}&skip=${skip}`;
       const res = await axios.get<ProductItem[]>(url, {
         headers: {
           Authorization: `Bearer ${accessToken}`,
         },
       });
-      const filtered = res.data.filter(p => p.product_info && p.product_info.isValid === true);
+      console.log("res", res.data);
+      const filtered = res.data.filter(p => p.product_info && p.isValid === true);
       // const filtered = [
       //     {
       //         "isValid": true,
@@ -537,6 +540,7 @@ const Content: React.FC<ContentProps> = ({ searchQuery }) => {
       //         "user_id": "682e58d3b329b52413d8d4df"
       //     }
       // ]
+      console.log("filtered", filtered);
       if (append) {
         setProducts(prev => [...prev, ...filtered]);
       } else {
@@ -560,8 +564,7 @@ const Content: React.FC<ContentProps> = ({ searchQuery }) => {
   // Reset to first page on search/filter change
   useEffect(() => {
     setCurrentPage(1);
-    setLoading(true);
-    fetchHistory(1, false);
+    // Do not call fetchHistory here to avoid duplicate API calls
     // eslint-disable-next-line
   }, [searchQuery, showOnlyFavorites, sortOrder]);
 

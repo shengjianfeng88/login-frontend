@@ -35,6 +35,11 @@ export default defineConfig({
       //     });
       //   },
       // },
+      // '/history': {
+      //   target: 'https://tryon-history.faishion.ai',
+      //   changeOrigin: true,
+      //   secure: false,
+      // },
       '/health': {
         target: 'http://chatbot.faishion.ai',
         changeOrigin: true,
