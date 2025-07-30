@@ -1,4 +1,4 @@
-import React, { useEffect, useState, Fragment } from 'react';
+import React, { useEffect, useState, Fragment, useCallback } from 'react';
 import { Camera, Heart, ChevronDown, X, Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Menu, Transition } from '@headlessui/react';
 import empty from '/empty.png';
@@ -365,6 +365,21 @@ const Content: React.FC<ContentProps> = ({ searchQuery }) => {
   const pageSize = 10;
   const [hasMore, setHasMore] = useState(true);
 
+  // Infinite scroll handler
+  const handleScroll = useCallback(() => {
+    if (window.innerHeight + document.documentElement.scrollTop >= document.documentElement.offsetHeight - 100) {
+      if (hasMore && !loading) {
+        setCurrentPage(prev => prev + 1);
+      }
+    }
+  }, [hasMore, loading]);
+
+  // Add scroll event listener
+  useEffect(() => {
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [handleScroll]);
+
   // Fetch and append products
   const fetchHistory = async (page: number, append = false) => {
     try {
@@ -378,6 +393,8 @@ const Content: React.FC<ContentProps> = ({ searchQuery }) => {
       });
       console.log("res", res.data);
       const filtered = res.data.filter(p => p.product_info && p.isValid === true);
+      console.log("filtered", filtered);
+
       // const filtered = [
       //     {
       //         "isValid": true,
@@ -451,7 +468,7 @@ const Content: React.FC<ContentProps> = ({ searchQuery }) => {
       //             "domain": "www.amazon.com",
       //             "price": 79.99,
       //             "product_name": "Womens Pant Suit Velvet 2 pcs Peak Lapel Double Breasted Women s Suiting for Work Professional",
-      //             "product_url": "https://www.amazon.com/dp/B0BLXYH4ZT/ref=sspa_dk_detail_6?pf_rd_p=7446a9d1-25fe-4460-b135-a60336bad2c9&pf_rd_r=QC55GDWMRMNZFEQ8FMJ3&pd_rd_wg=oVZ5l&pd_rd_w=eMDUh&content-id=amzn1.sym.7446a9d1-25fe-4460-b135-a60336bad2c9&pd_rd_r=56bd9c49-98f6-4a41-8c17-d9221d2b0256&sp_csd=d2lkZ2V0TmFtZT1zcF9kZXRhaWw&th=1&psc=1"
+      //             "product_url": "https://www.amazon.com/s?k=womens+pant+suit+velvet+2+pcs+peak+lapel+double+breasted+womens+suiting+for+work+professional&crid=1QZ8Z8Z8Z8Z8Z&sprefix=womens+pant+suit+velvet+2+pcs+peak+lapel+double+breasted+womens+suiting+for+work+professional%2Caps%2C123&ref=nb_sb_noss_1"
       //         },
       //         "record_id": "687946d81f9f9deb30c7e4aa",
       //         "result_image_url": "https://faishionai.s3.amazonaws.com/tryon-results/1752778389.png",
@@ -467,7 +484,7 @@ const Content: React.FC<ContentProps> = ({ searchQuery }) => {
       //             "domain": "www.amazon.com",
       //             "price": 49.99,
       //             "product_name": "Womens Suit 2 Piece Slim Fit Outfits Suits Professional Blazer with Pants Dressy Casual Suiting Business Office Sets for Work",
-      //             "product_url": "https://www.amazon.com/dp/B0DX1VY9NN/ref=sspa_dk_detail_6?pd_rd_i=B0DX1VY9NN&pd_rd_w=eMDUh&content-id=amzn1.sym.7446a9d1-25fe-4460-b135-a60336bad2c9&pf_rd_p=7446a9d1-25fe-4460-b135-a60336bad2c9&pf_rd_r=QC55GDWMRMNZFEQ8FMJ3&pd_rd_wg=oVZ5l&pd_rd_r=56bd9c49-98f6-4a41-8c17-d9221d2b0256&sp_csd=d2lkZ2V0TmFtZT1zcF9kZXRhaWw&th=1&psc=1"
+      //             "product_url": "https://www.amazon.com/s?k=womens+suit+2+piece+slim+fit+outfits+suits+professional+blazer+with+pants+dressy+casual+suiting+business+office+sets+for+work&crid=1QZ8Z8Z8Z8Z8Z&sprefix=womens+suit+2+piece+slim+fit+outfits+suits+professional+blazer+with+pants+dressy+casual+suiting+business+office+sets+for+work%2Caps%2C123&ref=nb_sb_noss_1"
       //         },
       //         "record_id": "687946a41f9f9deb30c7e4a9",
       //         "result_image_url": "https://faishionai.s3.amazonaws.com/tryon-results/1752778283.png",
@@ -483,7 +500,7 @@ const Content: React.FC<ContentProps> = ({ searchQuery }) => {
       //             "domain": "www.amazon.com",
       //             "price": 52.99,
       //             "product_name": "Womens Tuxedo 3 Piece Suit Sets for Women Blazer Pants Vest Set Womens Business Professional Outfits",
-      //             "product_url": "https://www.amazon.com/dp/B0DPKP6H7N/ref=sspa_dk_detail_4?pd_rd_i=B0DPKP65BH&pd_rd_w=S6Zyf&content-id=amzn1.sym.bbb3fb5e-28ad-4062-a3ba-1f7b9f2e4371&pf_rd_p=bbb3fb5e-28ad-4062-a3ba-1f7b9f2e4371&pf_rd_r=J63JTQ48NV2EHGRR4188&pd_rd_wg=dBlFE&pd_rd_r=6ef3a0cb-f9da-4376-9880-fd92a7c3c07a&sp_csd=d2lkZ2V0TmFtZT1zcF9kZXRhaWxfdGhlbWF0aWM&th=1&psc=1"
+      //             "product_url": "https://www.amazon.com/s?k=womens+tuxedo+3+piece+suit+sets+for+women+blazer+pants+vest+set+womens+business+professional+outfits&crid=1QZ8Z8Z8Z8Z8Z&sprefix=womens+tuxedo+3+piece+suit+sets+for+women+blazer+pants+vest+set+womens+business+professional+outfits%2Caps%2C123&ref=nb_sb_noss_1"
       //         },
       //         "record_id": "6879466f1f9f9deb30c7e4a8",
       //         "result_image_url": "https://faishionai.s3.amazonaws.com/tryon-results/1752778273.png",
@@ -499,7 +516,7 @@ const Content: React.FC<ContentProps> = ({ searchQuery }) => {
       //             "domain": "www.amazon.com",
       //             "price": 52.99,
       //             "product_name": "Womens Tuxedo 3 Piece Suit Sets for Women Blazer Pants Vest Set Womens Business Professional Outfits",
-      //             "product_url": "https://www.amazon.com/dp/B0DPKPLG3Z/ref=sspa_dk_detail_4?pd_rd_i=B0DPKP65BH&pd_rd_w=S6Zyf&content-id=amzn1.sym.bbb3fb5e-28ad-4062-a3ba-1f7b9f2e4371&pf_rd_p=bbb3fb5e-28ad-4062-a3ba-1f7b9f2e4371&pf_rd_r=J63JTQ48NV2EHGRR4188&pd_rd_wg=dBlFE&pd_rd_r=6ef3a0cb-f9da-4376-9880-fd92a7c3c07a&sp_csd=d2lkZ2V0TmFtZT1zcF9kZXRhaWxfdGhlbWF0aWM&th=1&psc=1"
+      //             "product_url": "https://www.amazon.com/s?k=womens+tuxedo+3+piece+suit+sets+for+women+blazer+pants+vest+set+womens+business+professional+outfits&crid=1QZ8Z8Z8Z8Z8Z&sprefix=womens+tuxedo+3+piece+suit+sets+for+women+blazer+pants+vest+set+womens+business+professional+outfits%2Caps%2C123&ref=nb_sb_noss_1"
       //         },
       //         "record_id": "6879459a1f9f9deb30c7e4a5",
       //         "result_image_url": "https://faishionai.s3.amazonaws.com/tryon-results/1752778085.png",
@@ -515,7 +532,7 @@ const Content: React.FC<ContentProps> = ({ searchQuery }) => {
       //             "domain": "www.amazon.com",
       //             "price": 52.99,
       //             "product_name": "Womens Tuxedo 3 Piece Suit Sets for Women Blazer Pants Vest Set Womens Business Professional Outfits",
-      //             "product_url": "https://www.amazon.com/dp/B0DPKN495L/ref=sspa_dk_detail_4?pd_rd_i=B0DPKP65BH&pd_rd_w=S6Zyf&content-id=amzn1.sym.bbb3fb5e-28ad-4062-a3ba-1f7b9f2e4371&pf_rd_p=bbb3fb5e-28ad-4062-a3ba-1f7b9f2e4371&pf_rd_r=J63JTQ48NV2EHGRR4188&pd_rd_wg=dBlFE&pd_rd_r=6ef3a0cb-f9da-4376-9880-fd92a7c3c07a&sp_csd=d2lkZ2V0TmFtZT1zcF9kZXRhaWxfdGhlbWF0aWM&th=1&psc=1"
+      //             "product_url": "https://www.amazon.com/s?k=womens+tuxedo+3+piece+suit+sets+for+women+blazer+pants+vest+set+womens+business+professional+outfits&crid=1QZ8Z8Z8Z8Z8Z&sprefix=womens+tuxedo+3+piece+suit+sets+for+women+blazer+pants+vest+set+womens+business+professional+outfits%2Caps%2C123&ref=nb_sb_noss_1"
       //         },
       //         "record_id": "687945051f9f9deb30c7e4a3",
       //         "result_image_url": "https://faishionai.s3.amazonaws.com/tryon-results/1752777937.png",
@@ -531,7 +548,7 @@ const Content: React.FC<ContentProps> = ({ searchQuery }) => {
       //             "domain": "www.amazon.com",
       //             "price": 19.99,
       //             "product_name": "Summer Dresses for Women Casual Tshirt Short Sleeve Floral Sundress Beach Cover Ups with Pockets",
-      //             "product_url": "https://www.amazon.com/dp/B0CM5QJX4M/ref=sspa_dk_detail_0?psc=1&pd_rd_i=B0CM5QJX4M&pd_rd_w=eJG3s&content-id=amzn1.sym.85ceacba-39b1-4243-8f28-2e014f9512c7&pf_rd_p=85ceacba-39b1-4243-8f28-2e014f9512c7&pf_rd_r=KYV48EME8WFHSCGM68QR&pd_rd_wg=TIvVV&pd_rd_r=5e380851-f3df-4baf-b1aa-76ebec9875ef&sp_csd=d2lkZ2V0TmFtZT1zcF9kZXRhaWxfdGhlbWF0aWM"
+      //             "product_url": "https://www.amazon.com/s?k=summer+dresses+for+women+casual+tshirt+short+sleeve+floral+sundress+beach+cover+ups+with+pockets&crid=1QZ8Z8Z8Z8Z8Z&sprefix=summer+dresses+for+women+casual+tshirt+short+sleeve+floral+sundress+beach+cover+ups+with+pockets%2Caps%2C123&ref=nb_sb_noss_1"
       //         },
       //         "record_id": "687943641f9f9deb30c7e49e",
       //         "result_image_url": "https://faishionai.s3.amazonaws.com/tryon-results/1752777500.png",
@@ -540,7 +557,10 @@ const Content: React.FC<ContentProps> = ({ searchQuery }) => {
       //         "user_id": "682e58d3b329b52413d8d4df"
       //     }
       // ]
-      console.log("filtered", filtered);
+      
+      // Add 2-second delay to show loader
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
       if (append) {
         setProducts(prev => [...prev, ...filtered]);
       } else {
@@ -846,18 +866,13 @@ const Content: React.FC<ContentProps> = ({ searchQuery }) => {
             </div>
           </>
         )}
-        {/* Load More Button */}
-        {hasMore && !loading && products.length > 0 && (
-          <div className="flex justify-center items-center mt-8">
-            <button
-              className="px-6 py-3 bg-[#6C5DD3] text-white rounded font-semibold hover:bg-[#5746b3] transition"
-              onClick={() => {
-                setLoading(true);
-                setCurrentPage((p) => p + 1);
-              }}
-            >
-              Load More
-            </button>
+        {/* Loading indicator for infinite scroll */}
+        {loading && products.length > 0 && (
+          <div className="flex justify-center items-center mt-8 py-4">
+            <div className="flex items-center gap-3">
+              <div className="w-6 h-6 border-2 border-[#6C5DD3] border-t-transparent rounded-full animate-spin" />
+              <span className="text-gray-600">Loading more items...</span>
+            </div>
           </div>
         )}
       </div>
