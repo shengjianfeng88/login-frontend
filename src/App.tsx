@@ -9,6 +9,7 @@ import { store } from './store/store';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import SignUp from './pages/SignUp';
 import Done from './pages/Done';
+import Pricing from './pages/Pricing';
 import History from './pages/History';
 import VerifyEmail from './pages/VerifyEmail';
 import ConfirmRegister from '@/pages/ConfirmRegister';
@@ -41,6 +42,7 @@ function App() {
               <Route path='/auto-test/*' element={<AutoTest />} />
               <Route path='/faishion-chatbot' element={<ChatWidget />} />
               <Route path='/chat' element={<ChatWidget />} />
+              <Route path='/pricing' element={<Pricing />} />
               <Route
                 path='/image-convert-test'
                 element={<ImageConvertTest />}

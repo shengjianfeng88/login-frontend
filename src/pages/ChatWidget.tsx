@@ -166,9 +166,8 @@ const ChatWidget: React.FC = () => {
       if (error.response) {
         console.error('Error response status:', error.response.status);
         console.error('Error response data:', error.response.data);
-        errorContent = `Error: ${
-          error.response.data.error || error.response.statusText
-        }`;
+        errorContent = `Error: ${error.response.data.error || error.response.statusText
+          }`;
         if (error.response.data.traceback) {
           console.error('Error traceback:', error.response.data.traceback);
         }
@@ -219,7 +218,7 @@ const ChatWidget: React.FC = () => {
         <ChatWindow>
           <ChatHeader>
             <Typography variant='h6'>
-              fAishion Support
+              fAIshion Support
               {!isServerAvailable && (
                 <Typography
                   component='span'

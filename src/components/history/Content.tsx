@@ -27,16 +27,12 @@ const TryOnSubHeader: React.FC<{
       <div className='flex items-center gap-4'>
         <button
           onClick={() => setShowOnlyFavorites(!showOnlyFavorites)}
-          className={`flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg transition ${
-            showOnlyFavorites
-              ? 'bg-red-100 text-red-600 border-red-300'
-              : 'text-gray-700 hover:bg-gray-100'
-          }`}
+          className={`flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg transition ${showOnlyFavorites ? 'bg-red-100 text-red-600 border-red-300' : 'text-gray-700 hover:bg-gray-100'
+            }`}
         >
           <Heart
-            className={`w-4 h-4 ${
-              showOnlyFavorites ? 'fill-red-500 text-red-500' : ''
-            }`}
+            className={`w-4 h-4 ${showOnlyFavorites ? 'fill-red-500 text-red-500' : ''
+              }`}
           />
           Favorites
         </button>
@@ -61,9 +57,8 @@ const TryOnSubHeader: React.FC<{
                   {({ active }) => (
                     <button
                       onClick={() => onSortChange('low-to-high')}
-                      className={`${
-                        active ? 'bg-gray-100 text-gray-900' : 'text-gray-700'
-                      } block px-4 py-2 text-sm w-full text-left`}
+                      className={`${active ? 'bg-gray-100 text-gray-900' : 'text-gray-700'
+                        } block px-4 py-2 text-sm w-full text-left`}
                     >
                       Price: Low to High
                     </button>
@@ -73,9 +68,8 @@ const TryOnSubHeader: React.FC<{
                   {({ active }) => (
                     <button
                       onClick={() => onSortChange('high-to-low')}
-                      className={`${
-                        active ? 'bg-gray-100 text-gray-900' : 'text-gray-700'
-                      } block px-4 py-2 text-sm w-full text-left`}
+                      className={`${active ? 'bg-gray-100 text-gray-900' : 'text-gray-700'
+                        } block px-4 py-2 text-sm w-full text-left`}
                     >
                       Price: High to Low
                     </button>
@@ -128,9 +122,8 @@ const ProductCard: React.FC<ProductProps> = ({
       className='absolute top-2 right-2 z-10 cursor-pointer p-1 rounded-full bg-white shadow hover:bg-gray-100'
     >
       <Heart
-        className={`w-5 h-5 ${
-          isFavorite ? 'fill-red-500 text-red-500' : 'text-gray-400'
-        }`}
+        className={`w-5 h-5 ${isFavorite ? 'fill-red-500 text-red-500' : 'text-gray-400'
+          }`}
       />
     </div>
 
@@ -146,7 +139,7 @@ const ProductCard: React.FC<ProductProps> = ({
     </div>
 
     {/* Timestamp Badge */}
-    <div className='absolute top-2 left-2 bg-gray-100 text-xs px-2 py-1 rounded z-10 text-gray-600'>
+    <div className="absolute top-2 left-2 bg-gray-100 text-xs px-2 py-1 rounded z-10 text-gray-600">
       {new Date(timestamp).toLocaleDateString()}
     </div>
 
@@ -260,9 +253,8 @@ const ImageSlider: React.FC<{
               <button
                 key={index}
                 onClick={() => onIndexChange(index)}
-                className={`w-2 h-2 rounded-full transition ${
-                  index === currentIndex ? 'bg-blue-500' : 'bg-gray-300'
-                }`}
+                className={`w-2 h-2 rounded-full transition ${index === currentIndex ? 'bg-blue-500' : 'bg-gray-300'
+                  }`}
               />
             ))}
           </div>
@@ -301,58 +293,58 @@ const DeleteConfirmationModal: React.FC<{
   deleteAll,
   imageCount,
 }) => {
-  if (!isOpen) return null;
+    if (!isOpen) return null;
 
-  return (
-    <div className='fixed inset-0 z-[9999] flex items-center justify-center bg-black bg-opacity-50'>
-      <div className='bg-white rounded-2xl p-6 max-w-md w-full mx-4 shadow-xl'>
-        <div className='flex items-center gap-3 mb-4'>
-          <div className='p-2 bg-red-100 rounded-full'>
-            <Trash2 className='w-6 h-6 text-red-600' />
+    return (
+      <div className='fixed inset-0 z-[9999] flex items-center justify-center bg-black bg-opacity-50'>
+        <div className='bg-white rounded-2xl p-6 max-w-md w-full mx-4 shadow-xl'>
+          <div className='flex items-center gap-3 mb-4'>
+            <div className='p-2 bg-red-100 rounded-full'>
+              <Trash2 className='w-6 h-6 text-red-600' />
+            </div>
+            <h3 className='text-lg font-semibold text-gray-900'>Delete Try-on</h3>
           </div>
-          <h3 className='text-lg font-semibold text-gray-900'>Delete Try-on</h3>
-        </div>
 
-        <p className='text-gray-600 mb-6'>
-          {deleteAll
-            ? `Are you sure you want to delete all ${imageCount} try-on${
-                imageCount > 1 ? 's' : ''
-              } for "${productName}"? This action cannot be undone.`
-            : `Are you sure you want to delete "${productName}" from your try-on history? This action cannot be undone.`}
-        </p>
+          <p className="text-gray-600 mb-6">
+            {deleteAll
+              ? `Are you sure you want to delete all ${imageCount} try-on${imageCount > 1 ? 's' : ''} for "${productName}"? This action cannot be undone.`
+              : `Are you sure you want to delete "${productName}" from your try-on history? This action cannot be undone.`
+            }
+          </p>
 
-        <div className='flex gap-3 justify-end'>
-          <button
-            onClick={onClose}
-            disabled={isDeleting}
-            className='px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition disabled:opacity-50'
-          >
-            Cancel
-          </button>
-          <button
-            onClick={onConfirm}
-            disabled={isDeleting}
-            className='px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition disabled:opacity-50 flex items-center gap-2'
-          >
-            {isDeleting ? (
-              <>
-                <div className='w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin' />
-                Deleting...
-              </>
-            ) : (
-              'Delete'
-            )}
-          </button>
+          <div className="flex gap-3 justify-end">
+            <button
+              onClick={onClose}
+              disabled={isDeleting}
+              className='px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition disabled:opacity-50'
+            >
+              Cancel
+            </button>
+            <button
+              onClick={onConfirm}
+              disabled={isDeleting}
+              className='px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition disabled:opacity-50 flex items-center gap-2'
+            >
+              {isDeleting ? (
+                <>
+                  <div className='w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin' />
+                  Deleting...
+                </>
+              ) : (
+                'Delete'
+              )}
+            </button>
+          </div>
         </div>
       </div>
-    </div>
-  );
-};
+    );
+  };
 
 interface ProductItem {
   record_id: string;
   result_image_url: string;
   timestamp: string | number | Date;
+  isValid?: boolean; // Added isValid property
   product_info?: {
     brand_name?: string;
     product_name?: string;
@@ -414,27 +406,19 @@ const Content: React.FC<ContentProps> = ({ searchQuery }) => {
 
   const accessToken = localStorage.getItem('accessToken');
 
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 10;
+  const [hasMore, setHasMore] = useState(true);
+
   useEffect(() => {
     const fetchHistory = async () => {
-      const getAccessToken = () => {
-        // 判断是否为测试环境
-        if (
-          typeof window !== 'undefined' &&
-          window.location.host === 'login-frontend-puce.vercel.app'
-        ) {
-          return 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2ODM5MzVmZWIzMjliNTI0MTNkOGQ2YTUiLCJwaWN0dXJlIjoiaHR0cHM6Ly9saDMuZ29vZ2xldXNlcmNvbnRlbnQuY29tL2EvQUNnOG9jSVN5dHEtQnNWcTItRTNXNGFoTG9CZTdYRVdZb0h1RmhoU3V4VjRLTy02cEdUTHlBPXM5Ni1jIiwiZW1haWwiOiJqaWFuZmVuZ3NoZW5nMEBnbWFpbC5jb20iLCJpYXQiOjE3NTM0MDIyMzMsImV4cCI6MTc1MzQwMzEzM30.3bpV7-OpXt3XJC7K35q2PfihFNX-oU64u0sWALaQxQw';
-        }
-        return localStorage.getItem('accessToken');
-      };
       try {
-        const res = await axios.get<ProductItem[]>(
-          'https://tryon-history.faishion.ai/history',
-          {
-            headers: {
-              Authorization: `Bearer ${getAccessToken()}`,
-            },
-          }
-        );
+        const res = await axios.get<ProductItem[]>('https://tryon-history.faishion.ai/history', {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        });
 
         setProducts(res.data);
 
@@ -592,6 +576,7 @@ const Content: React.FC<ContentProps> = ({ searchQuery }) => {
         // ]
 
         //         setProducts(res);
+
       } catch (error) {
         console.error('Error fetching history: ', error);
       } finally {
@@ -599,17 +584,14 @@ const Content: React.FC<ContentProps> = ({ searchQuery }) => {
       }
     };
     fetchHistory();
-  }, [accessToken]);
+  }, [accessToken, currentPage]);
 
   // Group products by product URL
   const groupedProducts = React.useMemo(() => {
     const grouped = new Map<string, GroupedProduct>();
 
-    products.forEach((product) => {
-      const productUrl =
-        product.product_info?.product_url ||
-        product.product_info?.url ||
-        'unknown';
+    products.forEach(product => {
+      const productUrl = product.product_info?.product_url || product.product_info?.url || 'unknown';
 
       if (grouped.has(productUrl)) {
         const existing = grouped.get(productUrl)!;
@@ -687,12 +669,8 @@ const Content: React.FC<ContentProps> = ({ searchQuery }) => {
       await Promise.all(deletePromises);
 
       // Remove all deleted records from the local state
-      const recordIdsToDelete = deleteModal.product.images.map(
-        (img) => img.recordId
-      );
-      setProducts((prev) =>
-        prev.filter((p) => !recordIdsToDelete.includes(p.record_id))
-      );
+      const recordIdsToDelete = deleteModal.product.images.map(img => img.recordId);
+      setProducts(prev => prev.filter(p => !recordIdsToDelete.includes(p.record_id)));
 
       // Remove from favorites if it was favorited
       setFavorites((prev) => {
@@ -745,9 +723,7 @@ const Content: React.FC<ContentProps> = ({ searchQuery }) => {
       );
 
       // Remove the deleted record from the local state
-      setProducts((prev) =>
-        prev.filter((p) => p.record_id !== deleteImageModal.recordId)
-      );
+      setProducts(prev => prev.filter(p => p.record_id !== deleteImageModal.recordId));
 
       // Update the selected product's images if it's currently open
       if (selectedProduct) {
@@ -761,12 +737,8 @@ const Content: React.FC<ContentProps> = ({ searchQuery }) => {
 
           // Remove the entire product from the products list
           // Find all record IDs for this product and remove them
-          const recordIdsToRemove = selectedProduct.images.map(
-            (img) => img.recordId
-          );
-          setProducts((prev) =>
-            prev.filter((p) => !recordIdsToRemove.includes(p.record_id))
-          );
+          const recordIdsToRemove = selectedProduct.images.map(img => img.recordId);
+          setProducts(prev => prev.filter(p => !recordIdsToRemove.includes(p.record_id)));
 
           // Remove from favorites if it was favorited
           setFavorites((prev) => {
@@ -903,6 +875,25 @@ const Content: React.FC<ContentProps> = ({ searchQuery }) => {
               })}
             </div>
           </>
+        )}
+        {/* Pagination Controls */}
+        {products.length > 0 && !loading && (
+          <div className="flex justify-center items-center gap-2 mt-8">
+            <button
+              className="px-4 py-2 bg-gray-200 rounded disabled:opacity-50"
+              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+              disabled={currentPage === 1 || loading}
+            >
+              Previous
+            </button>
+            <button
+              className="px-4 py-2 bg-gray-200 rounded disabled:opacity-50"
+              onClick={() => setCurrentPage((p) => hasMore ? p + 1 : p)}
+              disabled={!hasMore || loading || products.length === 0}
+            >
+              Next
+            </button>
+          </div>
         )}
       </div>
 
