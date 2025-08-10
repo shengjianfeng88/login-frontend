@@ -155,7 +155,10 @@ const SignUp = () => {
       const apiUrl = "https://api-auth.faishion.ai";
 
       // Use axiosInstance instead of axios 
-      const res = await axiosInstance.post(apiUrl + "/api/auth/google-auth", { token });
+      const res = await axiosInstance.post(apiUrl + "/api/auth/google-auth", {
+        token,
+        referralCode: formData.referralCode,
+      });
 
       if (res.data) {
         console.log('response data: ', res.data)
