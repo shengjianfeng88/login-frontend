@@ -5,7 +5,7 @@ import { useGoogleLogin } from "@react-oauth/google";
 import { CredentialResponse } from "@react-oauth/google";
 import { useDispatch } from "react-redux";
 
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { sendMessageToExtension } from "@/utils/utils";
 import backgroundImage from "@/assets/Background.png";
 import image1 from "@/assets/image_1.jpg";
@@ -24,6 +24,7 @@ const userSchema = z
     email: z.string().email("Invalid email format"),
     password: z.string().min(6, "Password must be at least 6 characters"),
     confirmPassword: z.string(),
+    referralCode: z.string().optional(),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "Passwords don't match",
@@ -32,19 +33,33 @@ const userSchema = z
 
 const SignUp = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     email: "",
     password: "",
     confirmPassword: "",
+    referralCode: "",
   });
 
   const [errors, setErrors] = useState({
     email: "",
     password: "",
     confirmPassword: "",
+    referralCode: "",
   });
+
+  // 从URL参数获取推荐码
+  useEffect(() => {
+    const refCode = searchParams.get("ref");
+    if (refCode) {
+      setFormData(prev => ({
+        ...prev,
+        referralCode: refCode
+      }));
+    }
+  }, [searchParams]);
 
   // Carousel state
   const [activeSlide, setActiveSlide] = useState<number>(0);
@@ -83,12 +98,12 @@ const SignUp = () => {
   const validateForm = () => {
     try {
       userSchema.parse(formData);
-      setErrors({ email: "", password: "", confirmPassword: "" });
+      setErrors({ email: "", password: "", confirmPassword: "", referralCode: "" });
       setError("");
       return true;
     } catch (err) {
       if (err instanceof z.ZodError) {
-        const newErrors = { email: "", password: "", confirmPassword: "" };
+        const newErrors = { email: "", password: "", confirmPassword: "", referralCode: "" };
         err.errors.forEach((e) => {
           const field = e.path[0] as keyof typeof newErrors;
           newErrors[field] = e.message;
@@ -104,12 +119,19 @@ const SignUp = () => {
     e.preventDefault();
     if (!validateForm()) return;
     setIsLoading(true);
-  
+
     try {
-      await axiosInstance.post("/auth/request-register", {
+      const requestData: any = {
         email: formData.email,
         password: formData.password,
-      });
+      };
+
+      // 如果有推荐码，添加到请求中
+      if (formData.referralCode.trim()) {
+        requestData.referralCode = formData.referralCode.trim();
+      }
+
+      await axiosInstance.post("/auth/request-register", requestData);
       alert("Verification email sent! Check your inbox.");
     } catch (err) {
       setError("Registration failed");
@@ -117,7 +139,7 @@ const SignUp = () => {
       setIsLoading(false);
     }
   };
-  
+
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -264,6 +286,8 @@ const SignUp = () => {
                   )}
                 </div>
 
+
+
                 {/* Sign Up button */}
                 <button
                   type="submit"
@@ -330,9 +354,8 @@ const SignUp = () => {
                   <img
                     src={images[activeSlide].left}
                     alt="Fashion model left"
-                    className={`w-full h-full object-cover transition-opacity duration-200 ease-in-out ${
-                      isTransitioning ? "opacity-60" : "opacity-100"
-                    }`}
+                    className={`w-full h-full object-cover transition-opacity duration-200 ease-in-out ${isTransitioning ? "opacity-60" : "opacity-100"
+                      }`}
                   />
                 </div>
               </div>
@@ -355,9 +378,8 @@ const SignUp = () => {
                   <img
                     src={images[activeSlide].right}
                     alt="Fashion model right"
-                    className={`w-full h-full object-cover transition-opacity duration-200 ease-in-out ${
-                      isTransitioning ? "opacity-60" : "opacity-100"
-                    }`}
+                    className={`w-full h-full object-cover transition-opacity duration-200 ease-in-out ${isTransitioning ? "opacity-60" : "opacity-100"
+                      }`}
                   />
                 </div>
               </div>
@@ -385,23 +407,20 @@ const SignUp = () => {
             <div className="flex justify-center pb-4 md:pb-6 space-x-3 md:space-x-4 lg:space-x-5">
               <button
                 onClick={() => changeSlide(0)}
-                className={`w-1.5 h-1.5 md:w-2 md:h-2 rounded-full transition-colors duration-300 ${
-                  activeSlide === 0 ? "bg-gray-800" : "bg-gray-400"
-                }`}
+                className={`w-1.5 h-1.5 md:w-2 md:h-2 rounded-full transition-colors duration-300 ${activeSlide === 0 ? "bg-gray-800" : "bg-gray-400"
+                  }`}
                 aria-label="Show slide 1"
               ></button>
               <button
                 onClick={() => changeSlide(1)}
-                className={`w-1.5 h-1.5 md:w-2 md:h-2 rounded-full transition-colors duration-300 ${
-                  activeSlide === 1 ? "bg-gray-800" : "bg-gray-400"
-                }`}
+                className={`w-1.5 h-1.5 md:w-2 md:h-2 rounded-full transition-colors duration-300 ${activeSlide === 1 ? "bg-gray-800" : "bg-gray-400"
+                  }`}
                 aria-label="Show slide 2"
               ></button>
               <button
                 onClick={() => changeSlide(2)}
-                className={`w-1.5 h-1.5 md:w-2 md:h-2 rounded-full transition-colors duration-300 ${
-                  activeSlide === 2 ? "bg-gray-800" : "bg-gray-400"
-                }`}
+                className={`w-1.5 h-1.5 md:w-2 md:h-2 rounded-full transition-colors duration-300 ${activeSlide === 2 ? "bg-gray-800" : "bg-gray-400"
+                  }`}
                 aria-label="Show slide 3"
               ></button>
             </div>
