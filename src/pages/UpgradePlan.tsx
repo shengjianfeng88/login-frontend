@@ -1,15 +1,59 @@
 import React, { useState } from 'react';
 import { ArrowLeft, User, CreditCard, Check, Crown, Copy } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import axiosInstance from '@/utils/axiosInstance';
 
 const UpgradePlan: React.FC = () => {
   const navigate = useNavigate();
   const [billingCycle, setBillingCycle] = useState<'annual' | 'monthly'>('annual');
   const [referralLink] = useState('https://fAIshion.AI.com/referMe/AI');
+  const [isLoading, setIsLoading] = useState(false);
 
   const copyReferralLink = () => {
     navigator.clipboard.writeText(referralLink);
     // You could add a toast notification here
+  };
+
+  const handleChoosePlan = async () => {
+    setIsLoading(true);
+    
+    try {
+      const token = localStorage.getItem('accessToken');
+      if (!token) {
+        alert('Please login first');
+        navigate('/signin');
+        return;
+      }
+
+      const response = await axiosInstance.post(
+        'https://staging.subscription.faishion.ai/api/create-checkout-session',
+        {},
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (response.data.url) {
+        // Redirect to Stripe checkout
+        window.location.href = response.data.url;
+      }
+    } catch (error: any) {
+      console.error('Checkout error:', error);
+      
+      if (error.response?.status === 401) {
+        alert('Session expired. Please login again.');
+        navigate('/signin');
+      } else if (error.response?.status === 400) {
+        alert(error.response.data?.message || 'You already have a subscription or there was an error creating the checkout session.');
+      } else {
+        alert('Failed to create checkout session. Please try again.');
+      }
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -262,8 +306,12 @@ const UpgradePlan: React.FC = () => {
                     </div>
                   </div>
 
-                  <button className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-medium">
-                    Choose Plan
+                  <button 
+                    onClick={handleChoosePlan}
+                    disabled={isLoading}
+                    className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed text-white py-3 rounded-lg font-medium transition-colors"
+                  >
+                    {isLoading ? 'Processing...' : 'Choose Plan'}
                   </button>
                 </div>
               </div>
