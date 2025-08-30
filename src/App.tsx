@@ -16,6 +16,9 @@ import ConfirmRegister from '@/pages/ConfirmRegister';
 import AutoTest from './pages/AutoTest/index';
 import ChatWidget from './pages/ChatWidget';
 import ImageConvertTest from './pages/ImageConvertTest';
+import AccountSettings from './pages/AccountSettings';
+import Billing from './pages/Billing';
+import UpgradePlan from './pages/UpgradePlan';
 console.log('environment', 'staging.........');
 function App() {
   const googleClientId =
@@ -47,6 +50,9 @@ function App() {
                 path='/image-convert-test'
                 element={<ImageConvertTest />}
               />
+              <Route path='/account-settings' element={<AccountSettings />} />
+              <Route path='/billing' element={<Billing />} />
+              <Route path='/upgrade-plan' element={<UpgradePlan />} />
             </Routes>
           </Suspense>
         </Router>
