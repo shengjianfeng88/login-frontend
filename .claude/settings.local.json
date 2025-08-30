@@ -5,7 +5,8 @@
       "Read(/Users/shengjianfeng/.config/**)",
       "Read(/Users/shengjianfeng/**)",
       "mcp__figma-dev-mode-mcp-server__get_code",
-      "mcp__figma-dev-mode-mcp-server__get_image"
+      "mcp__figma-dev-mode-mcp-server__get_image",
+      "Bash(git commit:*)"
     ],
     "deny": [],
     "ask": []
