@@ -26,7 +26,7 @@ const getOptimizedImageUrl = (src: string, size: 'thumbnail' | 'medium' | 'large
   // If S3 doesn't support image optimization parameters, 
   // we can disable URL optimization and rely on CSS + lazy loading
   const USE_URL_OPTIMIZATION = false; // Set to true if your S3 supports image transformation
-  
+
   if (!USE_URL_OPTIMIZATION) {
     // Just return original URL and let CSS handle the sizing
     console.log('📝 Using original image URL - relying on CSS optimization');
@@ -40,18 +40,18 @@ const getOptimizedImageUrl = (src: string, size: 'thumbnail' | 'medium' | 'large
   };
 
   const config = sizeConfig[size];
-  
+
   // Try AWS/CloudFront style parameters
   let params = `w=${config.w}&h=${config.h}&q=${config.q}&f=webp`;
   let optimizedUrl = src.includes('?') ? `${src}&${params}` : `${src}?${params}`;
-  
+
   // Debug log to check generated URLs
   if (typeof window !== 'undefined' && window.location.hostname.includes('localhost')) {
     console.log(`🖼️ Image optimization attempt:`);
     console.log(`Original: ${src}`);
     console.log(`Optimized (${size}): ${optimizedUrl}`);
   }
-  
+
   return optimizedUrl;
 };
 
@@ -127,7 +127,7 @@ const ModalOptimizedImage: React.FC<{
       setIsLoading(true);
       setHasError(false);
       onLoadStart?.(); // Notify parent that loading started
-      
+
       // Use medium size for modal images
       const optimizedSrc = getOptimizedImageUrl(src, 'medium');
       setImageSrc(optimizedSrc);
@@ -185,7 +185,7 @@ const ModalOptimizedImage: React.FC<{
             onError={handleError}
             loading="eager" // Load immediately for modal images
             decoding="async"
-            style={{ 
+            style={{
               willChange: 'opacity',
               backfaceVisibility: 'hidden',
               transform: 'translateZ(0)',
@@ -293,7 +293,7 @@ const OptimizedImage: React.FC<{
             onError={handleError}
             loading="lazy"
             decoding="async"
-            style={{ 
+            style={{
               willChange: 'opacity',
               backfaceVisibility: 'hidden',
               transform: 'translateZ(0)',
@@ -498,7 +498,7 @@ const ImageSlider: React.FC<{
         {carouselLoading && (
           <div className="absolute inset-0 bg-gray-100 bg-opacity-90 flex items-center justify-center z-20 rounded-xl">
             <div className="flex flex-col items-center gap-3">
-              <div 
+              <div
                 className="w-10 h-10 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"
                 style={{ borderWidth: '3px' }}
               ></div>
@@ -555,13 +555,12 @@ const ImageSlider: React.FC<{
               <button
                 key={index}
                 onClick={() => onIndexChange(index)}
-                className={`w-2 h-2 rounded-full transition ${
-                  index === currentIndex 
-                    ? carouselLoading 
-                      ? 'bg-blue-400 animate-pulse' 
+                className={`w-2 h-2 rounded-full transition ${index === currentIndex
+                    ? carouselLoading
+                      ? 'bg-blue-400 animate-pulse'
                       : 'bg-blue-500'
                     : 'bg-gray-300'
-                }`}
+                  }`}
               />
             ))}
           </div>
