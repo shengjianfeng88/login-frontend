@@ -45,6 +45,11 @@ export default defineConfig({
         changeOrigin: true,
         secure: false,
       },
+      '/history': {
+        target: 'https://tryon-history.faishion.ai',
+        changeOrigin: true,
+        secure: false,
+      },
     },
   },
   // history fallback 放在 build 或 preview 阶段配置
