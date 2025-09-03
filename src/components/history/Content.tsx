@@ -745,7 +745,7 @@ const Content: React.FC<ContentProps> = ({ searchQuery }) => {
   const fetchHistory = async (page: number, append = false) => {
     try {
       const skip = (page - 1) * pageSize;
-      const url = `https://tryon-history-staging.faishion.ai/history?limit=${pageSize}&skip=${skip}`;
+      const url = `https://tryon-history.faishion.ai/history?limit=${pageSize}&skip=${skip}`;
       // const url = `/history?limit=${pageSize}&skip=${skip}`;
       const res = await axios.get<{ data: ProductItem[] }>(url, {
         headers: {
