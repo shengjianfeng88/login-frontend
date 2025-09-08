@@ -3,6 +3,7 @@ import { Camera, Heart, ChevronDown, X, Trash2, ChevronLeft, ChevronRight } from
 import { Menu, Transition } from '@headlessui/react';
 import empty from '/empty.png';
 import axios from 'axios';
+import { tryonApi } from '../../api/tryon';
 
 // Add DNS prefetch for image domain
 const addDnsPrefetch = () => {
@@ -384,7 +385,7 @@ interface ProductProps {
   timestamp: string | number | Date;
   url: string;
   isFavorite: boolean;
-  onToggleFavorite: () => void;
+  onToggleFavorite: () => Promise<void>;
   onDelete: () => void;
   imageCount: number;
 }
@@ -404,9 +405,9 @@ const ProductCard: React.FC<ProductProps> = ({
   <div className="relative bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition cursor-pointer flex flex-col h-full">
     {/* Favorite Button */}
     <div
-      onClick={(e) => {
+      onClick={async (e) => {
         e.stopPropagation();
-        onToggleFavorite();
+        await onToggleFavorite();
       }}
       className="absolute top-2 right-2 z-10 cursor-pointer p-1 rounded-full bg-white shadow hover:bg-gray-100"
     >
@@ -708,6 +709,16 @@ const Content: React.FC<ContentProps> = ({ searchQuery }) => {
 
   const hasFetchedInitialData = useRef(false);
 
+  // 加载收藏列表
+  const loadFavorites = async () => {
+    try {
+      const favoriteUrls = await tryonApi.getFavorites();
+      setFavorites(new Set(favoriteUrls));
+    } catch (error) {
+      console.error('获取收藏列表失败:', error);
+    }
+  };
+
   // Smart preload modal images based on current index
   const modalImages = selectedProduct?.images.map(img => img.url) || [];
   useSmartImagePreloader(modalImages, currentImageIndex); // Remove unused variable
@@ -731,6 +742,11 @@ const Content: React.FC<ContentProps> = ({ searchQuery }) => {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, [handleScroll]);
+
+  // Load favorites on component mount
+  useEffect(() => {
+    loadFavorites();
+  }, []);
   const getAccessToken = () => {
     // 判断是否为测试环境
     if (
@@ -1008,13 +1024,31 @@ const Content: React.FC<ContentProps> = ({ searchQuery }) => {
     return Array.from(grouped.values());
   }, [products]);
 
-  const toggleFavorite = (productUrl: string) => {
-    setFavorites(prev => {
-      const updated = new Set(prev);
-      if (updated.has(productUrl)) updated.delete(productUrl);
-      else updated.add(productUrl);
-      return updated;
-    });
+  const toggleFavorite = async (productUrl: string) => {
+    try {
+      const isFavorite = favorites.has(productUrl);
+
+      if (isFavorite) {
+        // 取消收藏
+        await tryonApi.removeFromFavorites(productUrl);
+        setFavorites(prev => {
+          const updated = new Set(prev);
+          updated.delete(productUrl);
+          return updated;
+        });
+      } else {
+        // 添加收藏
+        await tryonApi.addToFavorites(productUrl);
+        setFavorites(prev => {
+          const updated = new Set(prev);
+          updated.add(productUrl);
+          return updated;
+        });
+      }
+    } catch (error) {
+      console.error('收藏操作失败:', error);
+      // 可以在这里添加错误提示
+    }
   };
 
   const handleDeleteClick = (product: GroupedProduct) => {

@@ -359,4 +359,76 @@ export const tryonApi = {
       throw error;
     }
   },
+
+  // 添加收藏
+  addToFavorites: async (product_url: string): Promise<void> => {
+    try {
+      const token = localStorage.getItem('accessToken');
+      if (!token) {
+        throw new Error('未找到认证 token，请先登录');
+      }
+
+      await axios.post(
+        'https://tryon-history.faishion.ai/history/favorite',
+        { product_url },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+    } catch (error) {
+      console.error('添加收藏失败:', error);
+      throw error;
+    }
+  },
+
+  // 获取所有收藏
+  getFavorites: async (): Promise<string[]> => {
+    try {
+      const token = localStorage.getItem('accessToken');
+      if (!token) {
+        throw new Error('未找到认证 token，请先登录');
+      }
+
+      const response = await axios.get(
+        'https://tryon-history.faishion.ai/history/favorites',
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      
+      return response.data.data || [];
+    } catch (error) {
+      console.error('获取收藏失败:', error);
+      throw error;
+    }
+  },
+
+  // 取消收藏 (假设有删除接口)
+  removeFromFavorites: async (product_url: string): Promise<void> => {
+    try {
+      const token = localStorage.getItem('accessToken');
+      if (!token) {
+        throw new Error('未找到认证 token，请先登录');
+      }
+
+      await axios.delete(
+        `https://tryon-history.faishion.ai/history/favorite`,
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          data: { product_url }
+        }
+      );
+    } catch (error) {
+      console.error('取消收藏失败:', error);
+      throw error;
+    }
+  },
 };
