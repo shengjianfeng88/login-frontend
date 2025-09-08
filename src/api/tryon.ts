@@ -408,7 +408,7 @@ export const tryonApi = {
     }
   },
 
-  // 取消收藏 (假设有删除接口)
+  // 取消收藏 (使用POST方法，后端根据isFavorite自动判断)
   removeFromFavorites: async (product_url: string): Promise<void> => {
     try {
       const token = localStorage.getItem('accessToken');
@@ -416,14 +416,14 @@ export const tryonApi = {
         throw new Error('未找到认证 token，请先登录');
       }
 
-      await axios.delete(
-        `https://tryon-history.faishion.ai/history/favorite`,
+      await axios.post(
+        'https://tryon-history.faishion.ai/history/favorite',
+        { product_url },
         {
           headers: {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${token}`,
           },
-          data: { product_url }
         }
       );
     } catch (error) {

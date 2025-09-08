@@ -672,6 +672,7 @@ interface GroupedProduct {
   }>;
   latestTimestamp: string;
   totalTryOns: number;
+  isFavorite: boolean;
 }
 
 interface ContentProps {
@@ -685,7 +686,6 @@ const Content: React.FC<ContentProps> = ({ searchQuery }) => {
   const [showModal, setShowModal] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [sortOrder, setSortOrder] = useState<'low-to-high' | 'high-to-low' | null>(null);
-  const [favorites, setFavorites] = useState<Set<string>>(new Set());
   const [showOnlyFavorites, setShowOnlyFavorites] = useState(false);
   const [deleteModal, setDeleteModal] = useState<{
     isOpen: boolean;
@@ -708,16 +708,6 @@ const Content: React.FC<ContentProps> = ({ searchQuery }) => {
   });
 
   const hasFetchedInitialData = useRef(false);
-
-  // 加载收藏列表
-  const loadFavorites = async () => {
-    try {
-      const favoriteUrls = await tryonApi.getFavorites();
-      setFavorites(new Set(favoriteUrls));
-    } catch (error) {
-      console.error('获取收藏列表失败:', error);
-    }
-  };
 
   // Smart preload modal images based on current index
   const modalImages = selectedProduct?.images.map(img => img.url) || [];
@@ -742,11 +732,6 @@ const Content: React.FC<ContentProps> = ({ searchQuery }) => {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, [handleScroll]);
-
-  // Load favorites on component mount
-  useEffect(() => {
-    loadFavorites();
-  }, []);
   const getAccessToken = () => {
     // 判断是否为测试环境
     if (
@@ -999,6 +984,8 @@ const Content: React.FC<ContentProps> = ({ searchQuery }) => {
         }
         // Update total try-ons
         existing.totalTryOns = Math.max(existing.totalTryOns, product.totalTryOns);
+        // Update favorite status
+        existing.isFavorite = product.isFavorite || existing.isFavorite;
       } else {
         const images = product.tryOnImages.map((imageUrl, index) => ({
           url: imageUrl,
@@ -1011,7 +998,8 @@ const Content: React.FC<ContentProps> = ({ searchQuery }) => {
           productInfo: product.productInfo,
           images,
           latestTimestamp: product.latestTryOnDate,
-          totalTryOns: product.totalTryOns
+          totalTryOns: product.totalTryOns,
+          isFavorite: product.isFavorite || false
         });
       }
     });
@@ -1026,28 +1014,34 @@ const Content: React.FC<ContentProps> = ({ searchQuery }) => {
 
   const toggleFavorite = async (productUrl: string) => {
     try {
-      const isFavorite = favorites.has(productUrl);
+      // 找到对应的产品
+      const product = products.find(p => {
+        const url = p.productInfo?.product_url || p.productInfo?.url || 'unknown';
+        return url === productUrl;
+      });
+
+      if (!product) return;
+
+      const isFavorite = product.isFavorite;
 
       if (isFavorite) {
         // 取消收藏
         await tryonApi.removeFromFavorites(productUrl);
-        setFavorites(prev => {
-          const updated = new Set(prev);
-          updated.delete(productUrl);
-          return updated;
-        });
       } else {
         // 添加收藏
         await tryonApi.addToFavorites(productUrl);
-        setFavorites(prev => {
-          const updated = new Set(prev);
-          updated.add(productUrl);
-          return updated;
-        });
       }
+
+      // 更新本地状态
+      setProducts(prev => prev.map(p => {
+        const url = p.productInfo?.product_url || p.productInfo?.url || 'unknown';
+        if (url === productUrl) {
+          return { ...p, isFavorite: !isFavorite };
+        }
+        return p;
+      }));
     } catch (error) {
       console.error('收藏操作失败:', error);
-      // 可以在这里添加错误提示
     }
   };
 
@@ -1073,13 +1067,6 @@ const Content: React.FC<ContentProps> = ({ searchQuery }) => {
         const productUrl = p.productInfo?.product_url || p.productInfo?.url || 'unknown';
         return productUrl !== deleteModal.product!.productUrl;
       }));
-
-      // Remove from favorites if it was favorited
-      setFavorites(prev => {
-        const updated = new Set(prev);
-        updated.delete(deleteModal.product!.productUrl);
-        return updated;
-      });
 
       // Close the modal
       setDeleteModal({
@@ -1132,13 +1119,6 @@ const Content: React.FC<ContentProps> = ({ searchQuery }) => {
             const productUrl = p.productInfo?.product_url || p.productInfo?.url || 'unknown';
             return productUrl !== selectedProduct.productUrl;
           }));
-
-          // Remove from favorites if it was favorited
-          setFavorites(prev => {
-            const updated = new Set(prev);
-            updated.delete(selectedProduct.productUrl);
-            return updated;
-          });
         } else {
           // Update the selected product with remaining images
           setSelectedProduct({
@@ -1176,7 +1156,7 @@ const Content: React.FC<ContentProps> = ({ searchQuery }) => {
   const NoHistory = !loading && groupedProducts.length === 0;
 
   const filteredProducts = (showOnlyFavorites
-    ? groupedProducts.filter(p => favorites.has(p.productUrl))
+    ? groupedProducts.filter(p => p.isFavorite)
     : groupedProducts
   ).filter((p) => {
     const info = p.productInfo || {};
@@ -1253,7 +1233,7 @@ const Content: React.FC<ContentProps> = ({ searchQuery }) => {
                     currency={item.productInfo?.currency || ''}
                     timestamp={item.latestTimestamp || new Date().toISOString()}
                     url={item.productInfo?.product_url || item.productInfo?.url || ''}
-                    isFavorite={favorites.has(item.productUrl || '') || false}
+                    isFavorite={item.isFavorite || false}
                     onToggleFavorite={() => toggleFavorite(item.productUrl || '')}
                     onDelete={() => handleDeleteClick(item)}
                     imageCount={item.totalTryOns || item.images.length}
