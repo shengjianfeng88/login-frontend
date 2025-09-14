@@ -105,6 +105,42 @@ export type TryOnResponse = {
   modelId?: string;
 };
 
+export type DealsRecommendParams = {
+  price_min?: number;
+  price_max?: number;
+  size?: string;
+  keyword?: string;
+  page_size?: number;
+  affiliate?: string;
+};
+
+export type DealsItem = {
+  Id: string;
+  Name: string;
+  Description: string;
+  Manufacturer?: string;
+  ImageUrl: string;
+  Url: string;
+  CurrentPrice: string;
+  OriginalPrice?: string;
+  DiscountPercentage?: string;
+  Currency: string;
+  Size?: string;
+  Colors?: string[];
+  StockAvailability?: string;
+  CampaignName?: string;
+  Category?: string;
+  Labels?: string[];
+};
+
+export type DealsResponse = {
+  success: boolean;
+  data: DealsItem[];
+  total?: number;
+  page?: number;
+  page_size?: number;
+};
+
 // 辅助函数：将 File 对象转换为 FormData
 function createFormData(file: File): FormData {
   const formData = new FormData();
@@ -357,6 +393,111 @@ export const tryonApi = {
     } catch (error) {
       console.error('按时间范围获取测试结果失败:', error);
       throw error;
+    }
+  },
+
+  // 添加收藏
+  addToFavorites: async (product_url: string): Promise<void> => {
+    try {
+      const token = localStorage.getItem('accessToken');
+      if (!token) {
+        throw new Error('未找到认证 token，请先登录');
+      }
+
+      await axios.post(
+        'https://tryon-history.faishion.ai/history/favorite',
+        { product_url },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+    } catch (error) {
+      console.error('添加收藏失败:', error);
+      throw error;
+    }
+  },
+
+  // 获取所有收藏
+  getFavorites: async (): Promise<string[]> => {
+    try {
+      const token = localStorage.getItem('accessToken');
+      if (!token) {
+        throw new Error('未找到认证 token，请先登录');
+      }
+
+      const response = await axios.get(
+        'https://tryon-history.faishion.ai/history/favorites',
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      
+      return response.data.data || [];
+    } catch (error) {
+      console.error('获取收藏失败:', error);
+      throw error;
+    }
+  },
+
+  // 取消收藏 (使用POST方法，后端根据isFavorite自动判断)
+  removeFromFavorites: async (product_url: string): Promise<void> => {
+    try {
+      const token = localStorage.getItem('accessToken');
+      if (!token) {
+        throw new Error('未找到认证 token，请先登录');
+      }
+
+      await axios.post(
+        'https://tryon-history.faishion.ai/history/favorite',
+        { product_url },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+    } catch (error) {
+      console.error('取消收藏失败:', error);
+      throw error;
+    }
+  },
+
+  // 获取推荐deals
+  getDealsRecommend: async (params: DealsRecommendParams): Promise<DealsResponse> => {
+    try {
+      const queryParams = new URLSearchParams();
+      
+      if (params.price_min !== undefined) queryParams.append('price_min', params.price_min.toString());
+      if (params.price_max !== undefined) queryParams.append('price_max', params.price_max.toString());
+      if (params.size) queryParams.append('size', params.size);
+      if (params.keyword) queryParams.append('keyword', params.keyword);
+      if (params.page_size !== undefined) queryParams.append('page_size', params.page_size.toString());
+      if (params.affiliate) queryParams.append('affiliate', params.affiliate);
+
+      const response = await axios.get(
+        `https://deals-canary.faishion.ai/affiliate/recommend?${queryParams.toString()}`
+      );
+
+      return {
+        success: true,
+        data: response.data.items || [],
+        total: response.data.meta?.limit || 0,
+        page: 1,
+        page_size: response.data.meta?.limit || 10
+      };
+    } catch (error) {
+      console.error('获取deals推荐失败:', error);
+      return {
+        success: false,
+        data: [],
+        total: 0
+      };
     }
   },
 };
