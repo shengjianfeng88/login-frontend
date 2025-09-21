@@ -8,7 +8,7 @@ const History: React.FC = () => {
   return (
     <main>
       <Header searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
-      <Content searchQuery={searchQuery} />
+      <Content searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
     </main>
   );
 };

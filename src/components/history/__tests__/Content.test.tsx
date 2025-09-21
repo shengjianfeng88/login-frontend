@@ -16,12 +16,25 @@ const mockedAxios = axios as typeof axios & {
   get: ReturnType<typeof vi.fn>;
 };
 
-// Mock store
+// Mock store with history reducer
 const mockStore = configureStore({
   reducer: {
     user: (state = {}) => state,
+    history: (state = {
+      products: [],
+      currentPage: 1,
+      hasMore: true,
+      loading: false,
+      searchQuery: '',
+      sortOrder: null,
+      scrollPosition: 0,
+      initialized: false,
+    }) => state,
   },
 });
+
+// Mock setSearchQuery function
+const mockSetSearchQuery = vi.fn();
 
 describe('Facebook Share Feature', () => {
   beforeEach(() => {
@@ -53,7 +66,7 @@ describe('Facebook Share Feature', () => {
 
       render(
         <Provider store={mockStore}>
-          <Content searchQuery="" />
+          <Content searchQuery="" setSearchQuery={mockSetSearchQuery} />
         </Provider>
       );
 
@@ -65,7 +78,7 @@ describe('Facebook Share Feature', () => {
 
       render(
         <Provider store={mockStore}>
-          <Content searchQuery="" />
+          <Content searchQuery="" setSearchQuery={mockSetSearchQuery} />
         </Provider>
       );
 
@@ -81,7 +94,7 @@ describe('Facebook Share Feature', () => {
 
       render(
         <Provider store={mockStore}>
-          <Content searchQuery="" />
+          <Content searchQuery="" setSearchQuery={mockSetSearchQuery} />
         </Provider>
       );
 

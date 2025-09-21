@@ -24,7 +24,7 @@ export default defineConfig({
         changeOrigin: true,
         secure: true,
         configure: (proxy) => {
-          proxy.on('proxyReq', (proxyReq, req) => {
+          proxy.on('proxyReq', (_proxyReq, req) => {
             console.log(
               `Proxy request: ${req.method} ${req.url} -> https://api-auth.faishion.ai${req.url}`
             );
@@ -47,18 +47,11 @@ export default defineConfig({
         changeOrigin: true,
         secure: false,
       },
-      // 历史记录API代理
+      // 历史记录API代理（包含收藏功能）
       '/history': {
         target: 'https://tryon-history.faishion.ai',
         changeOrigin: true,
         secure: false,
-      },
-      // 收藏功能API代理
-      '/favorite': {
-        target: 'https://tryon-history.faishion.ai',
-        changeOrigin: true,
-        secure: false,
-        rewrite: (path) => path.replace(/^\/favorite/, '/history'),
       },
     },
   },

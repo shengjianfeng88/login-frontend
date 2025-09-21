@@ -22,14 +22,9 @@ export const API_DOMAINS = {
     ? ''  // 开发环境使用vite proxy (已配置 /chat 和 /health)
     : 'https://chatbot.faishion.ai',  // 生产环境使用实际域名
   
-  // 历史记录API
+  // 历史记录API（包含收藏功能）
   HISTORY_API: isDevelopment 
     ? ''  // 开发环境使用vite proxy (已配置 /history)
-    : 'https://tryon-history.faishion.ai',  // 生产环境使用实际域名
-
-  // 收藏功能API
-  FAVORITE_API: isDevelopment 
-    ? ''  // 开发环境使用vite proxy (已配置 /favorite)
     : 'https://tryon-history.faishion.ai',  // 生产环境使用实际域名
 
   // 订阅服务API

@@ -371,7 +371,7 @@ export const tryonApi = {
       }
 
       await axios.post(
-        getApiUrl('FAVORITE_API', '/favorite/favorite'),
+        getApiUrl('HISTORY_API', '/history/favorite'),
         { product_url },
         {
           headers: {
@@ -387,7 +387,7 @@ export const tryonApi = {
   },
 
   // 获取所有收藏
-  getFavorites: async (): Promise<string[]> => {
+  getFavorites: async (): Promise<any[]> => {
     try {
       const token = getAccessToken();
       if (!token) {
@@ -395,7 +395,7 @@ export const tryonApi = {
       }
 
       const response = await axios.get(
-        getApiUrl('FAVORITE_API', '/favorite/favorites'),
+        getApiUrl('HISTORY_API', '/history/favorites'),
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -419,7 +419,7 @@ export const tryonApi = {
       }
 
       await axios.post(
-        getApiUrl('FAVORITE_API', '/favorite/favorite'),
+        getApiUrl('HISTORY_API', '/history/favorite'),
         { product_url },
         {
           headers: {
