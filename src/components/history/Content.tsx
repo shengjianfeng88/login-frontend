@@ -311,9 +311,7 @@ const OptimizedImage: React.FC<{
 
 const TryOnSubHeader: React.FC<{
   onSortChange: (order: 'low-to-high' | 'high-to-low') => void;
-  showOnlyFavorites: boolean;
-  setShowOnlyFavorites: (val: boolean) => void;
-}> = ({ onSortChange, showOnlyFavorites, setShowOnlyFavorites }) => {
+}> = ({ onSortChange }) => {
   return (
     <div className="flex items-center justify-between px-10 mt-4 mb-8 border-b pb-4">
       <div className="flex items-center gap-2 text-2xl font-bold text-gray-800">
@@ -322,11 +320,10 @@ const TryOnSubHeader: React.FC<{
       </div>
       <div className="flex items-center gap-4">
         <button
-          onClick={() => setShowOnlyFavorites(!showOnlyFavorites)}
-          className={`flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg transition ${showOnlyFavorites ? 'bg-red-100 text-red-600 border-red-300' : 'text-gray-700 hover:bg-gray-100'
-            }`}
+          onClick={() => window.location.href = '/tryon-history/favorites'}
+          className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition"
         >
-          <Heart className={`w-4 h-4 ${showOnlyFavorites ? 'fill-red-500 text-red-500' : ''}`} />
+          <Heart className="w-4 h-4" />
           Favorites
         </button>
 
@@ -688,7 +685,6 @@ const Content: React.FC<ContentProps> = ({ searchQuery }) => {
   const [showModal, setShowModal] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [sortOrder, setSortOrder] = useState<'low-to-high' | 'high-to-low' | null>(null);
-  const [showOnlyFavorites, setShowOnlyFavorites] = useState(false);
   const [deleteModal, setDeleteModal] = useState<{
     isOpen: boolean;
     product: GroupedProduct | null;
@@ -951,7 +947,7 @@ const Content: React.FC<ContentProps> = ({ searchQuery }) => {
     }
     // Do not call fetchHistory here to avoid duplicate API calls
     // eslint-disable-next-line
-  }, [searchQuery, showOnlyFavorites, sortOrder]);
+  }, [searchQuery, sortOrder]);
 
   // Group products by product URL
   const groupedProducts = React.useMemo(() => {
@@ -1147,10 +1143,7 @@ const Content: React.FC<ContentProps> = ({ searchQuery }) => {
 
   const NoHistory = !loading && groupedProducts.length === 0;
 
-  const filteredProducts = (showOnlyFavorites
-    ? groupedProducts.filter(p => p.isFavorite)
-    : groupedProducts
-  ).filter((p) => {
+  const filteredProducts = groupedProducts.filter((p) => {
     const info = p.productInfo || {};
     const name = (info.product_name || info.name || '').toLowerCase();
     const brand = (info.brand_name || '').toLowerCase();
@@ -1204,8 +1197,6 @@ const Content: React.FC<ContentProps> = ({ searchQuery }) => {
           <>
             <TryOnSubHeader
               onSortChange={setSortOrder}
-              showOnlyFavorites={showOnlyFavorites}
-              setShowOnlyFavorites={setShowOnlyFavorites}
             />
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8 w-full">
               {sortedProducts.map(item => (

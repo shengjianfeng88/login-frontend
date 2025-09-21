@@ -34,7 +34,6 @@ const mockStore = configureStore({
 });
 
 // Mock setSearchQuery function
-const mockSetSearchQuery = vi.fn();
 
 describe('Facebook Share Feature', () => {
   beforeEach(() => {
@@ -66,7 +65,7 @@ describe('Facebook Share Feature', () => {
 
       render(
         <Provider store={mockStore}>
-          <Content searchQuery="" setSearchQuery={mockSetSearchQuery} />
+          <Content searchQuery="" />
         </Provider>
       );
 
@@ -78,7 +77,7 @@ describe('Facebook Share Feature', () => {
 
       render(
         <Provider store={mockStore}>
-          <Content searchQuery="" setSearchQuery={mockSetSearchQuery} />
+          <Content searchQuery="" />
         </Provider>
       );
 
@@ -94,7 +93,7 @@ describe('Facebook Share Feature', () => {
 
       render(
         <Provider store={mockStore}>
-          <Content searchQuery="" setSearchQuery={mockSetSearchQuery} />
+          <Content searchQuery="" />
         </Provider>
       );
 
