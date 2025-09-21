@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { ArrowLeft, User, CreditCard, Check, Crown, Copy } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import axiosInstance from '@/utils/axiosInstance';
+import { getApiUrl } from '../config/api';
 
 const UpgradePlan: React.FC = () => {
   const navigate = useNavigate();
@@ -26,7 +27,7 @@ const UpgradePlan: React.FC = () => {
       }
 
       const response = await axiosInstance.post(
-        'https://subscriptions.faishion.ai/api/create-checkout-session',
+        getApiUrl('SUBSCRIPTION_API', '/api/create-checkout-session'),
         {},
         {
           headers: {

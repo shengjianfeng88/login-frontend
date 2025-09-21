@@ -18,23 +18,25 @@ export default defineConfig({
       strict: true,
     },
     proxy: {
-      // '/upload': {
-      //   target: 'https://staging-api-auth.faishion.ai', // 你的本地后端服务器地址
-      //   changeOrigin: true,
-      //   secure: false,
-      //   configure: (proxy, options) => {
-      //     proxy.on('proxyReq', (proxyReq, req) => {
-      //       console.log(
-      //         `Proxy request: ${req.method} ${req.url} -> ${options.target}${req.url}`
-      //       );
-      //     });
-      //     proxy.on('proxyRes', (proxyRes, req) => {
-      //       console.log(
-      //         `Proxy response: ${proxyRes.statusCode} for ${req.url}`
-      //       );
-      //     });
-      //   },
-      // },
+      // 主要API代理 - 代理到认证服务
+      '/v1': {
+        target: 'https://api-auth.faishion.ai',
+        changeOrigin: true,
+        secure: true,
+        configure: (proxy) => {
+          proxy.on('proxyReq', (proxyReq, req) => {
+            console.log(
+              `Proxy request: ${req.method} ${req.url} -> https://api-auth.faishion.ai${req.url}`
+            );
+          });
+          proxy.on('proxyRes', (proxyRes, req) => {
+            console.log(
+              `Proxy response: ${proxyRes.statusCode} for ${req.url}`
+            );
+          });
+        },
+      },
+      // 聊天机器人API代理
       '/health': {
         target: 'http://chatbot.faishion.ai',
         changeOrigin: true,
@@ -45,10 +47,18 @@ export default defineConfig({
         changeOrigin: true,
         secure: false,
       },
+      // 历史记录API代理
       '/history': {
         target: 'https://tryon-history.faishion.ai',
         changeOrigin: true,
         secure: false,
+      },
+      // 收藏功能API代理
+      '/favorite': {
+        target: 'https://tryon-history.faishion.ai',
+        changeOrigin: true,
+        secure: false,
+        rewrite: (path) => path.replace(/^\/favorite/, '/history'),
       },
     },
   },

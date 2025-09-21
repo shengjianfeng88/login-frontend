@@ -1,4 +1,6 @@
 import axios from 'axios';
+import { getApiUrl } from '../config/api';
+import { getAccessToken } from '../utils/auth';
 
 // 创建 axios 实例用于试穿服务（第三方 API，不通过 proxy）
 const axiosInstance = axios.create({
@@ -118,7 +120,7 @@ export const tryonApi = {
   async uploadImage(file: File): Promise<UploadImageResponse> {
     try {
       // 获取认证 token
-      const token = localStorage.getItem('accessToken');
+      const token = getAccessToken();
       if (!token) {
         throw new Error('未找到认证 token，请先登录');
       }
@@ -211,7 +213,7 @@ export const tryonApi = {
   saveTestResults: async (results: TestResult[]): Promise<void> => {
     try {
       // 获取认证 token
-      const token = localStorage.getItem('accessToken');
+      const token = getAccessToken();
       if (!token) {
         throw new Error('未找到认证 token，请先登录');
       }
@@ -238,7 +240,7 @@ export const tryonApi = {
   ): Promise<TestHistoryItem> => {
     try {
       // 获取认证 token
-      const token = localStorage.getItem('accessToken');
+      const token = getAccessToken();
       if (!token) {
         throw new Error('未找到认证 token，请先登录');
       }
@@ -266,7 +268,7 @@ export const tryonApi = {
   ): Promise<{ deletedCount: number; taskIds: string[] }> => {
     try {
       // 获取认证 token
-      const token = localStorage.getItem('accessToken');
+      const token = getAccessToken();
       if (!token) {
         throw new Error('未找到认证 token，请先登录');
       }
@@ -292,7 +294,7 @@ export const tryonApi = {
   getTestResultByTaskId: async (taskId: string): Promise<TestHistoryItem> => {
     try {
       // 获取认证 token
-      const token = localStorage.getItem('accessToken');
+      const token = getAccessToken();
       if (!token) {
         throw new Error('未找到认证 token，请先登录');
       }
@@ -363,13 +365,13 @@ export const tryonApi = {
   // 添加收藏
   addToFavorites: async (product_url: string): Promise<void> => {
     try {
-      const token = localStorage.getItem('accessToken');
+      const token = getAccessToken();
       if (!token) {
         throw new Error('未找到认证 token，请先登录');
       }
 
       await axios.post(
-        'https://tryon-history.faishion.ai/history/favorite',
+        getApiUrl('FAVORITE_API', '/favorite/favorite'),
         { product_url },
         {
           headers: {
@@ -387,13 +389,13 @@ export const tryonApi = {
   // 获取所有收藏
   getFavorites: async (): Promise<string[]> => {
     try {
-      const token = localStorage.getItem('accessToken');
+      const token = getAccessToken();
       if (!token) {
         throw new Error('未找到认证 token，请先登录');
       }
 
       const response = await axios.get(
-        'https://tryon-history.faishion.ai/history/favorites',
+        getApiUrl('FAVORITE_API', '/favorite/favorites'),
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -411,13 +413,13 @@ export const tryonApi = {
   // 取消收藏 (使用POST方法，后端根据isFavorite自动判断)
   removeFromFavorites: async (product_url: string): Promise<void> => {
     try {
-      const token = localStorage.getItem('accessToken');
+      const token = getAccessToken();
       if (!token) {
         throw new Error('未找到认证 token，请先登录');
       }
 
       await axios.post(
-        'https://tryon-history.faishion.ai/history/favorite',
+        getApiUrl('FAVORITE_API', '/favorite/favorite'),
         { product_url },
         {
           headers: {
