@@ -1,5 +1,11 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import axiosInstance from "@/utils/axiosInstance";
+import {
+  validateEmail,
+  calculatePasswordStrength,
+  getPasswordStrengthColor,
+  getPasswordStrengthText,
+} from "@/utils/validation";
 import { z } from "zod";
 import { useGoogleLogin } from "@react-oauth/google";
 import { CredentialResponse } from "@react-oauth/google";
@@ -35,6 +41,8 @@ const SignUp = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [error, setError] = useState("");
+  const [emailError, setEmailError] = useState("");
+  const [passwordStrength, setPasswordStrength] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     email: "",
@@ -54,9 +62,9 @@ const SignUp = () => {
   useEffect(() => {
     const refCode = searchParams.get("ref");
     if (refCode) {
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
-        referralCode: refCode
+        referralCode: refCode,
       }));
     }
   }, [searchParams]);
@@ -98,12 +106,22 @@ const SignUp = () => {
   const validateForm = () => {
     try {
       userSchema.parse(formData);
-      setErrors({ email: "", password: "", confirmPassword: "", referralCode: "" });
+      setErrors({
+        email: "",
+        password: "",
+        confirmPassword: "",
+        referralCode: "",
+      });
       setError("");
       return true;
     } catch (err) {
       if (err instanceof z.ZodError) {
-        const newErrors = { email: "", password: "", confirmPassword: "", referralCode: "" };
+        const newErrors = {
+          email: "",
+          password: "",
+          confirmPassword: "",
+          referralCode: "",
+        };
         err.errors.forEach((e) => {
           const field = e.path[0] as keyof typeof newErrors;
           newErrors[field] = e.message;
@@ -113,7 +131,6 @@ const SignUp = () => {
       return false;
     }
   };
-
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -140,13 +157,26 @@ const SignUp = () => {
     }
   };
 
-
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
       [name]: value,
     }));
+
+    // Real-time email validation
+    if (name === "email") {
+      if (value && !validateEmail(value)) {
+        setEmailError("Please enter a valid email address");
+      } else {
+        setEmailError("");
+      }
+    }
+
+    // Real-time password strength calculation
+    if (name === "password") {
+      setPasswordStrength(calculatePasswordStrength(value));
+    }
   };
 
   const handleGoogleLoginSuccess = async (response: CredentialResponse) => {
@@ -154,14 +184,14 @@ const SignUp = () => {
       const token = response.credential;
       const apiUrl = "https://api-auth.faishion.ai";
 
-      // Use axiosInstance instead of axios 
+      // Use axiosInstance instead of axios
       const res = await axiosInstance.post(apiUrl + "/api/auth/google-auth", {
         token,
         referralCode: formData.referralCode,
       });
 
       if (res.data) {
-        console.log('response data: ', res.data)
+        console.log("response data: ", res.data);
         const accessToken = res.data.accessToken;
         // Store token in localStorage
         localStorage.setItem("accessToken", accessToken);
@@ -243,12 +273,16 @@ const SignUp = () => {
                     value={formData.email}
                     onChange={handleChange}
                     placeholder="Email"
-                    className="w-full h-10 border border-[#DADCE0] rounded-lg px-4 text-sm"
+                    className={`w-full h-10 border rounded-lg px-4 text-sm ${
+                      emailError || errors.email
+                        ? "border-red-500"
+                        : "border-[#DADCE0]"
+                    }`}
                     autoComplete="email"
                   />
-                  {errors.email && (
+                  {(emailError || errors.email) && (
                     <p className="text-red-500 text-xs mt-1 text-left">
-                      {errors.email}
+                      {emailError || errors.email}
                     </p>
                   )}
                 </div>
@@ -264,6 +298,26 @@ const SignUp = () => {
                     className="w-full h-10 border border-[#DADCE0] rounded-lg px-4 text-sm"
                     autoComplete="new-password"
                   />
+                  {formData.password && (
+                    <div className="mt-2">
+                      <div className="flex space-x-1">
+                        {[...Array(5)].map((_, i) => (
+                          <div
+                            key={i}
+                            className={`h-2 w-full rounded transition-colors duration-200 ${
+                              i < passwordStrength
+                                ? getPasswordStrengthColor(passwordStrength)
+                                : "bg-gray-200"
+                            }`}
+                          />
+                        ))}
+                      </div>
+                      <p className="text-xs text-gray-600 mt-1">
+                        Password Strength:{" "}
+                        {getPasswordStrengthText(passwordStrength)}
+                      </p>
+                    </div>
+                  )}
                   {errors.password && (
                     <p className="text-red-500 text-xs mt-1 text-left">
                       {errors.password}
@@ -288,8 +342,6 @@ const SignUp = () => {
                     </p>
                   )}
                 </div>
-
-
 
                 {/* Sign Up button */}
                 <button
@@ -357,8 +409,9 @@ const SignUp = () => {
                   <img
                     src={images[activeSlide].left}
                     alt="Fashion model left"
-                    className={`w-full h-full object-cover transition-opacity duration-200 ease-in-out ${isTransitioning ? "opacity-60" : "opacity-100"
-                      }`}
+                    className={`w-full h-full object-cover transition-opacity duration-200 ease-in-out ${
+                      isTransitioning ? "opacity-60" : "opacity-100"
+                    }`}
                   />
                 </div>
               </div>
@@ -381,8 +434,9 @@ const SignUp = () => {
                   <img
                     src={images[activeSlide].right}
                     alt="Fashion model right"
-                    className={`w-full h-full object-cover transition-opacity duration-200 ease-in-out ${isTransitioning ? "opacity-60" : "opacity-100"
-                      }`}
+                    className={`w-full h-full object-cover transition-opacity duration-200 ease-in-out ${
+                      isTransitioning ? "opacity-60" : "opacity-100"
+                    }`}
                   />
                 </div>
               </div>
@@ -410,20 +464,23 @@ const SignUp = () => {
             <div className="flex justify-center pb-4 md:pb-6 space-x-3 md:space-x-4 lg:space-x-5">
               <button
                 onClick={() => changeSlide(0)}
-                className={`w-1.5 h-1.5 md:w-2 md:h-2 rounded-full transition-colors duration-300 ${activeSlide === 0 ? "bg-gray-800" : "bg-gray-400"
-                  }`}
+                className={`w-1.5 h-1.5 md:w-2 md:h-2 rounded-full transition-colors duration-300 ${
+                  activeSlide === 0 ? "bg-gray-800" : "bg-gray-400"
+                }`}
                 aria-label="Show slide 1"
               ></button>
               <button
                 onClick={() => changeSlide(1)}
-                className={`w-1.5 h-1.5 md:w-2 md:h-2 rounded-full transition-colors duration-300 ${activeSlide === 1 ? "bg-gray-800" : "bg-gray-400"
-                  }`}
+                className={`w-1.5 h-1.5 md:w-2 md:h-2 rounded-full transition-colors duration-300 ${
+                  activeSlide === 1 ? "bg-gray-800" : "bg-gray-400"
+                }`}
                 aria-label="Show slide 2"
               ></button>
               <button
                 onClick={() => changeSlide(2)}
-                className={`w-1.5 h-1.5 md:w-2 md:h-2 rounded-full transition-colors duration-300 ${activeSlide === 2 ? "bg-gray-800" : "bg-gray-400"
-                  }`}
+                className={`w-1.5 h-1.5 md:w-2 md:h-2 rounded-full transition-colors duration-300 ${
+                  activeSlide === 2 ? "bg-gray-800" : "bg-gray-400"
+                }`}
                 aria-label="Show slide 3"
               ></button>
             </div>

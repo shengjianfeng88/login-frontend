@@ -7,6 +7,7 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 // import { jwtDecode } from "jwt-decode";
 import { z } from "zod";
 import axiosInstance from "@/utils/axiosInstance";
+import { validateEmail } from "@/utils/validation";
 import { useGoogleLogin } from "@react-oauth/google";
 import { CredentialResponse } from "@react-oauth/google";
 import { Link, useNavigate } from "react-router-dom";
@@ -24,6 +25,7 @@ const signInSchema = z.object({
 
 const SignIn = () => {
   const [error, setError] = useState("");
+  const [emailError, setEmailError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const navigate = useNavigate();
@@ -65,6 +67,16 @@ const SignIn = () => {
     // Clean up the interval on component unmount
     return () => clearInterval(interval);
   }, [activeSlide, isTransitioning, isPaused, changeSlide]);
+
+  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const email = e.target.value;
+
+    if (email && !validateEmail(email)) {
+      setEmailError("Please enter a valid email address");
+    } else {
+      setEmailError("");
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -119,7 +131,7 @@ const SignIn = () => {
       });
       localStorage.setItem("accessToken", res.data.accessToken);
       localStorage.setItem("userId", res.data.userId);
-      console.log('Full response data:', res.data);
+      console.log("Full response data:", res.data);
       sendMessageToExtension({
         email: res.data.email,
         picture: res.data.picture,
@@ -212,9 +224,15 @@ const SignIn = () => {
                     type="email"
                     name="email"
                     placeholder="Email"
-                    className="w-full h-10 border border-[#DADCE0] rounded-lg px-4 text-sm"
+                    onChange={handleEmailChange}
+                    className={`w-full h-10 border rounded-lg px-4 text-sm ${
+                      emailError ? "border-red-500" : "border-[#DADCE0]"
+                    }`}
                     autoComplete="email"
                   />
+                  {emailError && (
+                    <p className="text-red-500 text-xs mt-1">{emailError}</p>
+                  )}
                 </div>
 
                 {/* Password input */}
