@@ -35,6 +35,62 @@ interface GroupedProduct {
   isFavorite: boolean;
 }
 
+// Delete Confirmation Modal Component (reuse same UI/behavior as history page)
+const DeleteConfirmationModal: React.FC<{
+  isOpen: boolean;
+  onClose: () => void;
+  onConfirm: () => void;
+  productName: string;
+  isDeleting: boolean;
+  deleteAll: boolean;
+  imageCount: number;
+}> = ({ isOpen, onClose, onConfirm, productName, isDeleting, deleteAll, imageCount }) => {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black bg-opacity-50">
+      <div className="bg-white rounded-2xl p-6 max-w-md w-full mx-4 shadow-xl">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="p-2 bg-red-100 rounded-full">
+            <Trash2 className="w-6 h-6 text-red-600" />
+          </div>
+          <h3 className="text-lg font-semibold text-gray-900">Delete Try-on</h3>
+        </div>
+
+        <p className="text-gray-600 mb-6">
+          {deleteAll
+            ? `Are you sure you want to delete all ${imageCount} try-on${imageCount > 1 ? 's' : ''} for "${productName}"? This action cannot be undone.`
+            : `Are you sure you want to delete "${productName}" from your try-on history? This action cannot be undone.`}
+        </p>
+
+        <div className="flex gap-3 justify-end">
+          <button
+            onClick={onClose}
+            disabled={isDeleting}
+            className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition disabled:opacity-50"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={onConfirm}
+            disabled={isDeleting}
+            className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition disabled:opacity-50 flex items-center gap-2"
+          >
+            {isDeleting ? (
+              <>
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                Deleting...
+              </>
+            ) : (
+              'Delete'
+            )}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // Image URL optimization utility (copied from Content.tsx)
 const getOptimizedImageUrl = (src: string, size: 'thumbnail' | 'medium' | 'large' = 'thumbnail') => {
   if (!src.includes('faishionai.s3.amazonaws.com')) {
@@ -494,6 +550,15 @@ const FavoritesPage: React.FC = () => {
   const [selectedProduct, setSelectedProduct] = useState<GroupedProduct | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [deleteModal, setDeleteModal] = useState<{
+    isOpen: boolean;
+    product: GroupedProduct | null;
+    isDeleting: boolean;
+  }>({
+    isOpen: false,
+    product: null,
+    isDeleting: false,
+  });
 
   // Fetch favorites list
   const fetchFavorites = async () => {
@@ -540,6 +605,32 @@ const FavoritesPage: React.FC = () => {
       console.error('Failed to remove favorite:', err);
       setError('Failed to remove favorite. Please try again.');
     }
+  };
+
+  // Open delete confirm modal for a product
+  const handleDeleteClick = (product: GroupedProduct) => {
+    setDeleteModal({ isOpen: true, product, isDeleting: false });
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!deleteModal.product) return;
+
+    setDeleteModal(prev => ({ ...prev, isDeleting: true }));
+    try {
+      const productUrlToDelete = deleteModal.product.productUrl;
+      if (productUrlToDelete) {
+        await tryonApi.deleteProductHistory(productUrlToDelete);
+      }
+      await fetchFavorites();
+      setDeleteModal({ isOpen: false, product: null, isDeleting: false });
+    } catch (e) {
+      console.error('Failed to delete product history:', e);
+      setDeleteModal(prev => ({ ...prev, isDeleting: false }));
+    }
+  };
+
+  const handleDeleteCancel = () => {
+    setDeleteModal({ isOpen: false, product: null, isDeleting: false });
   };
 
   // Load favorites list when page loads
@@ -674,18 +765,18 @@ const FavoritesPage: React.FC = () => {
                     <Heart className="w-6 h-6" />
                     <span>My Favorites</span>
                   </div>
-                           
+
                   {/* Chatbot button */}
                   <a
-                      href="https://udify.app/chat/q1Kt8Quqatr4MWdS"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center px-3 py-2 text-gray-600 hover:text-gray-800 hover:bg-white rounded-lg transition-colors shadow-sm border border-gray-200"
-                      title="Open Chatbot in New Tab"
+                    href="https://udify.app/chat/q1Kt8Quqatr4MWdS"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center px-3 py-2 text-gray-600 hover:text-gray-800 hover:bg-white rounded-lg transition-colors shadow-sm border border-gray-200"
+                    title="Open Chatbot in New Tab"
                   >
-                      💬 fAIshion Chatbot
+                    💬 fAIshion Chatbot
                   </a>
-                                                                  
+
                 </div>
                 <div className="text-gray-600">
                   {filteredFavorites.length} item{filteredFavorites.length !== 1 ? 's' : ''}
@@ -730,16 +821,7 @@ const FavoritesPage: React.FC = () => {
                         url={productUrl}
                         isFavorite={true}
                         onToggleFavorite={() => handleRemoveFavorite(item)}
-                        onDelete={async () => {
-                          try {
-                            if (productUrl) {
-                              await tryonApi.deleteProductHistory(productUrl);
-                              await fetchFavorites();
-                            }
-                          } catch (e) {
-                            console.error('Failed to delete product history:', e);
-                          }
-                        }}
+                        onDelete={() => handleDeleteClick(item)}
                         imageCount={imageCount}
                       />
                     </div>
@@ -794,6 +876,17 @@ const FavoritesPage: React.FC = () => {
             </div>
           </div>
         )}
+
+        {/* Delete Confirmation Modal */}
+        <DeleteConfirmationModal
+          isOpen={deleteModal.isOpen}
+          onClose={handleDeleteCancel}
+          onConfirm={handleDeleteConfirm}
+          productName={deleteModal.product?.productInfo?.product_name || deleteModal.product?.productInfo?.name || 'this item'}
+          isDeleting={deleteModal.isDeleting}
+          deleteAll={true}
+          imageCount={deleteModal.product?.images.length || 0}
+        />
       </section>
     </main>
   );
