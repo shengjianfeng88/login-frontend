@@ -402,7 +402,7 @@ export const tryonApi = {
           },
         }
       );
-      
+
       return response.data.data || [];
     } catch (error) {
       console.error('获取收藏失败:', error);
@@ -430,6 +430,33 @@ export const tryonApi = {
       );
     } catch (error) {
       console.error('取消收藏失败:', error);
+      throw error;
+    }
+  },
+
+  // 删除某个商品的所有历史记录（根据 product_url）
+  deleteProductHistory: async (
+    product_url: string
+  ): Promise<{ deleted_count: number; message: string; success: boolean }> => {
+    try {
+      const token = getAccessToken();
+      if (!token) {
+        throw new Error('未找到认证 token，请先登录');
+      }
+
+      const response = await axios.request({
+        method: 'DELETE',
+        url: getApiUrl('HISTORY_API', '/history/product'),
+        data: { product_url },
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      return response.data;
+    } catch (error) {
+      console.error('删除历史记录失败:', error);
       throw error;
     }
   },

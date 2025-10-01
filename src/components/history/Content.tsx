@@ -1047,8 +1047,11 @@ const Content: React.FC<ContentProps> = ({ searchQuery }) => {
     setDeleteModal(prev => ({ ...prev, isDeleting: true }));
 
     try {
-      // Since we don't have record IDs in new API, we'll just remove from local state
-      // In a real implementation, you might need to call a different API endpoint
+      // 调用后端删除接口，按商品 URL 删除该商品的所有试穿历史
+      const productUrlToDelete = deleteModal.product.productUrl;
+      if (productUrlToDelete) {
+        await tryonApi.deleteProductHistory(productUrlToDelete);
+      }
 
       // Remove all deleted records from the local state
       setProducts(prev => prev.filter(p => {

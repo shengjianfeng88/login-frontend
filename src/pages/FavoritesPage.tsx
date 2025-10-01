@@ -718,7 +718,16 @@ const FavoritesPage: React.FC = () => {
                         url={productUrl}
                         isFavorite={true}
                         onToggleFavorite={() => handleRemoveFavorite(item)}
-                        onDelete={() => handleRemoveFavorite(item)}
+                        onDelete={async () => {
+                          try {
+                            if (productUrl) {
+                              await tryonApi.deleteProductHistory(productUrl);
+                              await fetchFavorites();
+                            }
+                          } catch (e) {
+                            console.error('Failed to delete product history:', e);
+                          }
+                        }}
                         imageCount={imageCount}
                       />
                     </div>
