@@ -317,6 +317,18 @@ const TryOnSubHeader: React.FC<{
       <div className="flex items-center gap-2 text-2xl font-bold text-gray-800">
         <Camera className="w-6 h-6" />
         <span>Try-on History</span>
+          
+        {/* Chatbot button */}
+        <a
+            href="https://udify.app/chat/q1Kt8Quqatr4MWdS"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center px-3 py-2 text-gray-600 hover:text-gray-800 hover:bg-white rounded-lg transition-colors shadow-sm border border-gray-200"
+            title="Open Chatbot in New Tab"
+        >
+          💬 fAIshion Chatbot
+        </a>
+
       </div>
       <div className="flex items-center gap-4">
         <button
