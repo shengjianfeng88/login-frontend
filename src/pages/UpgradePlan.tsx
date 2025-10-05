@@ -13,6 +13,7 @@ import {
   Gift,
   Info,
 } from "lucide-react";
+import { Modal, message } from "antd";
 import { useNavigate } from "react-router-dom";
 import axiosInstance from "@/utils/axiosInstance";
 import { getApiUrl } from "../config/api";
@@ -27,6 +28,10 @@ const UpgradePlan: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [copyButtonText, setCopyButtonText] = useState("Copy Link");
   const copyTimeoutRef = React.useRef<number | null>(null);
+
+  // Cancel subscription state
+  const [isCancelling, setIsCancelling] = useState(false);
+  const [showCancelConfirm, setShowCancelConfirm] = useState(false);
 
   // Subscription status state
   const [subscriptionData, setSubscriptionData] = useState<{
@@ -59,6 +64,7 @@ const UpgradePlan: React.FC = () => {
           return;
         }
 
+        // TODO: need to confirm the specific endpoint doc
         const response = await axiosInstance.get(
           getApiUrl("AUTH_API", "/api/auth/credits/balance"),
           {
@@ -119,11 +125,10 @@ const UpgradePlan: React.FC = () => {
         console.error("Subscription status error:", error);
         setSubscriptionError("Failed to load subscription status");
 
-        // // Handle authentication errors
+        // Handle authentication errors
         // if (error && typeof error === 'object' && 'response' in error &&
         //     error.response && typeof error.response === 'object' && 'status' in error.response &&
         //     error.response.status === 401) {
-        //   alert('Session expired. Please login again.');
         //   navigate('/signin');
         // }
       } finally {
@@ -169,7 +174,7 @@ const UpgradePlan: React.FC = () => {
     try {
       const token = localStorage.getItem("accessToken");
       if (!token) {
-        alert("Please login first");
+        message.error("Please login first");
         navigate("/signin");
         return;
       }
@@ -194,21 +199,76 @@ const UpgradePlan: React.FC = () => {
 
       if (axios.isAxiosError(error)) {
         if (error.response?.status === 401) {
-          alert("Session expired. Please login again.");
+          message.error("Session expired. Please login again.");
           navigate("/signin");
         } else if (error.response?.status === 400) {
-          alert(
+          message.error(
             error.response.data?.message ||
               "You already have a subscription or there was an error creating the checkout session."
           );
         } else {
-          alert("Failed to create checkout session. Please try again.");
+          message.error("Failed to create checkout session. Please try again.");
         }
       } else {
-        alert("Failed to create checkout session. Please try again.");
+        message.error("Failed to create checkout session. Please try again.");
       }
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleCancelSubscription = async () => {
+    setIsCancelling(true);
+
+    try {
+      const token = localStorage.getItem("accessToken");
+      if (!token) {
+        message.error("No authentication token found");
+        setIsCancelling(false);
+        return;
+      }
+
+      const response = await axiosInstance.delete(
+        getApiUrl("SUBSCRIPTION_API", "/api/subscription/cancel"),
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (response.data.success) {
+        // Update subscription state locally
+        setSubscriptionData({
+          has_subscription: false,
+          subscription: null,
+        });
+
+        setShowCancelConfirm(false);
+        message.success("Your subscription has been cancelled and will not renew. You'll continue to have access to Plus features until the end of your current billing period.");
+      } else {
+        message.error(response.data.error || "Failed to cancel subscription");
+      }
+    } catch (error: unknown) {
+      console.error("Cancel subscription error:", error);
+
+      if (axios.isAxiosError(error)) {
+        if (error.response?.status === 401) {
+          message.error("Session expired. Please login again.");
+          setTimeout(() => {
+            navigate("/signin");
+          }, 2000);
+        } else if (error.response?.status === 404) {
+          message.error("No active subscription found");
+        } else {
+          message.error("Failed to cancel subscription. Please try again.");
+        }
+      } else {
+        message.error("An unexpected error occurred. Please try again.");
+      }
+    } finally {
+      setIsCancelling(false);
     }
   };
 
@@ -467,9 +527,19 @@ const UpgradePlan: React.FC = () => {
                   </div>
 
                   {!hasPlusPlan() ? (
-                    <button className="w-full bg-gray-300 text-gray-500 py-3 rounded-lg font-medium cursor-not-allowed">
-                      Current Plan
-                    </button>
+                    <div className="space-y-3">
+                      <button className="w-full bg-gray-300 text-gray-500 py-3 rounded-lg font-medium cursor-not-allowed">
+                        Current Plan
+                      </button>
+                      <button
+                        onClick={() => setShowCancelConfirm(true)}
+                        className="w-full bg-red-600 hover:bg-red-700 text-white py-3 rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
+                      >
+                        <Info size={16} />
+                        Test Cancel Subscription
+                      </button>
+                      {/* TODO: Remove this test cancel button before production - only for testing purposes */}
+                    </div>
                   ) : (
                     <button
                       onClick={handleChoosePlan}
@@ -579,9 +649,18 @@ const UpgradePlan: React.FC = () => {
                   </div>
 
                   {hasPlusPlan() ? (
-                    <button className="w-full bg-green-600 text-white py-3 rounded-lg font-medium cursor-not-allowed">
-                      Current Plan
-                    </button>
+                    <div className="space-y-3">
+                      <button className="w-full bg-green-600 text-white py-3 rounded-lg font-medium cursor-not-allowed">
+                        Current Plan
+                      </button>
+                      <button
+                        onClick={() => setShowCancelConfirm(true)}
+                        className="w-full bg-red-600 hover:bg-red-700 text-white py-3 rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
+                      >
+                        <Info size={16} />
+                        Cancel Subscription
+                      </button>
+                    </div>
                   ) : (
                     <button
                       onClick={handleChoosePlan}
@@ -597,6 +676,32 @@ const UpgradePlan: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Cancel Subscription Confirmation Modal */}
+      <Modal
+        title="Cancel Subscription"
+        open={showCancelConfirm}
+        onOk={handleCancelSubscription}
+        onCancel={() => setShowCancelConfirm(false)}
+        okText={isCancelling ? "Cancelling..." : "Yes, Cancel"}
+        cancelText="Keep Subscription"
+        okButtonProps={{
+          loading: isCancelling,
+          danger: true,
+        }}
+        width={480}
+      >
+        <div className="py-4">
+          <p className="text-gray-600 mb-4">
+            Are you sure you want to cancel your Plus subscription?
+          </p>
+          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+            <p className="text-sm text-yellow-800">
+              <strong>Note:</strong> Your subscription will remain active until the end of your current billing period. You'll continue to have access to all Plus features until then.
+            </p>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 };
