@@ -21,6 +21,8 @@ import AccountSettings from './pages/AccountSettings';
 import Billing from './pages/Billing';
 import UpgradePlan from './pages/UpgradePlan';
 import CreditsReceived from './pages/CreditsReceived';
+import SubscriptionSuccess from './pages/SubscriptionSuccess';
+import SubscriptionCancel from './pages/SubscriptionCancel';
 console.log('environment', 'staging.........');
 function App() {
   const googleClientId =
@@ -57,6 +59,8 @@ function App() {
               <Route path='/billing' element={<Billing />} />
               <Route path='/upgrade-plan' element={<UpgradePlan />} />
               <Route path='/credits-received' element={<CreditsReceived />} />
+              <Route path='/subscription/success' element={<SubscriptionSuccess />} />
+              <Route path='/subscription/cancel' element={<SubscriptionCancel />} />
             </Routes>
           </Suspense>
         </Router>
