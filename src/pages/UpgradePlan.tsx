@@ -12,6 +12,7 @@ import {
   Share2,
   Gift,
   Info,
+  X,
 } from "lucide-react";
 import { Modal, message } from "antd";
 import { useNavigate } from "react-router-dom";
@@ -295,6 +296,17 @@ const UpgradePlan: React.FC = () => {
     },
   ];
 
+  const PlanFeature: React.FC<{ included: boolean; text: string }> = ({ included, text }) => (
+    <div className="flex items-center gap-3">
+        {included ? (
+            <Check className="text-green-500 w-5 h-5 flex-shrink-0" />
+        ) : (
+            <X className="text-red-500 w-5 h-5 flex-shrink-0" />
+        )}
+        <span className="text-gray-700">{text}</span>
+    </div>
+);
+
   return (
     <div className="min-h-screen bg-gray-50">
       <header className="bg-white border-b border-gray-200">
@@ -476,203 +488,92 @@ const UpgradePlan: React.FC = () => {
             </div>
 
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-8 max-w-4xl w-full mx-auto">
-              <div className="text-center mb-6">
-                <h2 className="text-2xl font-bold text-gray-900 mb-2">Plans</h2>
-                <h3 className="text-xl text-gray-700 mb-4">
-                  Upgrade to a Higher Plan
-                </h3>
-                <p className="text-gray-600">
-                  Get unlimited access with our Plus Subscription
-                </p>
-              </div>
-
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div className="border border-gray-200 rounded-lg p-6 flex flex-col">
-                  <div className="text-center mb-6">
-                    <h3 className="text-xl font-bold text-gray-900 mb-2">
-                      Free Plan
-                    </h3>
-                    <div className="text-3xl font-bold text-gray-900">$0</div>
-                    <div className="text-gray-500">/account</div>
-                    <div className="mt-2 text-sm text-gray-600 font-medium">
-                      Always free
-                    </div>
-                  </div>
-
-                  <div className="space-y-3 mb-6 flex-grow">
-                    <div className="flex items-center gap-2 text-sm text-gray-700">
-                      <Check size={16} className="text-green-600" />
-                      <span>50 credits / month</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-sm text-gray-700">
-                      <Check size={16} className="text-green-600" />
-                      <span>~10 try-ons (5 credits each)</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-sm text-gray-700">
-                      <Check size={16} className="text-green-600" />
-                      <span>~50 size reca (1 credit each)</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-sm text-gray-700">
-                      <Check size={16} className="text-green-600" />
-                      <span>Limited History (last 5 items)</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-sm text-gray-700">
-                      <Check size={16} className="text-green-600" />
-                      <span>Basic Prompts</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-sm text-gray-700">
-                      <Check size={16} className="text-green-600" />
-                      <span>Ads shown</span>
-                    </div>
-                  </div>
-
-                  {!hasPlusPlan() ? (
-                    <div className="space-y-3">
-                      <button className="w-full bg-gray-300 text-gray-500 py-3 rounded-lg font-medium cursor-not-allowed">
-                        Current Plan
-                      </button>
-                      <button
-                        onClick={() => setShowCancelConfirm(true)}
-                        className="w-full bg-red-600 hover:bg-red-700 text-white py-3 rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
-                      >
-                        <Info size={16} />
-                        Test Cancel Subscription
-                      </button>
-                      {/* TODO: Remove this test cancel button before production - only for testing purposes */}
-                    </div>
-                  ) : (
-                    <button
-                      onClick={handleChoosePlan}
-                      disabled={isLoading || isSubscriptionLoading}
-                      className="w-full bg-gray-300 hover:bg-gray-400 disabled:bg-gray-300 disabled:cursor-not-allowed text-gray-700 py-3 rounded-lg font-medium transition-colors"
-                    >
-                      {isLoading ? "Processing..." : "Choose Plan"}
-                    </button>
-                  )}
-                </div>
-
-                <div className="border-2 border-blue-500 rounded-lg p-6 relative flex flex-col">
-                  <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-green-500 text-white px-3 py-1 rounded-full text-xs font-medium">
-                    Limited Time Special!
-                  </div>
-
-                  <div className="text-center mb-6">
-                    <h3 className="text-xl font-bold text-gray-900 mb-2">
-                      Plus Plan
-                    </h3>
-                    <div className="text-3xl font-bold text-gray-900">
-                      $6.99
-                    </div>
-                    <div className="text-gray-500">/Month</div>
-
-                    <div className="flex items-center justify-center gap-2 mt-3">
-                      <span className="text-sm text-gray-500">
-                        150 credits = $8.99/mo (Regular price)
-                      </span>
-                    </div>
-
-                    <div className="mt-3">
-                      <div className="flex items-center justify-center gap-4">
-                        <span
-                          className={`text-sm ${
-                            billingCycle === "annual"
-                              ? "text-gray-500"
-                              : "font-medium text-gray-900"
-                          }`}
-                        >
-                          Annual
-                        </span>
-                        <button
-                          onClick={() =>
-                            setBillingCycle(
-                              billingCycle === "annual" ? "monthly" : "annual"
-                            )
-                          }
-                          className={`w-12 h-6 rounded-full relative transition-colors ${
-                            billingCycle === "annual"
-                              ? "bg-blue-600"
-                              : "bg-gray-300"
-                          }`}
-                        >
-                          <div
-                            className={`w-5 h-5 bg-white rounded-full absolute top-0.5 transition-transform ${
-                              billingCycle === "annual"
-                                ? "translate-x-6"
-                                : "translate-x-0.5"
-                            }`}
-                          />
-                        </button>
-                        <span
-                          className={`text-sm ${
-                            billingCycle === "monthly"
-                              ? "text-gray-500"
-                              : "font-medium text-gray-900"
-                          }`}
-                        >
-                          Annual
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="bg-green-50 border border-green-200 rounded-lg p-3 mb-4 text-center">
-                    <div className="text-green-800 font-medium">
-                      Try this $6.99/mo! (Regular price)
-                    </div>
-                  </div>
-
-                  <div className="space-y-3 mb-6 flex-grow">
-                    <div className="flex items-center gap-2 text-sm text-gray-700">
-                      <Check size={16} className="text-green-600" />
-                      <span>Everything in Free Plan</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-sm text-gray-700">
-                      <Check size={16} className="text-green-600" />
-                      <span>30 try-ons & 150 size recs</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-sm text-gray-700">
-                      <Check size={16} className="text-green-600" />
-                      <span>No Limits</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-sm text-gray-700">
-                      <Check size={16} className="text-green-600" />
-                      <span>Full History Access</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-sm text-gray-700">
-                      <Check size={16} className="text-green-600" />
-                      <span>Custom background prompts</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-sm text-gray-700">
-                      <Check size={16} className="text-green-600" />
-                      <span>Ads Free</span>
-                    </div>
-                  </div>
-
-                  {hasPlusPlan() ? (
-                    <div className="space-y-3">
-                      <button className="w-full bg-green-600 text-white py-3 rounded-lg font-medium cursor-not-allowed">
-                        Current Plan
-                      </button>
-                      <button
-                        onClick={() => setShowCancelConfirm(true)}
-                        className="w-full bg-red-600 hover:bg-red-700 text-white py-3 rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
-                      >
-                        <Info size={16} />
-                        Cancel Subscription
-                      </button>
-                    </div>
-                  ) : (
-                    <button
-                      onClick={handleChoosePlan}
-                      disabled={isLoading || isSubscriptionLoading}
-                      className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed text-white py-3 rounded-lg font-medium transition-colors"
-                    >
-                      {isLoading ? "Processing..." : "Choose Plan"}
-                    </button>
-                  )}
-                </div>
-              </div>
+            <div className="text-center mb-10">
+                <h1 className="text-3xl font-bold text-gray-800 mb-3">Upgrade to a Higher Plan</h1>
+                <p className="text-base text-gray-600">Get unlimited access with our Plus Subscription</p>
             </div>
+
+            <div className="flex flex-col lg:flex-row items-stretch justify-center gap-8 w-full max-w-5xl">
+                {/* Free Plan Card */}
+                <div className="bg-white rounded-2xl border border-gray-200 p-8 w-full max-w-md flex flex-col h-full min-h-[600px]">
+                    <h2 className="text-2xl font-semibold text-gray-800 mb-2">Free Plan</h2>
+                    <p className="text-4xl font-bold text-gray-900 mb-1">
+                        $0 <span className="text-lg font-medium text-gray-500">per month</span>
+                    </p>
+                    <hr className="my-6" />
+                    <p className="text-sm font-medium text-gray-600 mb-6">Always free</p>
+                    <div className="space-y-4 flex-grow mb-8">
+                        <PlanFeature included={true} text="50 credits / month" />
+                        <PlanFeature included={true} text="~10 try-ons (5 credits each)" />
+                        <PlanFeature included={true} text="~50 size recs (1 credit each)" />
+                        <PlanFeature included={true} text="Limited History (last 5 items)" />
+                        <PlanFeature included={true} text="Basic Prompts" />
+                        <PlanFeature included={false} text="Ads shown" />
+                    </div>
+                    {!hasPlusPlan() ? (
+                        <button className="w-full bg-gray-200 text-gray-500 py-3 rounded-lg font-medium cursor-not-allowed">
+                            Current Plan
+                        </button>
+                    ) : (
+                        <button
+                            onClick={() => setShowCancelConfirm(true)}
+                            className="w-full bg-gray-300 hover:bg-gray-400 text-gray-700 py-3 rounded-lg font-medium transition-colors"
+                        >
+                            Downgrade
+                        </button>
+                    )}
+                </div>
+
+                {/* Plus Plan Card */}
+                <div className="bg-purple-50 rounded-2xl border-2 border-purple-300 p-8 w-full max-w-md flex flex-col h-full min-h-[600px] relative">
+                    <h2 className="text-2xl font-semibold text-gray-800 mb-2">Plus Plan</h2>
+                    <div className="flex items-baseline gap-2 mb-4">
+                        <p className="text-4xl font-bold text-gray-900">$6.99</p>
+                        <p className="text-lg font-medium text-gray-500">/Month</p>
+                        <p className="text-sm text-gray-400 line-through">$9.99/mo</p>
+                    </div>
+
+                    <div className="flex items-center gap-3 mb-6">
+                        <span className="text-sm font-medium text-gray-600">Annual</span>
+                        <button
+                            onClick={() => setBillingCycle(billingCycle === "monthly" ? "annual" : "monthly")}
+                            className={`w-11 h-6 rounded-full relative transition-colors ${billingCycle === "annual" ? "bg-gray-800" : "bg-gray-300"}`}
+                        >
+                            <div
+                                className={`w-5 h-5 bg-white rounded-full absolute top-0.5 transition-transform ${billingCycle === "annual" ? "translate-x-5" : "translate-x-0.5"}`}
+                            />
+                        </button>
+                    </div>
+
+                    <div className="bg-green-100 border border-green-200 rounded-lg p-4 mb-6 text-center">
+                        <p className="font-bold text-green-800">Limited Time Special</p>
+                        <p className="text-sm text-green-700">First three months: $6.99/mo</p>
+                        <p className="text-sm text-green-700">Then: $9.99/mo (Regular price)</p>
+                    </div>
+
+                    <div className="space-y-4 flex-grow mb-8">
+                        <PlanFeature included={true} text="150 credits/mo + top-ups available" />
+                        <PlanFeature included={true} text="No queue" />
+                        <PlanFeature included={true} text="Full History Access" />
+                        <PlanFeature included={true} text="Custom background prompts" />
+                        <PlanFeature included={true} text="Ad Free" />
+                    </div>
+                    {hasPlusPlan() ? (
+                        <button className="w-full bg-purple-600 text-white py-3 rounded-lg font-medium cursor-not-allowed">
+                            Current Plan
+                        </button>
+                    ) : (
+                        <button
+                            onClick={handleChoosePlan}
+                            disabled={isLoading || isSubscriptionLoading}
+                            className="w-full bg-purple-600 hover:bg-purple-700 disabled:bg-purple-400 disabled:cursor-not-allowed text-white py-3 rounded-lg font-medium transition-colors"
+                        >
+                            {isLoading ? "Processing..." : "Choose Plan"}
+                        </button>
+                    )}
+                </div>
+            </div>
+        </div>
           </div>
         </div>
       </div>
