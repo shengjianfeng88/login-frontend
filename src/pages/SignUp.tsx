@@ -9,10 +9,10 @@ import {
 import { z } from "zod";
 import { useGoogleLogin } from "@react-oauth/google";
 import { CredentialResponse } from "@react-oauth/google";
-import { useDispatch } from "react-redux";
-
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { useDispatch } from "react-redux";
 import { sendMessageToExtension } from "@/utils/utils";
+import { setUser } from "@/store/features/userSlice";
 import backgroundImage from "@/assets/Background.png";
 import image1 from "@/assets/image_1.jpg";
 import image2 from "@/assets/image_2.jpg";
@@ -39,6 +39,7 @@ const userSchema = z
 
 const SignUp = () => {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const [searchParams] = useSearchParams();
   const [error, setError] = useState("");
   const [emailError, setEmailError] = useState("");
@@ -196,10 +197,27 @@ const SignUp = () => {
         // Store token in localStorage
         localStorage.setItem("accessToken", accessToken);
 
+        // Decode JWT to get user info including picture
+        let userEmail = res.data.email || '';
+        let userPicture = '';
+        try {
+          const decoded = JSON.parse(atob(accessToken.split('.')[1]));
+          userEmail = decoded.email || res.data.email || '';
+          userPicture = decoded.picture || '';
+        } catch (error) {
+          console.error('Failed to decode JWT:', error);
+        }
+
+        // Update Redux store with complete user information
+        dispatch(setUser({
+          email: userEmail,
+          picture: userPicture
+        }));
+
         sendMessageToExtension({
-          email: res.data.email,
-          picture: res.data.picture,
-          accessToken: res.data.accessToken,
+          email: userEmail,
+          picture: userPicture,
+          accessToken: accessToken,
         });
 
         navigate("/done");

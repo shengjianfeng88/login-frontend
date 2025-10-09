@@ -14,14 +14,17 @@ import {
   Info,
   X,
 } from "lucide-react";
-import { Modal, message } from "antd";
+import { Modal, message, Avatar } from "antd";
 import { useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux";
+import { RootState } from "@/store/store";
 import axiosInstance from "@/utils/axiosInstance";
 import { getApiUrl } from "../config/api";
 import axios from "axios";
 
 const UpgradePlan: React.FC = () => {
   const navigate = useNavigate();
+  const user = useSelector((state: RootState) => state.user);
   const [billingCycle, setBillingCycle] = useState<"annual" | "monthly">(
     "annual"
   );
@@ -332,9 +335,9 @@ const UpgradePlan: React.FC = () => {
           <div className="w-80 bg-white rounded-lg shadow-sm border border-gray-200 h-fit">
             <div className="p-6 border-b border-gray-200">
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-gray-300 rounded-full flex-shrink-0"></div>
+                <Avatar src={user.picture} size={48} icon={<User />} />
                 <div>
-                  <h3 className="font-medium text-gray-900">Anna Wang</h3>
+                  <h3 className="font-medium text-gray-900">{user.email || 'Guest'}</h3>
                   <p className="text-sm text-gray-500">
                     {isSubscriptionLoading ? (
                       <span className="flex items-center gap-1">

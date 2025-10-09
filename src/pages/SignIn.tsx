@@ -11,7 +11,9 @@ import { validateEmail } from "@/utils/validation";
 import { useGoogleLogin } from "@react-oauth/google";
 import { CredentialResponse } from "@react-oauth/google";
 import { Link, useNavigate } from "react-router-dom";
+import { useDispatch } from "react-redux";
 import { sendMessageToExtension } from "@/utils/utils";
+import { setUser } from "@/store/features/userSlice";
 import backgroundImage from "@/assets/Background.png";
 import image1 from "@/assets/image_1.jpg";
 import image2 from "@/assets/image_2.jpg";
@@ -29,6 +31,7 @@ const SignIn = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
   //Image carrousel
   const [activeSlide, setActiveSlide] = useState<number>(0);
@@ -129,9 +132,28 @@ const SignIn = () => {
         ...validatedData,
         rememberMe,
       });
-      localStorage.setItem("accessToken", res.data.accessToken);
-      localStorage.setItem("userId", res.data.userId);
       console.log("Full response data:", res.data);
+      localStorage.setItem("accessToken", res.data.accessToken);
+      localStorage.setItem("refreshToken", res.data.refreshToken);
+      localStorage.setItem("userId", res.data.userId);
+
+      // Decode JWT to get user info including picture
+      let userEmail = res.data.email || '';
+      let userPicture = '';
+      try {
+        const decoded = JSON.parse(atob(res.data.accessToken.split('.')[1]));
+        userEmail = decoded.email || res.data.email || '';
+        userPicture = decoded.picture || '';
+      } catch (error) {
+        console.error('Failed to decode JWT:', error);
+      }
+
+      // Update Redux store with complete user information
+      dispatch(setUser({
+        email: userEmail,
+        picture: userPicture
+      }));
+
       sendMessageToExtension({
         email: res.data.email,
         picture: res.data.picture,
@@ -154,13 +176,32 @@ const SignIn = () => {
       const token = response.credential;
       const res = await axiosInstance.post("/auth/google-auth", { token });
       localStorage.setItem("accessToken", res.data.accessToken);
+      localStorage.setItem("refreshToken", res.data.refreshToken);
+
+      // Decode JWT to get user info including picture
+      let userEmail = res.data.email || '';
+      let userPicture = '';
+      try {
+        const decoded = JSON.parse(atob(res.data.accessToken.split('.')[1]));
+        userEmail = decoded.email || res.data.email || '';
+        userPicture = decoded.picture || '';
+      } catch (error) {
+        console.error('Failed to decode JWT:', error);
+      }
+
+      // Update Redux store with complete user information
+      dispatch(setUser({
+        email: userEmail,
+        picture: userPicture
+      }));
+
       sendMessageToExtension({
-        email: res.data.email,
-        picture: res.data.picture,
+        email: userEmail,
+        picture: userPicture,
         accessToken: res.data.accessToken,
       });
       navigate("/done");
-    } catch (error) {
+    } catch {
       setError("Google authentication failed. Please try again.");
     }
   };
@@ -227,7 +268,7 @@ const SignIn = () => {
                     onChange={handleEmailChange}
                     className={`w-full h-10 border rounded-lg px-4 text-sm ${
                       emailError ? "border-red-500" : "border-[#DADCE0]"
-                    }`}
+                      }`}
                     autoComplete="email"
                   />
                   {emailError && (
@@ -339,7 +380,7 @@ const SignIn = () => {
                     alt="Fashion model left"
                     className={`w-full h-full object-cover transition-opacity duration-200 ease-in-out ${
                       isTransitioning ? "opacity-60" : "opacity-100"
-                    }`}
+                      }`}
                   />
                 </div>
               </div>
@@ -364,7 +405,7 @@ const SignIn = () => {
                     alt="Fashion model right"
                     className={`w-full h-full object-cover transition-opacity duration-200 ease-in-out ${
                       isTransitioning ? "opacity-60" : "opacity-100"
-                    }`}
+                      }`}
                   />
                 </div>
               </div>
@@ -394,21 +435,21 @@ const SignIn = () => {
                 onClick={() => changeSlide(0)}
                 className={`w-1.5 h-1.5 md:w-2 md:h-2 rounded-full transition-colors duration-300 ${
                   activeSlide === 0 ? "bg-gray-800" : "bg-gray-400"
-                }`}
+                  }`}
                 aria-label="Show slide 1"
               ></button>
               <button
                 onClick={() => changeSlide(1)}
                 className={`w-1.5 h-1.5 md:w-2 md:h-2 rounded-full transition-colors duration-300 ${
                   activeSlide === 1 ? "bg-gray-800" : "bg-gray-400"
-                }`}
+                  }`}
                 aria-label="Show slide 2"
               ></button>
               <button
                 onClick={() => changeSlide(2)}
                 className={`w-1.5 h-1.5 md:w-2 md:h-2 rounded-full transition-colors duration-300 ${
                   activeSlide === 2 ? "bg-gray-800" : "bg-gray-400"
-                }`}
+                  }`}
                 aria-label="Show slide 3"
               ></button>
             </div>
