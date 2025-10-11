@@ -5,7 +5,23 @@ export const getAccessToken = (): string | null => {
     typeof window !== 'undefined' &&
     (window.location.host === 'login-frontend-puce.vercel.app' || window.location.host.includes('localhost'))
   ) {
-    return 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2ODM5MzVmZWIzMjliNTI0MTNkOGQ2YTUiLCJwaWN0dXJlIjoiaHR0cHM6Ly9saDMuZ29vZ2xldXNlcmNvbnRlbnQuY29tL2EvQUNnOG9jSVN5dHEtQnNWcTItRTNXNGFoTG9CZTdYRVdZb0h1RmhoU3V4VjRLTy02cEdUTHlBPXM5Ni1jIiwiZW1haWwiOiJqaWFuZmVuZ3NoZW5nMEBnbWFpbC5jb20iLCJpYXQiOjE3NTY1NDgwMTAsImV4cCI6MTc1NjU0ODkxMH0.z4sDXh8_GF0ET2MYiKmW0QuKBZ_Qd0Q7qUYke1p4MaA';
+    return 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OGQ4OTU4MGZkMWY5YzNlMTE3MzExYTUiLCJwaWN0dXJlIjoiaHR0cHM6Ly9saDMuZ29vZ2xldXNlcmNvbnRlbnQuY29tL2EvQUNnOG9jSXoxY3V3RVAwWFowTEVRa2gzVlVreUlBWXhMMjN1eVNpaEl6NjhqVDgtLWRfTEN0ZlNCZz1zOTYtYyIsImVtYWlsIjoicGFuZ21pbmdrYWlAZ21haWwuY29tIiwiaWF0IjoxNzYwMDQ5OTkzLCJleHAiOjE3NjAwNTA4OTN9.Zmimki_bKwVppt6Gh2FY_viBAw0f_dA292RHJglg1eo';
   }
   return localStorage.getItem('accessToken');
 };
+
+// 获取刷新token的共享方法
+export const getRefreshToken = (): string | null => {
+  return localStorage.getItem('refreshToken');
+};
+
+// 检查token是否过期
+export const isTokenExpired = (token: string): boolean => {
+  try {
+    const decoded = JSON.parse(atob(token.split('.')[1]));
+    return Date.now() >= decoded.exp * 1000;
+  } catch {
+    return true;
+  }
+};
+
