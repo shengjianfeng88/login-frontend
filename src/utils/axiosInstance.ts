@@ -1,12 +1,18 @@
-import axios from 'axios';
-import { getAccessToken, getRefreshToken, isTokenExpired, clearAuthTokens } from './auth';
-import { store } from '@/store/store';
-import { setUser } from '@/store/features/userSlice';
-const apiUrl = import.meta.env.VITE_API_URL;
+import axios from "axios";
+import { getAccessToken, getRefreshToken, isTokenExpired } from "./auth";
+import { store } from "@/store/store";
+import { setUser } from "@/store/features/userSlice";
+import { API_DOMAINS } from "@/config/api";
+
+// 开发环境强制使用相对路径走 Vite 代理，避免 CORS
+// 生产环境使用环境变量或默认值
+const apiUrl = import.meta.env.DEV
+  ? "/v1"
+  : import.meta.env.VITE_API_URL || "https://api-auth.faishion.ai/v1";
 
 const axiosInstance = axios.create({
   baseURL: apiUrl,
-  withCredentials: true,  // 必须有，带上 cookie
+  withCredentials: true, // 必须有，带上 cookie
 });
 
 // 标记是否正在刷新token，防止重复刷新
@@ -57,12 +63,14 @@ axiosInstance.interceptors.response.use(
       if (isRefreshing) {
         return new Promise((resolve, reject) => {
           failedQueue.push({ resolve, reject });
-        }).then((token) => {
-          originalRequest.headers.Authorization = `Bearer ${token}`;
-          return axiosInstance(originalRequest);
-        }).catch((err) => {
-          return Promise.reject(err);
-        });
+        })
+          .then((token) => {
+            originalRequest.headers.Authorization = `Bearer ${token}`;
+            return axiosInstance(originalRequest);
+          })
+          .catch((err) => {
+            return Promise.reject(err);
+          });
       }
 
       originalRequest._retry = true;
@@ -72,35 +80,49 @@ axiosInstance.interceptors.response.use(
 
       if (refreshToken) {
         try {
-          // 调用刷新token的API
-          const response = await axios.post('https://api-auth.faishion.ai/v1/auth/refresh-token-checkout', {
-            refreshToken,
-          });
+          // 调用刷新token的API（开发环境走 /v1 代理，生产环境走真实域名）
+          const refreshBase = API_DOMAINS.AUTH_API || "/v1";
+          const response = await axios.post(
+            `${refreshBase}/auth/refresh-token-checkout`,
+            {
+              refreshToken,
+            }
+          );
 
-          const { success, accessToken, refreshToken: newRefreshToken, userId } = response.data;
+          const {
+            success,
+            accessToken,
+            refreshToken: newRefreshToken,
+            userId,
+          } = response.data;
 
           if (!success) {
-            throw new Error('Refresh token failed');
+            throw new Error("Refresh token failed");
           }
 
           // 保存新的tokens和用户信息
-          localStorage.setItem('accessToken', accessToken);
+          localStorage.setItem("accessToken", accessToken);
           if (newRefreshToken) {
-            localStorage.setItem('refreshToken', newRefreshToken);
+            localStorage.setItem("refreshToken", newRefreshToken);
           }
           if (userId) {
-            localStorage.setItem('userId', userId);
+            localStorage.setItem("userId", userId);
           }
 
           // 更新 Redux store 中的用户信息
           try {
-            const decoded = JSON.parse(atob(accessToken.split('.')[1]));
-            store.dispatch(setUser({
-              email: decoded.email || '',
-              picture: decoded.picture || ''
-            }));
+            const decoded = JSON.parse(atob(accessToken.split(".")[1]));
+            store.dispatch(
+              setUser({
+                email: decoded.email || "",
+                picture: decoded.picture || "",
+              })
+            );
           } catch (error) {
-            console.error('Failed to decode and update user info in Redux store:', error);
+            console.error(
+              "Failed to decode and update user info in Redux store:",
+              error
+            );
           }
 
           // 处理队列中的请求
@@ -111,22 +133,28 @@ axiosInstance.interceptors.response.use(
           return axiosInstance(originalRequest);
         } catch (refreshError: unknown) {
           // 刷新失败，检查是否是API返回的错误消息
-          let errorMessage = 'Token refresh failed';
+          let errorMessage = "Token refresh failed";
 
-          const axiosError = refreshError as { response?: { data?: { message?: string } } };
+          const axiosError = refreshError as {
+            response?: { data?: { message?: string } };
+          };
           if (axiosError.response?.data?.message) {
             errorMessage = axiosError.response.data.message;
           }
 
-          console.error('Token refresh failed:', errorMessage);
+          console.error("Token refresh failed:", errorMessage);
 
           // 刷新失败，清除tokens并重定向到登录页
           processQueue(refreshError, null);
-          clearAuthTokens();
+
+          // // 清除认证信息
+          // localStorage.removeItem('accessToken');
+          // localStorage.removeItem('refreshToken');
+          // localStorage.removeItem('userId');
 
           // 如果在浏览器环境中，重定向到登录页
-          if (typeof window !== 'undefined') {
-            window.location.href = '/signin';
+          if (typeof window !== "undefined") {
+            window.location.href = "/signin";
           }
 
           return Promise.reject(refreshError);
@@ -135,9 +163,11 @@ axiosInstance.interceptors.response.use(
         }
       } else {
         // 没有refresh token，清除认证信息并重定向
-        clearAuthTokens();
-        if (typeof window !== 'undefined') {
-          window.location.href = '/signin';
+        localStorage.removeItem("accessToken");
+        localStorage.removeItem("refreshToken");
+        localStorage.removeItem("userId");
+        if (typeof window !== "undefined") {
+          window.location.href = "/signin";
         }
         return Promise.reject(error);
       }

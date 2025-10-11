@@ -5,38 +5,41 @@ export const isProduction = import.meta.env.PROD;
 // API域名配置
 export const API_DOMAINS = {
   // 主要认证API
-  AUTH_API: isDevelopment 
-    ? '/v1'  // 开发环境使用proxy 
-    : 'https://api-auth.faishion.ai/v1',  // 生产环境使用实际域名
-  
+  AUTH_API: isDevelopment
+    ? "" // 开发环境通过 axiosInstance.baseURL 指向 https://api-auth.faishion.ai/v1，避免重复 /v1
+    : "https://api-auth.faishion.ai/v1", // 生产环境使用实际域名
+
   // 试穿服务API (第三方服务，不通过proxy)
-  TRYON_API: 'https://tryon-advanced-canary.faishion.ai',
-  
+  TRYON_API: "https://tryon-advanced-canary.faishion.ai",
+
   // 上传服务API
-  UPLOAD_API: isDevelopment 
-    ? '/v1'  // 开发环境使用proxy
-    : 'https://staging-api-auth.faishion.ai',  // 生产环境使用实际域名
-  
+  UPLOAD_API: isDevelopment
+    ? "/v1" // 开发环境使用proxy
+    : "https://staging-api-auth.faishion.ai", // 生产环境使用实际域名
+
   // 聊天机器人API
-  CHATBOT_API: isDevelopment 
-    ? ''  // 开发环境使用vite proxy (已配置 /chat 和 /health)
-    : 'https://chatbot.faishion.ai',  // 生产环境使用实际域名
-  
+  CHATBOT_API: isDevelopment
+    ? "" // 开发环境使用vite proxy (已配置 /chat 和 /health)
+    : "https://chatbot.faishion.ai", // 生产环境使用实际域名
+
   // 历史记录API（包含收藏功能）
-  HISTORY_API: isDevelopment 
-    ? ''  // 开发环境使用vite proxy (已配置 /history)
-    : 'https://tryon-history.faishion.ai',  // 生产环境使用实际域名
+  HISTORY_API: isDevelopment
+    ? "" // 开发环境使用vite proxy (已配置 /history)
+    : "https://tryon-history.faishion.ai", // 生产环境使用实际域名
 
   // 订阅服务API
-  SUBSCRIPTION_API: 'https://subscriptions.faishion.ai',
+  SUBSCRIPTION_API: "https://subscriptions.faishion.ai",
 
   // 主要网站域名
-  MAIN_WEBSITE: 'https://www.faishion.ai',
-  FAISHION_MAIN: 'https://faishion.ai',
+  MAIN_WEBSITE: "https://www.faishion.ai",
+  FAISHION_MAIN: "https://faishion.ai",
 };
 
 // 获取完整的API URL
-export const getApiUrl = (service: keyof typeof API_DOMAINS, path: string = '') => {
+export const getApiUrl = (
+  service: keyof typeof API_DOMAINS,
+  path: string = ""
+) => {
   const baseUrl = API_DOMAINS[service];
   return `${baseUrl}${path}`;
 };

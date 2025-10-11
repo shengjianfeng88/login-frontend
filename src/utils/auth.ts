@@ -25,9 +25,3 @@ export const isTokenExpired = (token: string): boolean => {
   }
 };
 
-// 清除所有认证信息
-export const clearAuthTokens = (): void => {
-  localStorage.removeItem('accessToken');
-  localStorage.removeItem('refreshToken');
-  localStorage.removeItem('userId');
-};
