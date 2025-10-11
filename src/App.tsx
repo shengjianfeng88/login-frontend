@@ -1,4 +1,4 @@
-import { Route, BrowserRouter as Router, Routes } from 'react-router-dom';
+import { Route, BrowserRouter as Router, Routes, Navigate, useLocation } from 'react-router-dom';
 import { Suspense } from 'react';
 import PageNotFound from './pages/PageNotFound';
 import SignIn from './pages/SignIn';
@@ -24,6 +24,13 @@ import CreditsReceived from './pages/CreditsReceived';
 import SubscriptionSuccess from './pages/SubscriptionSuccess';
 import SubscriptionCancel from './pages/SubscriptionCancel';
 console.log('environment', 'staging.........');
+
+// Redirect component to preserve query parameters
+const RegisterRedirect = () => {
+  const location = useLocation();
+  return <Navigate to={`/signup${location.search}`} replace />;
+};
+
 function App() {
   const googleClientId =
     '261406484674-gi5ric620ka8oijufm3bp6ng6jeuvdn1.apps.googleusercontent.com';
@@ -39,6 +46,8 @@ function App() {
             <Routes>
               <Route path='/signin' element={<SignIn />} />
               <Route path='/signup' element={<SignUp />} />
+              {/* Redirect /register to /signup to handle backend referral links */}
+              <Route path='/register' element={<RegisterRedirect />} />
               <Route path='/done' element={<Done />} />
               <Route path='/forgot-password' element={<ForgotPassword />} />
               <Route path='/reset-password' element={<ResetPassword />} />

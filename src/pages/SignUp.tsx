@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import axiosInstance from "@/utils/axiosInstance";
+import { getApiUrl } from "@/config/api";
 import {
   validateEmail,
   calculatePasswordStrength,
@@ -151,7 +152,8 @@ const SignUp = () => {
 
       await axiosInstance.post("/auth/request-register", requestData);
       alert("Verification email sent! Check your inbox.");
-    } catch (err) {
+    } catch (_error) {
+      console.error("Registration failed:", _error);
       setError("Registration failed");
     } finally {
       setIsLoading(false);
@@ -183,13 +185,13 @@ const SignUp = () => {
   const handleGoogleLoginSuccess = async (response: CredentialResponse) => {
     try {
       const token = response.credential;
-      const apiUrl = "https://api-auth.faishion.ai";
-
-      // Use axiosInstance instead of axios
-      const res = await axiosInstance.post(apiUrl + "/api/auth/google-auth", {
-        token,
-        referralCode: formData.referralCode,
-      });
+      const res = await axiosInstance.post(
+        getApiUrl("AUTH_API", "/auth/google-auth"),
+        {
+          token,
+          referralCode: formData.referralCode,
+        }
+      );
 
       if (res.data) {
         console.log("response data: ", res.data);
@@ -291,11 +293,10 @@ const SignUp = () => {
                     value={formData.email}
                     onChange={handleChange}
                     placeholder="Email"
-                    className={`w-full h-10 border rounded-lg px-4 text-sm ${
-                      emailError || errors.email
-                        ? "border-red-500"
-                        : "border-[#DADCE0]"
-                    }`}
+                    className={`w-full h-10 border rounded-lg px-4 text-sm ${emailError || errors.email
+                      ? "border-red-500"
+                      : "border-[#DADCE0]"
+                      }`}
                     autoComplete="email"
                   />
                   {(emailError || errors.email) && (
@@ -322,11 +323,10 @@ const SignUp = () => {
                         {[...Array(5)].map((_, i) => (
                           <div
                             key={i}
-                            className={`h-2 w-full rounded transition-colors duration-200 ${
-                              i < passwordStrength
-                                ? getPasswordStrengthColor(passwordStrength)
-                                : "bg-gray-200"
-                            }`}
+                            className={`h-2 w-full rounded transition-colors duration-200 ${i < passwordStrength
+                              ? getPasswordStrengthColor(passwordStrength)
+                              : "bg-gray-200"
+                              }`}
                           />
                         ))}
                       </div>
@@ -427,9 +427,8 @@ const SignUp = () => {
                   <img
                     src={images[activeSlide].left}
                     alt="Fashion model left"
-                    className={`w-full h-full object-cover transition-opacity duration-200 ease-in-out ${
-                      isTransitioning ? "opacity-60" : "opacity-100"
-                    }`}
+                    className={`w-full h-full object-cover transition-opacity duration-200 ease-in-out ${isTransitioning ? "opacity-60" : "opacity-100"
+                      }`}
                   />
                 </div>
               </div>
@@ -452,9 +451,8 @@ const SignUp = () => {
                   <img
                     src={images[activeSlide].right}
                     alt="Fashion model right"
-                    className={`w-full h-full object-cover transition-opacity duration-200 ease-in-out ${
-                      isTransitioning ? "opacity-60" : "opacity-100"
-                    }`}
+                    className={`w-full h-full object-cover transition-opacity duration-200 ease-in-out ${isTransitioning ? "opacity-60" : "opacity-100"
+                      }`}
                   />
                 </div>
               </div>
@@ -482,23 +480,20 @@ const SignUp = () => {
             <div className="flex justify-center pb-4 md:pb-6 space-x-3 md:space-x-4 lg:space-x-5">
               <button
                 onClick={() => changeSlide(0)}
-                className={`w-1.5 h-1.5 md:w-2 md:h-2 rounded-full transition-colors duration-300 ${
-                  activeSlide === 0 ? "bg-gray-800" : "bg-gray-400"
-                }`}
+                className={`w-1.5 h-1.5 md:w-2 md:h-2 rounded-full transition-colors duration-300 ${activeSlide === 0 ? "bg-gray-800" : "bg-gray-400"
+                  }`}
                 aria-label="Show slide 1"
               ></button>
               <button
                 onClick={() => changeSlide(1)}
-                className={`w-1.5 h-1.5 md:w-2 md:h-2 rounded-full transition-colors duration-300 ${
-                  activeSlide === 1 ? "bg-gray-800" : "bg-gray-400"
-                }`}
+                className={`w-1.5 h-1.5 md:w-2 md:h-2 rounded-full transition-colors duration-300 ${activeSlide === 1 ? "bg-gray-800" : "bg-gray-400"
+                  }`}
                 aria-label="Show slide 2"
               ></button>
               <button
                 onClick={() => changeSlide(2)}
-                className={`w-1.5 h-1.5 md:w-2 md:h-2 rounded-full transition-colors duration-300 ${
-                  activeSlide === 2 ? "bg-gray-800" : "bg-gray-400"
-                }`}
+                className={`w-1.5 h-1.5 md:w-2 md:h-2 rounded-full transition-colors duration-300 ${activeSlide === 2 ? "bg-gray-800" : "bg-gray-400"
+                  }`}
                 aria-label="Show slide 3"
               ></button>
             </div>
