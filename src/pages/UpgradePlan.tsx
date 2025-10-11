@@ -14,7 +14,7 @@ import {
   Info,
   X,
 } from "lucide-react";
-import { Modal, message, Avatar } from "antd";
+import { Modal, message } from "antd";
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store/store";
@@ -25,10 +25,17 @@ import axios from "axios";
 const UpgradePlan: React.FC = () => {
   const navigate = useNavigate();
   const user = useSelector((state: RootState) => state.user);
-  const [billingCycle, setBillingCycle] = useState<"annual" | "monthly">(
-    "annual"
-  );
-  const [referralLink] = useState("https://fAIshion.AI.com/referMe/AI");
+  // Temporarily commented out - not using billing cycle toggle
+  // const [billingCycle, setBillingCycle] = useState<"annual" | "monthly">(
+  //   "annual"
+  // );
+  // Referral link state
+  const [referralData, setReferralData] = useState<{
+    referralCode: string;
+    referralLink: string;
+  } | null>(null);
+  const [isReferralLoading, setIsReferralLoading] = useState(true);
+  const [referralError, setReferralError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [copyButtonText, setCopyButtonText] = useState("Copy Link");
   const copyTimeoutRef = React.useRef<number | null>(null);
@@ -58,6 +65,14 @@ const UpgradePlan: React.FC = () => {
   const [isCreditsLoading, setIsCreditsLoading] = useState(true);
   const [creditsError, setCreditsError] = useState<string | null>(null);
 
+  // Avatar image load state
+  const [avatarError, setAvatarError] = useState(false);
+
+  // Reset avatar error when picture changes
+  useEffect(() => {
+    setAvatarError(false);
+  }, [user.picture]);
+
   useEffect(() => {
     const fetchCredits = async () => {
       try {
@@ -70,7 +85,7 @@ const UpgradePlan: React.FC = () => {
 
         // TODO: need to confirm the specific endpoint doc
         const response = await axiosInstance.get(
-          getApiUrl("AUTH_API", "/api/auth/credits/balance"),
+          getApiUrl("AUTH_API", "/auth/credits/balance"),
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -143,6 +158,47 @@ const UpgradePlan: React.FC = () => {
     fetchSubscriptionStatus();
   }, [navigate]);
 
+  // Fetch referral info on component mount
+  useEffect(() => {
+    const fetchReferralInfo = async () => {
+      try {
+        const token = localStorage.getItem("accessToken");
+        if (!token) {
+          setReferralError("No authentication token found");
+          setIsReferralLoading(false);
+          return;
+        }
+
+        const response = await axiosInstance.get(
+          getApiUrl("AUTH_API", "/auth/referral-info"),
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          }
+        );
+
+        if (response.data.success) {
+          setReferralData({
+            referralCode: response.data.referralCode,
+            referralLink: response.data.referralLink,
+          });
+          setReferralError(null);
+        } else {
+          setReferralError("Failed to load referral information");
+        }
+      } catch (error) {
+        console.error("Referral info error:", error);
+        setReferralError("Failed to load referral information");
+      } finally {
+        setIsReferralLoading(false);
+      }
+    };
+
+    fetchReferralInfo();
+  }, []);
+
   // Helper function to get display plan name
   const getDisplayPlanName = () => {
     if (isSubscriptionLoading) return "Loading...";
@@ -161,7 +217,11 @@ const UpgradePlan: React.FC = () => {
   };
 
   const copyReferralLink = () => {
-    navigator.clipboard.writeText(referralLink);
+    if (!referralData?.referralLink) {
+      message.error("Referral link not available");
+      return;
+    }
+    navigator.clipboard.writeText(referralData.referralLink);
     setCopyButtonText("Copied");
     if (copyTimeoutRef.current) {
       window.clearTimeout(copyTimeoutRef.current);
@@ -208,7 +268,7 @@ const UpgradePlan: React.FC = () => {
         } else if (error.response?.status === 400) {
           message.error(
             error.response.data?.message ||
-              "You already have a subscription or there was an error creating the checkout session."
+            "You already have a subscription or there was an error creating the checkout session."
           );
         } else {
           message.error("Failed to create checkout session. Please try again.");
@@ -301,14 +361,14 @@ const UpgradePlan: React.FC = () => {
 
   const PlanFeature: React.FC<{ included: boolean; text: string }> = ({ included, text }) => (
     <div className="flex items-center gap-3">
-        {included ? (
-            <Check className="text-green-500 w-5 h-5 flex-shrink-0" />
-        ) : (
-            <X className="text-red-500 w-5 h-5 flex-shrink-0" />
-        )}
-        <span className="text-gray-700">{text}</span>
+      {included ? (
+        <Check className="text-green-500 w-5 h-5 flex-shrink-0" />
+      ) : (
+        <X className="text-red-500 w-5 h-5 flex-shrink-0" />
+      )}
+      <span className="text-gray-700">{text}</span>
     </div>
-);
+  );
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -335,7 +395,20 @@ const UpgradePlan: React.FC = () => {
           <div className="w-80 bg-white rounded-lg shadow-sm border border-gray-200 h-fit">
             <div className="p-6 border-b border-gray-200">
               <div className="flex items-center gap-4">
-                <Avatar src={user.picture} size={48} icon={<User />} />
+                {user.picture && !avatarError ? (
+                  <div className="relative w-12 h-12">
+                    <img
+                      src={user.picture}
+                      alt={user.email || 'User'}
+                      className="w-full h-full rounded-full object-cover"
+                      onError={() => setAvatarError(true)}
+                    />
+                  </div>
+                ) : (
+                  <div className="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center">
+                    <User className="text-gray-500" size={24} />
+                  </div>
+                )}
                 <div>
                   <h3 className="font-medium text-gray-900">{user.email || 'Guest'}</h3>
                   <p className="text-sm text-gray-500">
@@ -474,13 +547,14 @@ const UpgradePlan: React.FC = () => {
                   <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
                     <input
                       type="text"
-                      value={referralLink}
+                      value={isReferralLoading ? "Loading..." : referralError ? "Not available" : referralData?.referralLink || ""}
                       readOnly
                       className="w-full sm:w-auto flex-grow px-4 py-2.5 border border-gray-300 rounded-lg text-sm bg-gray-50/80 text-center sm:text-left focus:ring-2 focus:ring-violet-300 focus:outline-none transition-shadow"
                     />
                     <button
                       onClick={copyReferralLink}
-                      className="w-full sm:w-auto bg-violet-600 hover:bg-violet-700 text-white px-5 py-2.5 rounded-lg flex items-center justify-center gap-2 font-semibold transition-all shadow-md hover:shadow-lg active:scale-95"
+                      disabled={isReferralLoading || !referralData?.referralLink}
+                      className="w-full sm:w-auto bg-violet-600 hover:bg-violet-700 disabled:bg-violet-400 disabled:cursor-not-allowed text-white px-5 py-2.5 rounded-lg flex items-center justify-center gap-2 font-semibold transition-all shadow-md hover:shadow-lg active:scale-95"
                     >
                       <Copy size={16} />
                       {copyButtonText}
@@ -491,52 +565,53 @@ const UpgradePlan: React.FC = () => {
             </div>
 
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-8 max-w-4xl w-full mx-auto">
-            <div className="text-center mb-10">
+              <div className="text-center mb-10">
                 <h1 className="text-3xl font-bold text-gray-800 mb-3">Upgrade to a Higher Plan</h1>
                 <p className="text-base text-gray-600">Get unlimited access with our Plus Subscription</p>
-            </div>
+              </div>
 
-            <div className="flex flex-col lg:flex-row items-stretch justify-center gap-8 w-full max-w-5xl">
+              <div className="flex flex-col lg:flex-row items-stretch justify-center gap-8 w-full max-w-5xl">
                 {/* Free Plan Card */}
                 <div className="bg-white rounded-2xl border border-gray-200 p-8 w-full max-w-md flex flex-col h-full min-h-[600px]">
-                    <h2 className="text-2xl font-semibold text-gray-800 mb-2">Free Plan</h2>
-                    <p className="text-4xl font-bold text-gray-900 mb-1">
-                        $0 <span className="text-lg font-medium text-gray-500">per month</span>
-                    </p>
-                    <hr className="my-6" />
-                    <p className="text-sm font-medium text-gray-600 mb-6">Always free</p>
-                    <div className="space-y-4 flex-grow mb-8">
-                        <PlanFeature included={true} text="50 credits / month" />
-                        <PlanFeature included={true} text="~10 try-ons (5 credits each)" />
-                        <PlanFeature included={true} text="~50 size recs (1 credit each)" />
-                        <PlanFeature included={true} text="Limited History (last 5 items)" />
-                        <PlanFeature included={true} text="Basic Prompts" />
-                        <PlanFeature included={false} text="Ads shown" />
-                    </div>
-                    {!hasPlusPlan() ? (
-                        <button className="w-full bg-gray-200 text-gray-500 py-3 rounded-lg font-medium cursor-not-allowed">
-                            Current Plan
-                        </button>
-                    ) : (
-                        <button
-                            onClick={() => setShowCancelConfirm(true)}
-                            className="w-full bg-gray-300 hover:bg-gray-400 text-gray-700 py-3 rounded-lg font-medium transition-colors"
-                        >
-                            Downgrade
-                        </button>
-                    )}
+                  <h2 className="text-2xl font-semibold text-gray-800 mb-2">Free Plan</h2>
+                  <p className="text-4xl font-bold text-gray-900 mb-1">
+                    $0 <span className="text-lg font-medium text-gray-500">per month</span>
+                  </p>
+                  <hr className="my-6" />
+                  <p className="text-sm font-medium text-gray-600 mb-6">Always free</p>
+                  <div className="space-y-4 flex-grow mb-8">
+                    <PlanFeature included={true} text="50 credits / month" />
+                    <PlanFeature included={true} text="~10 try-ons (5 credits each)" />
+                    <PlanFeature included={true} text="~50 size recs (1 credit each)" />
+                    <PlanFeature included={true} text="Limited History (last 5 items)" />
+                    <PlanFeature included={true} text="Basic Prompts" />
+                    <PlanFeature included={false} text="Ads shown" />
+                  </div>
+                  {!hasPlusPlan() ? (
+                    <button className="w-full bg-gray-200 text-gray-500 py-3 rounded-lg font-medium cursor-not-allowed">
+                      Current Plan
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => setShowCancelConfirm(true)}
+                      className="w-full bg-gray-300 hover:bg-gray-400 text-gray-700 py-3 rounded-lg font-medium transition-colors"
+                    >
+                      Downgrade
+                    </button>
+                  )}
                 </div>
 
                 {/* Plus Plan Card */}
                 <div className="bg-purple-50 rounded-2xl border-2 border-purple-300 p-8 w-full max-w-md flex flex-col h-full min-h-[600px] relative">
-                    <h2 className="text-2xl font-semibold text-gray-800 mb-2">Plus Plan</h2>
-                    <div className="flex items-baseline gap-2 mb-4">
-                        <p className="text-4xl font-bold text-gray-900">$6.99</p>
-                        <p className="text-lg font-medium text-gray-500">/Month</p>
-                        <p className="text-sm text-gray-400 line-through">$9.99/mo</p>
-                    </div>
+                  <h2 className="text-2xl font-semibold text-gray-800 mb-2">Plus Plan</h2>
+                  <div className="flex items-baseline gap-2 mb-4">
+                    <p className="text-4xl font-bold text-gray-900">$6.99</p>
+                    <p className="text-lg font-medium text-gray-500">/Month</p>
+                    <p className="text-sm text-gray-400 line-through">$9.99/mo</p>
+                  </div>
 
-                    <div className="flex items-center gap-3 mb-6">
+                  {/* Temporarily commented out annual/monthly toggle */}
+                  {/* <div className="flex items-center gap-3 mb-6">
                         <span className="text-sm font-medium text-gray-600">Annual</span>
                         <button
                             onClick={() => setBillingCycle(billingCycle === "monthly" ? "annual" : "monthly")}
@@ -546,37 +621,37 @@ const UpgradePlan: React.FC = () => {
                                 className={`w-5 h-5 bg-white rounded-full absolute top-0.5 transition-transform ${billingCycle === "annual" ? "translate-x-5" : "translate-x-0.5"}`}
                             />
                         </button>
-                    </div>
+                    </div> */}
 
-                    <div className="bg-green-100 border border-green-200 rounded-lg p-4 mb-6 text-center">
-                        <p className="font-bold text-green-800">Limited Time Special</p>
-                        <p className="text-sm text-green-700">First three months: $6.99/mo</p>
-                        <p className="text-sm text-green-700">Then: $9.99/mo (Regular price)</p>
-                    </div>
+                  <div className="bg-green-100 border border-green-200 rounded-lg p-4 mb-6 text-center">
+                    <p className="font-bold text-green-800">Limited Time Special</p>
+                    <p className="text-sm text-green-700">First three months: $6.99/mo</p>
+                    <p className="text-sm text-green-700">Then: $9.99/mo (Regular price)</p>
+                  </div>
 
-                    <div className="space-y-4 flex-grow mb-8">
-                        <PlanFeature included={true} text="150 credits/mo + top-ups available" />
-                        <PlanFeature included={true} text="No queue" />
-                        <PlanFeature included={true} text="Full History Access" />
-                        <PlanFeature included={true} text="Custom background prompts" />
-                        <PlanFeature included={true} text="Ad Free" />
-                    </div>
-                    {hasPlusPlan() ? (
-                        <button className="w-full bg-purple-600 text-white py-3 rounded-lg font-medium cursor-not-allowed">
-                            Current Plan
-                        </button>
-                    ) : (
-                        <button
-                            onClick={handleChoosePlan}
-                            disabled={isLoading || isSubscriptionLoading}
-                            className="w-full bg-purple-600 hover:bg-purple-700 disabled:bg-purple-400 disabled:cursor-not-allowed text-white py-3 rounded-lg font-medium transition-colors"
-                        >
-                            {isLoading ? "Processing..." : "Choose Plan"}
-                        </button>
-                    )}
+                  <div className="space-y-4 flex-grow mb-8">
+                    <PlanFeature included={true} text="150 credits/mo + top-ups available" />
+                    <PlanFeature included={true} text="No queue" />
+                    <PlanFeature included={true} text="Full History Access" />
+                    <PlanFeature included={true} text="Custom background prompts" />
+                    <PlanFeature included={true} text="Ad Free" />
+                  </div>
+                  {hasPlusPlan() ? (
+                    <button className="w-full bg-purple-600 text-white py-3 rounded-lg font-medium cursor-not-allowed">
+                      Current Plan
+                    </button>
+                  ) : (
+                    <button
+                      onClick={handleChoosePlan}
+                      disabled={isLoading || isSubscriptionLoading}
+                      className="w-full bg-purple-600 hover:bg-purple-700 disabled:bg-purple-400 disabled:cursor-not-allowed text-white py-3 rounded-lg font-medium transition-colors"
+                    >
+                      {isLoading ? "Processing..." : "Choose Plan"}
+                    </button>
+                  )}
                 </div>
+              </div>
             </div>
-        </div>
           </div>
         </div>
       </div>
