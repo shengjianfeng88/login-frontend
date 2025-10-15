@@ -317,14 +317,14 @@ const TryOnSubHeader: React.FC<{
       <div className="flex items-center gap-2 text-2xl font-bold text-gray-800">
         <Camera className="w-6 h-6" />
         <span>Try-on History</span>
-          
+
         {/* Chatbot button */}
         <a
-            href="https://udify.app/chat/q1Kt8Quqatr4MWdS"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center px-3 py-2 text-gray-600 hover:text-gray-800 hover:bg-white rounded-lg transition-colors shadow-sm border border-gray-200"
-            title="Open Chatbot in New Tab"
+          href="https://udify.app/chat/q1Kt8Quqatr4MWdS"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center px-3 py-2 text-gray-600 hover:text-gray-800 hover:bg-white rounded-lg transition-colors shadow-sm border border-gray-200"
+          title="Open Chatbot in New Tab"
         >
           💬 fAIshion Chatbot
         </a>
@@ -470,7 +470,7 @@ const ProductCard: React.FC<ProductProps> = ({
 
 // Image Slider Component
 const ImageSlider: React.FC<{
-  images: { url: string; timestamp: string; imageIndex: number }[];
+  images: { url: string; timestamp: string; imageIndex: number; recordId?: string }[];
   currentIndex: number;
   onIndexChange: (index: number) => void;
   onDeleteImage?: (imageIndex: number) => void;
@@ -670,7 +670,7 @@ interface ProductItem {
     domain?: string;
   };
   totalTryOns: number;
-  tryOnImages: string[];
+  tryOnImages: Array<string | { url: string; recordId?: string }>;
 }
 
 interface GroupedProduct {
@@ -680,6 +680,7 @@ interface GroupedProduct {
     url: string;
     timestamp: string;
     imageIndex: number;
+    recordId?: string;
   }>;
   latestTimestamp: string;
   totalTryOns: number;
@@ -971,11 +972,15 @@ const Content: React.FC<ContentProps> = ({ searchQuery }) => {
       if (grouped.has(productUrl)) {
         const existing = grouped.get(productUrl)!;
         // Add all images from tryOnImages array
-        product.tryOnImages.forEach((imageUrl, index) => {
+        product.tryOnImages.forEach((img, index) => {
+          const isObj = typeof img === 'object' && img !== null;
+          const url = isObj ? (img as { url: string }).url : (img as string);
+          const recordId = isObj ? (img as { recordId?: string }).recordId : undefined;
           existing.images.push({
-            url: imageUrl,
+            url,
             timestamp: product.latestTryOnDate,
-            imageIndex: index
+            imageIndex: index,
+            recordId,
           });
         });
         // Update latest timestamp if this one is newer
@@ -987,11 +992,17 @@ const Content: React.FC<ContentProps> = ({ searchQuery }) => {
         // Update favorite status
         existing.isFavorite = product.isFavorite || existing.isFavorite;
       } else {
-        const images = product.tryOnImages.map((imageUrl, index) => ({
-          url: imageUrl,
-          timestamp: product.latestTryOnDate,
-          imageIndex: index
-        }));
+        const images = product.tryOnImages.map((img, index) => {
+          const isObj = typeof img === 'object' && img !== null;
+          const url = isObj ? (img as { url: string }).url : (img as string);
+          const recordId = isObj ? (img as { recordId?: string }).recordId : undefined;
+          return {
+            url,
+            timestamp: product.latestTryOnDate,
+            imageIndex: index,
+            recordId,
+          };
+        });
 
         grouped.set(productUrl, {
           productUrl,
@@ -1106,8 +1117,15 @@ const Content: React.FC<ContentProps> = ({ searchQuery }) => {
     setDeleteImageModal(prev => ({ ...prev, isDeleting: true }));
 
     try {
-      // Since we don't have record_id in new API, we'll just remove from local state
-      // In a real implementation, you might need to call a different API endpoint
+      // 尝试调用后端根据 recordId 删除单条记录（新数据结构支持）
+      const recordId = selectedProduct?.images[deleteImageModal.imageIndex]?.recordId;
+      if (recordId) {
+        try {
+          await (tryonApi as any).deleteHistoryRecord(recordId);
+        } catch (e) {
+          console.warn('Delete record by recordId failed, fallback to local removal:', e);
+        }
+      }
 
       // Update the selected product's images if it's currently open
       if (selectedProduct) {

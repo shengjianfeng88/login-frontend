@@ -460,4 +460,29 @@ export const tryonApi = {
       throw error;
     }
   },
+
+  // 删除单条试穿记录（根据 record_id）
+  deleteHistoryRecord: async (
+    record_id: string
+  ): Promise<{ deleted: boolean; message?: string; success?: boolean }> => {
+    try {
+      const token = getAccessToken();
+      if (!token) {
+        throw new Error('未找到认证 token，请先登录');
+      }
+
+      const response = await axios.request({
+        method: 'DELETE',
+        url: getApiUrl('HISTORY_API', `/history/${record_id}`),
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      return response.data || { deleted: true };
+    } catch (error) {
+      console.error('删除单条历史记录失败:', error);
+      throw error;
+    }
+  },
 };

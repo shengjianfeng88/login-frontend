@@ -19,7 +19,8 @@ interface FavoriteItem {
     product_url?: string;
   };
   totalTryOns?: number;
-  tryOnImages?: string[];  // Array of image URLs
+  // 兼容旧(字符串数组)与新(对象数组)两种结构
+  tryOnImages?: Array<string | { url: string; recordId?: string }>;  // Array of image URLs or objects
 }
 
 interface GroupedProduct {
@@ -29,6 +30,7 @@ interface GroupedProduct {
     url: string;
     timestamp: string;
     imageIndex: number;
+    recordId?: string;
   }>;
   latestTimestamp: string;
   totalTryOns: number;
@@ -412,7 +414,7 @@ const ProductCard: React.FC<ProductProps> = ({
 
 // Image Slider Component (copied exactly from Content.tsx)
 const ImageSlider: React.FC<{
-  images: { url: string; timestamp: string; imageIndex: number }[];
+  images: { url: string; timestamp: string; imageIndex: number; recordId?: string }[];
   currentIndex: number;
   onIndexChange: (index: number) => void;
   onDeleteImage?: (imageIndex: number) => void;
@@ -649,11 +651,15 @@ const FavoritesPage: React.FC = () => {
         const existing = grouped.get(productUrl)!;
         // Add all images from tryOnImages array
         if (favorite.tryOnImages) {
-          favorite.tryOnImages.forEach((imageUrl, index) => {
+          favorite.tryOnImages.forEach((img, index) => {
+            const isObj = typeof img === 'object' && img !== null;
+            const url = isObj ? (img as { url: string }).url : (img as string);
+            const recordId = isObj ? (img as { recordId?: string }).recordId : undefined;
             existing.images.push({
-              url: imageUrl,
+              url,
               timestamp: favorite.latestTryOnDate || new Date().toISOString(),
-              imageIndex: index
+              imageIndex: index,
+              recordId,
             });
           });
         }
@@ -664,11 +670,17 @@ const FavoritesPage: React.FC = () => {
         // Update total try-ons
         existing.totalTryOns = Math.max(existing.totalTryOns, favorite.totalTryOns || 1);
       } else {
-        const images = favorite.tryOnImages ? favorite.tryOnImages.map((imageUrl, index) => ({
-          url: imageUrl,
-          timestamp: favorite.latestTryOnDate || new Date().toISOString(),
-          imageIndex: index
-        })) : [];
+        const images = favorite.tryOnImages ? favorite.tryOnImages.map((img, index) => {
+          const isObj = typeof img === 'object' && img !== null;
+          const url = isObj ? (img as { url: string }).url : (img as string);
+          const recordId = isObj ? (img as { recordId?: string }).recordId : undefined;
+          return {
+            url,
+            timestamp: favorite.latestTryOnDate || new Date().toISOString(),
+            imageIndex: index,
+            recordId,
+          };
+        }) : [];
 
         grouped.set(productUrl, {
           productUrl,
