@@ -2,7 +2,6 @@ import axios from "axios";
 import { getAccessToken, getRefreshToken, isTokenExpired } from "./auth";
 import { store } from "@/store/store";
 import { setUser } from "@/store/features/userSlice";
-import { API_DOMAINS } from "@/config/api";
 
 // 开发环境强制使用相对路径走 Vite 代理，避免 CORS
 // 生产环境使用环境变量或默认值
@@ -80,10 +79,10 @@ axiosInstance.interceptors.response.use(
 
       if (refreshToken) {
         try {
-          // 调用刷新token的API（开发环境走 /v1 代理，生产环境走真实域名）
-          const refreshBase = API_DOMAINS.AUTH_API || "/v1";
+          // 调用刷新token的API，使用指定的staging端点
+          const refreshEndpoint = "https://staging-api-auth.faishion.ai/v1/auth/refresh-token-checkout";
           const response = await axios.post(
-            `${refreshBase}/auth/refresh-token-checkout`,
+            refreshEndpoint,
             {
               refreshToken,
             }
@@ -94,6 +93,7 @@ axiosInstance.interceptors.response.use(
             accessToken,
             refreshToken: newRefreshToken,
             userId,
+            email,
           } = response.data;
 
           if (!success) {
@@ -108,14 +108,26 @@ axiosInstance.interceptors.response.use(
           if (userId) {
             localStorage.setItem("userId", userId);
           }
+          if (email) {
+            localStorage.setItem("email", email);
+          }
 
           // 更新 Redux store 中的用户信息
           try {
-            const decoded = JSON.parse(atob(accessToken.split(".")[1]));
+            // 优先使用API返回的email，如果没有则从token中解析
+            let userEmail = email;
+            let userPicture = "";
+            
+            if (!userEmail) {
+              const decoded = JSON.parse(atob(accessToken.split(".")[1]));
+              userEmail = decoded.email || "";
+              userPicture = decoded.picture || "";
+            }
+            
             store.dispatch(
               setUser({
-                email: decoded.email || "",
-                picture: decoded.picture || "",
+                email: userEmail,
+                picture: userPicture,
               })
             );
           } catch (error) {
