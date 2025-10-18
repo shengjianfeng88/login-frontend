@@ -5,6 +5,7 @@ import { useSelector } from 'react-redux';
 import { RootState } from '@/store/store';
 import axiosInstance from '@/utils/axiosInstance';
 import { getApiUrl } from '../config/api';
+import { message } from 'antd';
 
 interface AccountSidebarProps {
   activeTab: 'account' | 'billing' | 'referral';
@@ -16,6 +17,7 @@ const AccountSidebar: React.FC<AccountSidebarProps> = ({ activeTab }) => {
 
   // Avatar image load state
   const [avatarError, setAvatarError] = useState(false);
+  const [imageKey, setImageKey] = useState(Date.now()); // For cache busting
 
   // Subscription status state
   const [subscriptionData, setSubscriptionData] = useState<{
@@ -30,22 +32,27 @@ const AccountSidebar: React.FC<AccountSidebarProps> = ({ activeTab }) => {
   });
   const [isSubscriptionLoading, setIsSubscriptionLoading] = useState(true);
 
-  // Reset avatar error when picture changes
+  // Reset avatar error when picture changes and force image refresh
   useEffect(() => {
     setAvatarError(false);
+    setImageKey(Date.now()); // Force image refresh by updating key
   }, [user.picture]);
 
-  // Fetch subscription status on component mount
+  // Check authentication status on component mount
   useEffect(() => {
+    const token = localStorage.getItem("accessToken");
+    const isAuthenticated = user.isAuthenticated;
+    
+    // If user is not authenticated in store or no token in localStorage
+    if (!isAuthenticated || !token) {
+      message.info("Redirecting to login page...");
+      navigate('/signin');
+      return;
+    }
+    
+    // Only fetch subscription status if authenticated
     const fetchSubscriptionStatus = async () => {
       try {
-        const token = localStorage.getItem("accessToken");
-        if (!token) {
-          console.error("No authentication token found");
-          setIsSubscriptionLoading(false);
-          return;
-        }
-
         const response = await axiosInstance.get(
           getApiUrl("SUBSCRIPTION_API", "/api/subscription/status"),
           {
@@ -65,7 +72,7 @@ const AccountSidebar: React.FC<AccountSidebarProps> = ({ activeTab }) => {
     };
 
     fetchSubscriptionStatus();
-  }, []);
+  }, [user.isAuthenticated]);
 
   // Helper function to get display plan name
   const getDisplayPlanName = () => {
@@ -109,10 +116,15 @@ const AccountSidebar: React.FC<AccountSidebarProps> = ({ activeTab }) => {
           {user.picture && !avatarError ? (
             <div className="relative w-12 h-12">
               <img
-                src={user.picture}
+                key={imageKey} // Key forces re-render when picture changes
+                src={`${user.picture}?t=${imageKey}`} // Cache busting parameter
                 alt={user.email || 'User'}
                 className="w-full h-full rounded-full object-cover"
                 onError={() => setAvatarError(true)}
+                onLoad={() => {
+                  // Reset error state if image loads successfully
+                  if (avatarError) setAvatarError(false);
+                }}
               />
             </div>
           ) : (

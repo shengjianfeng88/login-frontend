@@ -114,22 +114,31 @@ axiosInstance.interceptors.response.use(
 
           // 更新 Redux store 中的用户信息
           try {
-            // 优先使用API返回的email，如果没有则从token中解析
-            let userEmail = email;
-            let userPicture = "";
+            // 从token中解析用户信息
+            const decoded = JSON.parse(atob(accessToken.split(".")[1]));
+            const userEmail = email || decoded.email || "";
+            const userPicture = decoded.picture || "";
             
-            if (!userEmail) {
-              const decoded = JSON.parse(atob(accessToken.split(".")[1]));
-              userEmail = decoded.email || "";
-              userPicture = decoded.picture || "";
+            // 只有当头像信息存在时才更新
+            if (userPicture) {
+              store.dispatch(
+                setUser({
+                  email: userEmail,
+                  picture: userPicture,
+                })
+              );
+              console.log("Updated user info in Redux store:", { email: userEmail, hasPicture: !!userPicture });
+            } else {
+              // 只更新email，保持原有头像
+              const currentState = store.getState().user;
+              store.dispatch(
+                setUser({
+                  email: userEmail,
+                  picture: currentState.picture,
+                })
+              );
+              console.log("Updated email only, keeping existing picture");
             }
-            
-            store.dispatch(
-              setUser({
-                email: userEmail,
-                picture: userPicture,
-              })
-            );
           } catch (error) {
             console.error(
               "Failed to decode and update user info in Redux store:",

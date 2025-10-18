@@ -5,7 +5,7 @@ import { RootState } from '../store/store';
 import AccountSidebar from '../components/AccountSidebar';
 
 const AccountSettings: React.FC = () => {
-  const [showDangerZone, setShowDangerZone] = useState(false);
+  // const [showDangerZone, setShowDangerZone] = useState(false);
   const userEmail = useSelector((state: RootState) => state.user.email);
 
   return (
@@ -36,12 +36,12 @@ const AccountSettings: React.FC = () => {
               <div className="p-6 pb-0">
                 <div className="flex items-center justify-between">
                   <h2 className="text-lg font-semibold text-gray-900">Profile Information</h2>
-                  <button
+                  {/* <button
                     className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium min-w-[80px]"
                     onClick={() => setShowDangerZone(!showDangerZone)}
                   >
                     {showDangerZone ? 'Less' : 'More'}
-                  </button>
+                  </button> */}
                 </div>
               </div>
 
@@ -55,7 +55,7 @@ const AccountSettings: React.FC = () => {
                 </div>
               </div>
 
-              {showDangerZone && (
+              {/* {showDangerZone && (
                 <div className="border-t border-gray-200">
                   <div className="p-6">
                     <div className="bg-red-50 border border-red-200 rounded-lg p-4">
@@ -79,7 +79,7 @@ const AccountSettings: React.FC = () => {
                     </div>
                   </div>
                 </div>
-              )}
+              )} */}
             </div>
           </div>
         </div>
