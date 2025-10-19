@@ -2,7 +2,6 @@ import axios from "axios";
 import { getAccessToken, getRefreshToken, isTokenExpired } from "./auth";
 import { store } from "@/store/store";
 import { setUser } from "@/store/features/userSlice";
-import { API_DOMAINS } from "@/config/api";
 
 // 开发环境强制使用相对路径走 Vite 代理，避免 CORS
 // 生产环境使用环境变量或默认值
@@ -80,10 +79,10 @@ axiosInstance.interceptors.response.use(
 
       if (refreshToken) {
         try {
-          // 调用刷新token的API（开发环境走 /v1 代理，生产环境走真实域名）
-          const refreshBase = API_DOMAINS.AUTH_API || "/v1";
+          // 调用刷新token的API，使用指定的staging端点
+          const refreshEndpoint = "https://staging-api-auth.faishion.ai/v1/auth/refresh-token-checkout";
           const response = await axios.post(
-            `${refreshBase}/auth/refresh-token-checkout`,
+            refreshEndpoint,
             {
               refreshToken,
             }
@@ -94,6 +93,7 @@ axiosInstance.interceptors.response.use(
             accessToken,
             refreshToken: newRefreshToken,
             userId,
+            email,
           } = response.data;
 
           if (!success) {
@@ -108,16 +108,37 @@ axiosInstance.interceptors.response.use(
           if (userId) {
             localStorage.setItem("userId", userId);
           }
+          if (email) {
+            localStorage.setItem("email", email);
+          }
 
           // 更新 Redux store 中的用户信息
           try {
+            // 从token中解析用户信息
             const decoded = JSON.parse(atob(accessToken.split(".")[1]));
-            store.dispatch(
-              setUser({
-                email: decoded.email || "",
-                picture: decoded.picture || "",
-              })
-            );
+            const userEmail = email || decoded.email || "";
+            const userPicture = decoded.picture || "";
+            
+            // 只有当头像信息存在时才更新
+            if (userPicture) {
+              store.dispatch(
+                setUser({
+                  email: userEmail,
+                  picture: userPicture,
+                })
+              );
+              console.log("Updated user info in Redux store:", { email: userEmail, hasPicture: !!userPicture });
+            } else {
+              // 只更新email，保持原有头像
+              const currentState = store.getState().user;
+              store.dispatch(
+                setUser({
+                  email: userEmail,
+                  picture: currentState.picture,
+                })
+              );
+              console.log("Updated email only, keeping existing picture");
+            }
           } catch (error) {
             console.error(
               "Failed to decode and update user info in Redux store:",

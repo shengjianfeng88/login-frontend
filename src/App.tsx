@@ -1,4 +1,4 @@
-import { Route, BrowserRouter as Router, Routes, Navigate, useLocation } from 'react-router-dom';
+import { Route, BrowserRouter as Router, Routes } from 'react-router-dom';
 import { Suspense } from 'react';
 import PageNotFound from './pages/PageNotFound';
 import SignIn from './pages/SignIn';
@@ -19,17 +19,12 @@ import ChatWidget from './pages/ChatWidget';
 import ImageConvertTest from './pages/ImageConvertTest';
 import AccountSettings from './pages/AccountSettings';
 import Billing from './pages/Billing';
-import UpgradePlan from './pages/UpgradePlan';
+import ReferralPage from './pages/ReferralPage';
 import CreditsReceived from './pages/CreditsReceived';
+import Register from './pages/Register';
 import SubscriptionSuccess from './pages/SubscriptionSuccess';
 import SubscriptionCancel from './pages/SubscriptionCancel';
 console.log('environment', 'staging.........');
-
-// Redirect component to preserve query parameters
-const RegisterRedirect = () => {
-  const location = useLocation();
-  return <Navigate to={`/signup${location.search}`} replace />;
-};
 
 function App() {
   const googleClientId =
@@ -46,8 +41,8 @@ function App() {
             <Routes>
               <Route path='/signin' element={<SignIn />} />
               <Route path='/signup' element={<SignUp />} />
-              {/* Redirect /register to /signup to handle backend referral links */}
-              <Route path='/register' element={<RegisterRedirect />} />
+              {/* Register page for invitation links */}
+              <Route path='/register' element={<Register />} />
               <Route path='/done' element={<Done />} />
               <Route path='/forgot-password' element={<ForgotPassword />} />
               <Route path='/reset-password' element={<ResetPassword />} />
@@ -66,8 +61,8 @@ function App() {
               />
               <Route path='/account-settings' element={<AccountSettings />} />
               <Route path='/billing' element={<Billing />} />
-              <Route path='/upgrade-plan' element={<UpgradePlan />} />
-              <Route path='/credits-received' element={<CreditsReceived />} />
+              <Route path='/referral' element={<ReferralPage />} />
+                <Route path='/credits-received' element={<CreditsReceived />} />
               <Route path='/subscription/success' element={<SubscriptionSuccess />} />
               <Route path='/subscription/cancel' element={<SubscriptionCancel />} />
             </Routes>

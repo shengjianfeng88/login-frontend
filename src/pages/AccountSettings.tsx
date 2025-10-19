@@ -1,9 +1,12 @@
-import React from 'react';
-import { ArrowLeft, User, CreditCard, Mail } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState } from 'react';
+import { AlertTriangle, Mail, Trash2 } from 'lucide-react';
+import { useSelector } from 'react-redux';
+import { RootState } from '../store/store';
+import AccountSidebar from '../components/AccountSidebar';
 
 const AccountSettings: React.FC = () => {
-  const navigate = useNavigate();
+  // const [showDangerZone, setShowDangerZone] = useState(false);
+  const userEmail = useSelector((state: RootState) => state.user.email);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -19,68 +22,64 @@ const AccountSettings: React.FC = () => {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex gap-8">
-          <div className="w-80 bg-white rounded-lg shadow-sm border border-gray-200 h-fit">
-            <div className="p-6 border-b border-gray-200">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-gray-300 rounded-full flex-shrink-0"></div>
-                <div>
-                  <h3 className="font-medium text-gray-900">Anna Wang</h3>
-                  <p className="text-sm text-gray-500">Free user</p>
-                </div>
-              </div>
-            </div>
-            
-            <nav className="p-6">
-              <div className="space-y-2">
-                <div className="flex items-center gap-3 p-3 bg-blue-50 text-blue-700 rounded-lg">
-                  <User size={20} />
-                  <span className="font-medium">Account</span>
-                </div>
-                <div className="flex items-center gap-3 p-3 text-gray-700 hover:bg-gray-50 rounded-lg cursor-pointer"
-                     onClick={() => navigate('/billing')}>
-                  <CreditCard size={20} />
-                  <span>Billing</span>
-                </div>
-              </div>
-            </nav>
-          </div>
+          <AccountSidebar activeTab="account" />
 
           <div className="flex-1">
             <div className="mb-8">
-              <button
-                onClick={() => navigate(-1)}
-                className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-6"
-              >
-                <ArrowLeft size={20} />
-                <span>Go back to Dashboard</span>
-              </button>
-              
+
               <div>
                 <h1 className="text-4xl font-bold text-gray-900 mb-2">Account Settings</h1>
-                <p className="text-gray-600">Manage your account preferences</p>
               </div>
             </div>
 
             <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-              <div className="p-6 border-b border-gray-200">
+              <div className="p-6 pb-0">
                 <div className="flex items-center justify-between">
                   <h2 className="text-lg font-semibold text-gray-900">Profile Information</h2>
-                  <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium">
-                    More
-                  </button>
+                  {/* <button
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium min-w-[80px]"
+                    onClick={() => setShowDangerZone(!showDangerZone)}
+                  >
+                    {showDangerZone ? 'Less' : 'More'}
+                  </button> */}
                 </div>
               </div>
-              
+
               <div className="p-6">
                 <p className="text-sm text-gray-500 mb-4">Your Account</p>
                 <div className="flex items-center gap-3">
-                  <Mail size={20} className="text-gray-400" />
+                  <Mail size={20} />
                   <div>
-                    <p className="font-medium text-gray-900">Alex.AI</p>
-                    <p className="text-sm text-gray-500">alex.johnson@example.com</p>
+                    <p className="text-sm">{userEmail || 'No email available'}</p>
                   </div>
                 </div>
               </div>
+
+              {/* {showDangerZone && (
+                <div className="border-t border-gray-200">
+                  <div className="p-6">
+                    <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                      <div className="flex items-center gap-2 mb-3">
+                        <AlertTriangle size={20} className="text-red-600" />
+                        <h3 className="text-lg font-semibold text-red-900">Danger Zone</h3>
+                      </div>
+                      <p className="text-sm text-red-700 mb-4">
+                        Once you delete your account, there is no going back. Please be certain.
+                      </p>
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-sm font-medium text-gray-900">Delete Account</p>
+                          <p className="text-xs text-gray-500">Permanently remove your account and all data</p>
+                        </div>
+                        <button className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm font-medium">
+                          <Trash2 size={16} />
+                          Delete Account
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )} */}
             </div>
           </div>
         </div>

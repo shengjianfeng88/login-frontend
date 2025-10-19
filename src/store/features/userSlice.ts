@@ -12,9 +12,16 @@ const initialState: UserState = (() => {
     if (token) {
       try {
         const decoded = JSON.parse(atob(token.split('.')[1])); // Decode JWT payload
+        const picture = decoded.picture || '';
+        
+        // Log for debugging purposes
+        if (picture) {
+          console.log('User picture found in token:', picture.substring(0, 50) + '...');
+        }
+        
         return {
           email: decoded.email || '',
-          picture: decoded.picture || '',
+          picture,
           isAuthenticated: true,
         };
       } catch (error) {
@@ -34,9 +41,25 @@ const userSlice = createSlice({
   initialState,
   reducers: {
     setUser: (state, action: PayloadAction<{ email: string; picture: string }>) => {
-      state.email = action.payload.email;
-      state.picture = action.payload.picture;
-      state.isAuthenticated = true;
+      const { email, picture } = action.payload;
+      
+      // Only update if the new values are different
+      if (state.email !== email || state.picture !== picture) {
+        state.email = email;
+        state.picture = picture;
+        state.isAuthenticated = true;
+        
+        // Log for debugging
+        if (picture) {
+          console.log('User picture updated in Redux:', picture.substring(0, 50) + '...');
+        }
+      }
+    },
+    updateUserPicture: (state, action: PayloadAction<string>) => {
+      if (state.picture !== action.payload) {
+        state.picture = action.payload;
+        console.log('User picture updated separately:', action.payload.substring(0, 50) + '...');
+      }
     },
     logout: (state) => {
       state.email = '';
@@ -46,5 +69,5 @@ const userSlice = createSlice({
   },
 });
 
-export const { setUser, logout } = userSlice.actions;
+export const { setUser, updateUserPicture, logout } = userSlice.actions;
 export default userSlice.reducer; 
