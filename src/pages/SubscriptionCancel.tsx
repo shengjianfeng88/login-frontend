@@ -6,7 +6,7 @@ const SubscriptionCancel: React.FC = () => {
   const navigate = useNavigate();
 
   const handleTryAgain = () => {
-    navigate("/billing");
+    navigate("/subscription");
   };
 
   return (
