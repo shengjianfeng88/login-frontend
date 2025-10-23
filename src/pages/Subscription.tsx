@@ -7,7 +7,7 @@ import axiosInstance from "@/utils/axiosInstance";
 import { getApiUrl } from "../config/api";
 import axios from "axios";
 
-const Billing: React.FC = () => {
+const Subscription: React.FC = () => {
   const navigate = useNavigate();
 
   // State for subscription management
@@ -269,13 +269,13 @@ const Billing: React.FC = () => {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex gap-8">
-          <AccountSidebar activeTab="billing" />
+          <AccountSidebar activeTab="subscription" />
 
           <div className="flex-1">
             <div className="mb-8">
               <div>
                 <h1 className="text-4xl font-bold text-gray-900 mb-2">
-                  Billing
+                  Subscription
                 </h1>
               </div>
             </div>
@@ -552,4 +552,4 @@ const Billing: React.FC = () => {
   );
 };
 
-export default Billing;
+export default Subscription;

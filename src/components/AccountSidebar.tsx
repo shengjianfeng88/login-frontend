@@ -8,7 +8,7 @@ import { getApiUrl } from '../config/api';
 import { message } from 'antd';
 
 interface AccountSidebarProps {
-  activeTab: 'account' | 'billing' | 'referral';
+  activeTab: 'account' | 'subscription' | 'referral';
 }
 
 const AccountSidebar: React.FC<AccountSidebarProps> = ({ activeTab }) => {
@@ -96,10 +96,10 @@ const AccountSidebar: React.FC<AccountSidebarProps> = ({ activeTab }) => {
       onClick: () => navigate('/account-settings'),
     },
     {
-      id: 'billing',
-      label: 'Billing',
+      id: 'subscription',
+      label: 'Subscription',
       icon: <CreditCard size={20} />,
-      onClick: () => navigate('/billing'),
+      onClick: () => navigate('/subscription'),
     },
     {
       id: 'referral',

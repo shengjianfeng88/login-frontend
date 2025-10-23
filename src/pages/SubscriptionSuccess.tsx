@@ -69,16 +69,16 @@ const SubscriptionSuccess: React.FC = () => {
             setSubscriptionData(subscription);
           }
         } else {
-          message.warning("No active subscription found. Redirecting to billing...");
+          message.warning("No active subscription found. Redirecting to subscription...");
           setTimeout(() => {
-            navigate("/billing");
+            navigate("/subscription");
           }, 2000);
         }
       } catch (error) {
         console.error("Failed to verify payment:", error);
-        message.error("Unable to verify payment status. Please check your billing page.");
+        message.error("Unable to verify payment status. Please check your subscription page.");
         setTimeout(() => {
-          navigate("/billing");
+          navigate("/subscription");
         }, 2000);
       } finally {
         setIsLoading(false);
@@ -163,7 +163,7 @@ const SubscriptionSuccess: React.FC = () => {
 
           <div className="flex flex-col gap-3">
             <button
-              onClick={() => navigate("/billing")}
+              onClick={() => navigate("/subscription")}
               className="w-full bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg font-medium transition-colors"
             >
               Back to home
