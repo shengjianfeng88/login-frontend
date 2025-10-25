@@ -7,6 +7,67 @@ import { tryonApi } from '../../api/tryon';
 import { getApiUrl } from '../../config/api';
 import { getAccessToken } from '../../utils/auth';
 
+import { Carousel } from 'antd';
+import 'antd/dist/reset.css'; 
+
+
+  const items = [
+    {
+      brand: "GARAGE",
+      name: "Romantic Lace Midi...",
+      price: 11944.0,
+      oldPrice: 14900.0,
+      discount: "20% OFF",
+      img: "https://encrypted-tbn0.gstatic.com/shopping?q=tbn:ANd9GcQmmzp-_kftvTFdH_kuXOQuESvgNvrmdnDFR3FWThEEOHjsbbpUE9pqrr_rjlIDsA7g4O1K2gybieFwiNbTgSeroTiNgySvfuOBV309CjMPnpSIGU4xWruI&usqp=CAc",
+    },
+    {
+      brand: "H&M",
+      name: "Elegant Summer Midi",
+      price: 59.99,
+      oldPrice: 79.99,
+      discount: "20% OFF",
+      img: "https://encrypted-tbn0.gstatic.com/shopping?q=tbn:ANd9GcTdF5e6eZdypM0O3a1Pe0e-ts6BCLAMPFeJ0ygJQDJqF7P-tDCVkQO1Gzd-6n_BXqH7Efgb5otMNy0j_AL-3YprTNdyePXfJfbOs0pYfVTZfqwszRhCystIkA&usqp=CAc",
+    },
+    {
+      brand: "FASHION NOVA",
+      name: "Trina Mini Dress",
+      price: 10.0,
+      oldPrice: 24.99,
+      discount: "20% OFF",
+      img: "https://encrypted-tbn3.gstatic.com/shopping?q=tbn:ANd9GcSAkAsOHUEgR2VTJD162yU-MOYbRO1uD9C1FuxbUBkhXwIbI_sTH5I2rmnvMHndX_Z2V-nRbLWZVrcZHDK2w6GeaHbKHkj8A-z9ouyQHHRZ8MylFGYlSwr-&usqp=CAc",
+    },
+    {
+      brand: "FASHION NOVA",
+      name: "Trina Mini Dress",
+      price: 10.0,
+      oldPrice: 24.99,
+      discount: "20% OFF",
+      img: "https://images.urbndata.com/is/image/UrbanOutfitters/92036334_060_b?$xlarge$&fit=constrain&fmt=webp&qlt=80&wid=960",
+    },
+    {
+      brand: "FASHION NOVA",
+      name: "Trina Mini Dress",
+      price: 10.0,
+      oldPrice: 24.99,
+      discount: "20% OFF",
+      img: "https://images.urbndata.com/is/image/UrbanOutfitters/92036334_060_b?$xlarge$&fit=constrain&fmt=webp&qlt=80&wid=960",
+    },
+  ];
+
+// const SimpleAntdCarousel = () => {
+//   return (
+//     <div style={{ width: '600px', margin: '20px auto' }}>
+//       <h3 style={{ fontWeight: 600, marginBottom: '10px' }}>You May Also Like</h3>
+
+//       <Carousel arrows slidesToShow={3} autoplay>
+//         <div><img src="https://images.urbndata.com/is/image/UrbanOutfitters/92036334_060_b?$xlarge$&fit=constrain&fmt=webp&qlt=80&wid=960" style={{ width: '180px', height: '250px', objectFit: 'cover' }} /></div>
+//         <div><img src="https://images.urbndata.com/is/image/UrbanOutfitters/92036334_060_b?$xlarge$&fit=constrain&fmt=webp&qlt=80&wid=960" style={{ width: '180px', height: '250px', objectFit: 'cover' }} /></div>
+//         <div><img src="https://images.urbndata.com/is/image/UrbanOutfitters/92036334_060_b?$xlarge$&fit=constrain&fmt=webp&qlt=80&wid=960" style={{ width: '180px', height: '250px', objectFit: 'cover' }} /></div>
+//       </Carousel>
+//     </div>
+//   );
+// };
+
 // Add DNS prefetch for image domain
 const addDnsPrefetch = () => {
   if (typeof document !== 'undefined') {
@@ -1332,6 +1393,37 @@ const Content: React.FC<ContentProps> = ({ searchQuery }) => {
               >
                 Shop Now
               </a>
+              <div className="recommendation-wrapper">
+      <h3 className="recommendation-title">You May Also Like</h3>
+      <div style={{backgroundColor:"rgb(243 244 246 / var(--tw-bg-opacity, 1))"}}>
+      <Carousel
+        arrows
+        slidesToShow={3}
+        slidesToScroll={1}
+        infinite={false}
+       dots={false}
+        
+      >
+        {items.map((item, i) => (
+          <div key={i} className="recommendation-card">
+            <div className="reco-img-wrap">
+            <img src={item.img} alt={item.name} className="recommendation-img" />
+            </div>
+
+            <div className="recommendation-info">
+              <p className="brand">{item.brand}</p>
+              <p className="name">{item.name}</p>
+              <div className="price-row">
+                <span className="price">${item.price.toFixed(2)}</span>
+                <span className="old-price">${item.oldPrice.toFixed(2)}</span>
+                <span className="discount">{item.discount}</span>
+              </div>
+            </div>
+          </div>
+        ))}
+      </Carousel>
+      </div>
+    </div>
             </div>
           </div>
         </div>
