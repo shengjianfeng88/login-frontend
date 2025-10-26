@@ -313,35 +313,37 @@ const TryOnSubHeader: React.FC<{
   onSortChange: (order: 'low-to-high' | 'high-to-low') => void;
 }> = ({ onSortChange }) => {
   return (
-    <div className="flex items-center justify-between px-10 mt-4 mb-8 border-b pb-4">
+    <div className="flex items-center justify-between px-10 mt-4 mb-8 pb-4">
       <div className="flex items-center gap-2 text-2xl font-bold text-gray-800">
         <Camera className="w-6 h-6" />
         <span>Try-on History</span>
 
-        {/* Chatbot button */}
-        <a
-          href="https://udify.app/chat/q1Kt8Quqatr4MWdS"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex items-center px-3 py-2 text-gray-600 hover:text-gray-800 hover:bg-white rounded-lg transition-colors shadow-sm border border-gray-200"
-          title="Open Chatbot in New Tab"
-        >
-          💬 fAIshion Chatbot
-        </a>
+        <span className="h-12 w-[1px] bg-gray-400 mx-4 inline-block rounded"  aria-hidden="true"></span>
+        <span className="flex items-center px-3 py-2 text-blackrounded-lg">
+         Deals For You
+        </span>
 
       </div>
       <div className="flex items-center gap-4">
         <button
           onClick={() => window.location.href = '/tryon-history/favorites'}
-          className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition"
+          className="inline-flex items-center gap-2 px-6 py-1
+      rounded-md bg-white
+      ring-1 ring-gray-200 shadow-sm
+      text-gray-800 text-sm font-medium
+      hover:ring-gray-300"
         >
           <Heart className="w-4 h-4" />
           Favorites
         </button>
 
         <Menu as="div" className="relative inline-block text-left">
-          <Menu.Button className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition">
-            Sort By
+          <Menu.Button className="inline-flex items-center gap-2 px-6 py-1
+        rounded-md bg-white
+        ring-1 ring-gray-200 shadow-sm
+        text-gray-800 text-sm font-medium
+        hover:ring-gray-300">
+            Sort by
             <ChevronDown className="w-4 h-4" />
           </Menu.Button>
           <Transition
@@ -413,20 +415,28 @@ const ProductCard: React.FC<ProductProps> = ({
   onDelete,
   imageCount
 }) => (
-  <div className="relative bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition cursor-pointer flex flex-col h-full">
-    {/* Favorite Button */}
-    <div
-      onClick={async (e) => {
-        e.stopPropagation();
-        await onToggleFavorite();
-      }}
-      className="absolute top-2 right-2 z-10 cursor-pointer p-1 rounded-full bg-white shadow hover:bg-gray-100"
-    >
-      <Heart className={`w-5 h-5 ${isFavorite ? 'fill-red-500 text-red-500' : 'text-gray-400'}`} />
-    </div>
 
+  <div className="relative bg-white overflow-hidden rounded-none
+    ring-1 ring-gray-200
+    shadow-[0_2px_10px_rgba(0,0,0,0.06)] 
+    transition-none cursor-pointer flex flex-col h-full">
+    {/* Favorite Button */}
+
+     <div className="absolute top-2 right-2 z-10">
+    <span
+      className="
+        inline-flex items-center px-3 py-1 p-1 rounded-full
+        text-[10px] font-semibold uppercase tracking-wide text-white
+        shadow
+        bg-gradient-to-r from-violet-500 to-blue-500
+      "
+    >
+      NEW IN
+    </span>
+  </div>
+    
     {/* Delete Button */}
-    <div
+    {/* <div
       onClick={(e) => {
         e.stopPropagation();
         onDelete();
@@ -434,37 +444,69 @@ const ProductCard: React.FC<ProductProps> = ({
       className="absolute bottom-2 right-2 z-10 cursor-pointer p-1 hover:bg-red-50 rounded transition-colors"
     >
       <Trash2 className="w-5 h-5 text-red-500 hover:text-red-600" />
-    </div>
+    </div> */}
 
     {/* Timestamp Badge */}
-    <div className="absolute top-2 left-2 bg-gray-100 text-xs px-2 py-1 rounded z-10 text-gray-600">
+    {/* <div className="absolute top-2 left-2 bg-gray-100 text-xs px-2 py-1 rounded z-10 text-gray-600">
       {new Date(timestamp).toLocaleDateString()}
-    </div>
+    </div> */}
 
     {/* Image Count Badge */}
-    {imageCount > 1 && (
+    {/* {imageCount > 1 && (
       <div className="absolute top-10 left-2 bg-blue-500 text-white text-xs px-2 py-1 rounded z-10 font-medium">
         {imageCount} try-ons
       </div>
-    )}
+    )} */}
 
     {/* Optimized Image */}
-    <div className="w-full h-72 bg-white flex items-center justify-center rounded-t-2xl">
+    <div className="w-full h-[360px] overflow-hidden">
       <OptimizedImage
         src={image}
         alt="Product"
-        className="h-full object-contain"
+        className="w-full h-full object-[right_bottom]"
       />
     </div>
 
-    {/* Product Details */}
-    <div className="p-4 flex flex-col justify-between flex-grow">
-      <p className="text-gray-500 text-xs uppercase tracking-wide font-medium mb-1">{brand}</p>
-      <p className="text-lg font-semibold text-gray-900 truncate">{name}</p>
-      <div className="flex items-center gap-2 mt-2">
-        <span className="text-lg font-bold text-black">{currency}{price}</span>
-      </div>
-    </div>
+
+    <div className="p-4 flex flex-col gap-1 flex-grow">
+
+  <div className="flex items-center justify-between">
+    <span className="text-gray-500 text-xs uppercase font-medium leading-tight">
+      {brand}
+    </span>
+    <button
+      onClick={async (e) => { e.stopPropagation(); await onToggleFavorite(); }}
+      aria-label="Toggle favorite"
+      className="p-1 m-0 bg-transparent rounded-none shadow-none ring-0 outline-none shrink-0"
+    >
+      <Heart
+        className={`w-4 h-4 ${isFavorite ? 'text-red-500 fill-red-500' : 'text-black'}`}
+      />
+    </button>
+  </div>
+
+ 
+  <p className="text-base font-semibold text-gray-900 leading-tight truncate">
+    {name}
+  </p>
+
+
+  <div className="flex items-baseline gap-2">
+    <span className="text-xs font-bold text-black leading-none">
+      {currency}{price}
+    </span>
+    <span className="text-xs text-gray-400 line-through leading-none">
+      {currency}100.00
+    </span>
+     <span
+    className="ml-1 inline-flex items-center px-2 py-0.5 rounded-md
+               text-xs font-semibold uppercase tracking-wide whitespace-nowrap"
+    style={{ backgroundColor: 'rgba(255,165,0,0.38)', color: '#C97217' }}
+  >
+    30% OFF
+  </span>
+  </div>
+</div>
   </div>
 );
 
