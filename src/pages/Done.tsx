@@ -10,8 +10,8 @@ const Done = () => {
       </div>
       <p className="text-2xl font-bold">You're logged in</p>
       <p className="text-base text-gray-500">You're now logged into Faishion</p>
-      <Link to="https://faishion.ai" className="w-[180px] py-2.5 mt-2 btn-primary rounded-md text-black">
-        <p className="text-center">Done</p>
+      <Link to="https://www.faishion.ai/howitworks" className="w-[180px] py-2.5 mt-2 btn-primary rounded-md text-black">
+        <p className="text-center">How It Works</p>
       </Link>
     </div>
   )
