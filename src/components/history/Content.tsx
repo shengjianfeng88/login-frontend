@@ -578,129 +578,89 @@ const ImageSlider: React.FC<{
   onIndexChange: (index: number) => void;
   onDeleteImage?: (imageIndex: number) => void;
 }> = ({ images, currentIndex, onIndexChange, onDeleteImage }) => {
-  const [carouselLoading, setCarouselLoading] = useState(false);
-  const [currentImageSrc, setCurrentImageSrc] = useState('');
+  const [loading, setLoading] = useState(false);
+  const listRef = useRef<HTMLDivElement>(null);
 
-  // Track when the current image changes
   useEffect(() => {
-    const newImageSrc = images[currentIndex]?.url;
-    if (newImageSrc && newImageSrc !== currentImageSrc) {
-      setCarouselLoading(true);
-      setCurrentImageSrc(newImageSrc);
-    }
-  }, [currentIndex, images, currentImageSrc]);
-
-  const goToPrevious = () => {
-    onIndexChange(currentIndex === 0 ? images.length - 1 : currentIndex - 1);
-  };
-
-  const goToNext = () => {
-    onIndexChange(currentIndex === images.length - 1 ? 0 : currentIndex + 1);
-  };
-
-  const handleLoadStart = () => {
-    setCarouselLoading(true);
-  };
-
-  const handleLoadComplete = () => {
-    setCarouselLoading(false);
-  };
+    const el = listRef.current?.querySelector<HTMLButtonElement>(`[data-idx="${currentIndex}"]`);
+    if (el && listRef.current) el.scrollIntoView({ block: "nearest" });
+  }, [currentIndex]);
 
   return (
-    <div className="relative">
-      <div className="w-full h-96 bg-gray-100 rounded-xl flex items-center justify-center overflow-hidden relative">
-        {/* Carousel Loading Overlay */}
-        {carouselLoading && (
-          <div className="absolute inset-0 bg-gray-100 bg-opacity-90 flex items-center justify-center z-20 rounded-xl">
-            <div className="flex flex-col items-center gap-3">
-              <div
-                className="w-10 h-10 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"
-                style={{ borderWidth: '3px' }}
-              ></div>
-              <span className="text-gray-600 text-sm font-medium">Loading image...</span>
+    <div className="w-full">
+      {/* One grey card for thumbs + image + button gutter (no vertical padding) */}
+      <div className="relative bg-gray-100 px-3">
+        {/* 64px thumbs | auto image | 48px gutter for the delete button */}
+        <div className="grid grid-cols-[64px,1fr,48px] gap-3 items-stretch">
+          {/* Thumbs rail (inside grey, top-aligned) */}
+          <div ref={listRef} className="overflow-auto max-h-[520px] py-0 my-0">
+            <div className="flex flex-col gap-2">
+              {images.map((img, idx) => (
+                <button
+                  key={idx}
+                  data-idx={idx}
+                  onClick={() => onIndexChange(idx)}
+                  className={[
+                    "relative w-[56px] h-[72px] overflow-hidden border",
+                    idx === currentIndex
+                      ? "border-[3px] border-violet-600"
+                      : "border-gray-200 hover:border-gray-300",
+                  ].join(" ")}
+                  aria-label={`Go to image ${idx + 1}`}
+                >
+                  <OptimizedImage src={img.url} alt={`thumb-${idx}`} className="w-full h-full object-cover" />
+                </button>
+              ))}
             </div>
           </div>
-        )}
 
-        <ModalOptimizedImage
-          key={`${currentIndex}-${images[currentIndex]?.url}`} // Force re-render on image change
-          src={images[currentIndex]?.url || ''}
-          alt="Product"
-          className="w-full h-full object-contain"
-          isVisible={true}
-          onLoadStart={handleLoadStart}
-          onLoadComplete={handleLoadComplete}
-        />
+          {/* Main image (no fixed height; max-height caps it; no extra grey top/bottom) */}
+          <div className="relative">
+            {loading && (
+              <div className="absolute inset-0 z-10 flex items-center justify-center bg-gray-100/80">
+                <div className="w-10 h-10 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+              </div>
+            )}
 
-        {/* Delete Button for Individual Image */}
-        {onDeleteImage && (
-          <div
-            onClick={(e) => {
-              e.stopPropagation();
-              onDeleteImage(images[currentIndex].imageIndex);
-            }}
-            className="absolute bottom-4 right-4 z-10 cursor-pointer p-2 hover:bg-red-50 rounded-full bg-white shadow-lg hover:shadow-xl transition-all"
-          >
-            <Trash2 className="w-5 h-5 text-red-500 hover:text-red-600" />
+            <ModalOptimizedImage
+              key={`${currentIndex}-${images[currentIndex]?.url}`}
+              src={images[currentIndex]?.url || ""}
+              alt="Product"
+              className="block mx-auto w-auto max-h-[520px] object-contain"
+              isVisible
+              onLoadStart={() => setLoading(true)}
+              onLoadComplete={() => setLoading(false)}
+            />
           </div>
-        )}
-      </div>
 
-      {images.length > 1 && (
-        <>
-          {/* Navigation Arrows */}
-          <button
-            onClick={goToPrevious}
-            className={`absolute left-2 top-1/2 transform -translate-y-1/2 bg-white rounded-full p-2 shadow-lg hover:bg-gray-100 transition ${carouselLoading ? 'opacity-70' : ''}`}
-            disabled={false} // Keep buttons enabled during loading for better UX
-          >
-            <ChevronLeft className="w-5 h-5 text-gray-600" />
-          </button>
-          <button
-            onClick={goToNext}
-            className={`absolute right-2 top-1/2 transform -translate-y-1/2 bg-white rounded-full p-2 shadow-lg hover:bg-gray-100 transition ${carouselLoading ? 'opacity-70' : ''}`}
-            disabled={false} // Keep buttons enabled during loading for better UX
-          >
-            <ChevronRight className="w-5 h-5 text-gray-600" />
-          </button>
-
-          {/* Dots Indicator */}
-          <div className="flex justify-center mt-4 gap-2">
-            {images.map((_, index) => (
+          {/* Right gutter column — keeps button OUTSIDE the image but INSIDE grey */}
+          <div className="flex items-end justify-end">
+            {onDeleteImage && (
               <button
-                key={index}
-                onClick={() => onIndexChange(index)}
-                className={`w-2 h-2 rounded-full transition ${index === currentIndex
-                  ? carouselLoading
-                    ? 'bg-blue-400 animate-pulse'
-                    : 'bg-blue-500'
-                  : 'bg-gray-300'
-                  }`}
-              />
-            ))}
-          </div>
-
-          {/* Image Counter */}
-          <div className={`absolute top-2 right-2 bg-black bg-opacity-60 text-white text-xs px-2 py-1 rounded transition ${carouselLoading ? 'opacity-70' : ''}`}>
-            {carouselLoading ? (
-              <span className="flex items-center gap-1">
-                <div className="w-2 h-2 bg-white rounded-full animate-bounce"></div>
-                {currentIndex + 1} / {images.length}
-              </span>
-            ) : (
-              <span>{currentIndex + 1} / {images.length}</span>
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDeleteImage(images[currentIndex].imageIndex);
+                }}
+                className="mb-3 p-2 rounded-full bg-white shadow-md hover:shadow-lg hover:bg-red-50 transition"
+                title="Delete this try-on"
+              >
+                <Trash2 className="w-5 h-5 text-red-500" />
+              </button>
             )}
           </div>
-        </>
-      )}
+        </div>
+      </div>
 
-      {/* Timestamp for current image */}
-      <p className="text-gray-500 text-sm mt-2 text-center">
+      {/* Try-on date OUTSIDE the grey card */}
+      <p className="text-gray-500 text-sm mt-6 md:mt-8 text-center">
         Try-on date: {new Date(images[currentIndex].timestamp).toLocaleDateString()}
       </p>
     </div>
   );
 };
+
+
+
 
 // Delete Confirmation Modal Component
 const DeleteConfirmationModal: React.FC<{
@@ -1322,6 +1282,7 @@ const Content: React.FC<ContentProps> = ({ searchQuery }) => {
   });
 
   return (
+
     <section className="px-10 py-6 min-h-[calc(100vh-150px)] bg-gray-50 mx-auto rounded-md flex flex-col items-center gap-6">
       <div className="max-w-[1280px] w-full">
         {NoHistory ? (
@@ -1423,7 +1384,7 @@ const Content: React.FC<ContentProps> = ({ searchQuery }) => {
                 </span>
               </div>
               {selectedProduct.images.length > 1 && (
-                <p className="text-blue-600 text-sm font-medium">
+                <p className="text-violet-500 text-sm font-medium">
                   {selectedProduct.totalTryOns} try-ons available
                 </p>
               )}
@@ -1431,7 +1392,7 @@ const Content: React.FC<ContentProps> = ({ searchQuery }) => {
                 href={selectedProduct.productUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="mt-3 bg-black text-white px-6 py-3 rounded-lg hover:bg-gray-800 text-center w-fit"
+                className="mt-3 bg-violet-500 text-white px-12 py-2.5 rounded-lg hover:bg-violet-600 text-center w-fit text-[15px] font-medium transition-all"
               >
                 Shop Now
               </a>
