@@ -254,6 +254,7 @@ const ModalOptimizedImage: React.FC<{
               backfaceVisibility: 'hidden',
               transform: 'translateZ(0)',
               imageRendering: 'auto',
+              objectFit: 'contain', maxHeight: '520px'
             }}
           />
         )
@@ -492,7 +493,7 @@ const ProductCard: React.FC<ProductProps> = ({
         bg-gradient-to-r from-violet-500 to-blue-500
       "
     >
-      NEW IN
+      RECOMMENDED
     </span>
   </div>
     
@@ -626,7 +627,7 @@ const ImageSlider: React.FC<{
               key={`${currentIndex}-${images[currentIndex]?.url}`}
               src={images[currentIndex]?.url || ""}
               alt="Product"
-              className="block mx-auto w-auto max-h-[520px] object-contain"
+              className="w-full max-h-[520px] mx-auto"
               isVisible
               onLoadStart={() => setLoading(true)}
               onLoadComplete={() => setLoading(false)}
@@ -676,7 +677,7 @@ const DeleteConfirmationModal: React.FC<{
 
   return (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black bg-opacity-50">
-      <div className="bg-white rounded-2xl p-6 max-w-md w-full mx-4 shadow-xl">
+      <div className="bg-white rounded-2xl p-8 max-w-[1200px] w-full flex gap-6 relative shadow-xl">
         <div className="flex items-center gap-3 mb-4">
           <div className="p-2 bg-red-100 rounded-full">
             <Trash2 className="w-6 h-6 text-red-600" />
@@ -1365,7 +1366,7 @@ const Content: React.FC<ContentProps> = ({ searchQuery }) => {
             >
               <X className="w-6 h-6" />
             </button>
-            <div className="w-1/2">
+            <div className="basis-[55%] min-w-0">
               <ImageSlider
                 images={selectedProduct.images}
                 currentIndex={currentImageIndex}
@@ -1373,7 +1374,7 @@ const Content: React.FC<ContentProps> = ({ searchQuery }) => {
                 onDeleteImage={handleDeleteImage}
               />
             </div>
-            <div className="w-1/2 flex flex-col justify-center gap-4">
+            <div className="basis-[45%] min-w-0 flex flex-col justify-center gap-4">
               <h2 className="text-2xl font-bold text-gray-900">
                 {selectedProduct.productInfo?.brand_name || 'Brand'} -{' '}
                 {selectedProduct.productInfo?.product_name || selectedProduct.productInfo?.name || 'Product Name'}
