@@ -438,15 +438,10 @@ const TryOnSubHeader: React.FC<{
          Deals For You
         </span> */}
         {/* Chatbot button */}
-        <a
-          href='https://udify.app/chat/q1Kt8Quqatr4MWdS'
-          target='_blank'
-          rel='noopener noreferrer'
-          className='flex items-center px-3 py-2 text-gray-600 hover:text-gray-800 hover:bg-white rounded-lg transition-colors shadow-sm border border-gray-200'
-          title='Open Chatbot in New Tab'
-        >
-          💬 fAIshion Chatbot
-        </a>
+       
+        <span className="flex items-center px-3 py-2 text-blackrounded-lg">
+         Deals For You
+        </span>
       </div>
       <div className='flex items-center gap-4'>
         <button
@@ -654,6 +649,10 @@ const ImageSlider: React.FC<{
 }> = ({ images, currentIndex, onIndexChange, onDeleteImage }) => {
   const [loading, setLoading] = useState(false);
   const listRef = useRef<HTMLDivElement>(null);
+   const demoImages =
+    images.length === 1
+      ? Array.from({ length: 12 }, (_, i) => ({ ...images[0], imageIndex: i }))
+      : images;
 
   useEffect(() => {
     const el = listRef.current?.querySelector<HTMLButtonElement>(
@@ -662,6 +661,8 @@ const ImageSlider: React.FC<{
     if (el && listRef.current) el.scrollIntoView({ block: 'nearest' });
   }, [currentIndex]);
 
+  
+
   return (
     <div className='w-full'>
       {/* One grey card for thumbs + image + button gutter (no vertical padding) */}
@@ -669,7 +670,12 @@ const ImageSlider: React.FC<{
         {/* 64px thumbs | auto image | 48px gutter for the delete button */}
         <div className='grid grid-cols-[64px,1fr,48px] gap-3 items-stretch'>
           {/* Thumbs rail (inside grey, top-aligned) */}
-          <div ref={listRef} className='overflow-auto max-h-[520px] py-0 my-0'>
+          <div
+    ref={listRef}
+    className="overflow-y-auto overscroll-contain max-h-[520px] py-0 my-0 pr-1
+               scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent no-scrollbar"
+    style={{ scrollBehavior: 'smooth',WebkitOverflowScrolling: 'touch' }}
+  >
             <div className='flex flex-col gap-2'>
               {images.map((img, idx) => (
                 <button
@@ -679,9 +685,10 @@ const ImageSlider: React.FC<{
                   className={[
                     'relative w-[56px] h-[72px] overflow-hidden border',
                     idx === currentIndex
-                      ? 'border-[3px] border-violet-600'
+                      ? 'border-[3px] border-[#675BC5]'
                       : 'border-gray-200 hover:border-gray-300',
                   ].join(' ')}
+                  style={{ scrollMargin: 8 }}
                   aria-label={`Go to image ${idx + 1}`}
                 >
                   <OptimizedImage
@@ -862,6 +869,8 @@ const Content: React.FC<ContentProps> = ({ searchQuery }) => {
     isDeleting: false,
   });
 
+  
+
   const [deleteImageModal, setDeleteImageModal] = useState<{
     isOpen: boolean;
     imageIndex: number | null;
@@ -894,6 +903,7 @@ const Content: React.FC<ContentProps> = ({ searchQuery }) => {
       }
     }
   }, [hasMore, loading]);
+  
 
   // Add scroll event listener
   useEffect(() => {
@@ -1532,7 +1542,7 @@ const Content: React.FC<ContentProps> = ({ searchQuery }) => {
                 </span>
               </div>
               {selectedProduct.images.length > 1 && (
-                <p className='text-violet-500 text-sm font-medium'>
+                <p className='text-[#675BC5] text-sm font-medium'>
                   {selectedProduct.totalTryOns} try-ons available
                 </p>
               )}
@@ -1540,7 +1550,7 @@ const Content: React.FC<ContentProps> = ({ searchQuery }) => {
                 href={selectedProduct.productUrl}
                 target='_blank'
                 rel='noopener noreferrer'
-                className='mt-3 bg-violet-500 text-white px-12 py-2.5 rounded-lg hover:bg-violet-600 text-center w-fit text-[15px] font-medium transition-all'
+                className='mt-3 bg-[#675BC5] text-white px-12 py-2.5 rounded-lg  text-center w-fit text-[15px] font-medium transition-all'
               >
                 Shop Now
               </a>
@@ -1555,7 +1565,7 @@ const Content: React.FC<ContentProps> = ({ searchQuery }) => {
                   <Carousel
                     arrows
                     slidesToShow={3}
-                    slidesToScroll={1}
+                    slidesToScroll={3}
                     infinite={false}
                     dots={false}
                   >
