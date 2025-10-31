@@ -626,7 +626,7 @@ const ProductCard: React.FC<ProductProps> = ({
         <span
           className='ml-1 inline-flex items-center px-2 py-0.5 rounded-md
                text-xs font-semibold uppercase tracking-wide whitespace-nowrap'
-          style={{ backgroundColor: 'rgba(255,165,0,0.38)', color: '#C97217' }}
+          style={{ backgroundColor: '#f0d6b3', color: '#ea7706' }}
         >
           30% OFF
         </span>
@@ -637,115 +637,120 @@ const ProductCard: React.FC<ProductProps> = ({
 
 // Image Slider Component
 const ImageSlider: React.FC<{
-  images: {
-    url: string;
-    timestamp: string;
-    imageIndex: number;
-    recordId?: string;
-  }[];
+  images: { url: string; timestamp: string; imageIndex: number; recordId?: string }[];
   currentIndex: number;
   onIndexChange: (index: number) => void;
   onDeleteImage?: (imageIndex: number) => void;
 }> = ({ images, currentIndex, onIndexChange, onDeleteImage }) => {
   const [loading, setLoading] = useState(false);
   const listRef = useRef<HTMLDivElement>(null);
-   const demoImages =
-    images.length === 1
-      ? Array.from({ length: 12 }, (_, i) => ({ ...images[0], imageIndex: i }))
-      : images;
+
+useEffect(() => {
+  const onKey = (e: KeyboardEvent) => {
+    if (e.key === 'ArrowUp') onIndexChange(Math.max(0, currentIndex - 1));
+    if (e.key === 'ArrowDown') onIndexChange(Math.min(images.length - 1, currentIndex + 1));
+  };
+  window.addEventListener('keydown', onKey);
+  return () => window.removeEventListener('keydown', onKey);
+}, [currentIndex, images.length, onIndexChange]);
 
   useEffect(() => {
-    const el = listRef.current?.querySelector<HTMLButtonElement>(
-      `[data-idx="${currentIndex}"]`
-    );
-    if (el && listRef.current) el.scrollIntoView({ block: 'nearest' });
+    const el = listRef.current?.querySelector<HTMLButtonElement>(`[data-idx="${currentIndex}"]`);
+    if (el && listRef.current) el.scrollIntoView({ block: "nearest" });
   }, [currentIndex]);
 
-  
-
   return (
-    <div className='w-full'>
-      {/* One grey card for thumbs + image + button gutter (no vertical padding) */}
-      <div className='relative bg-gray-100 px-3'>
-        {/* 64px thumbs | auto image | 48px gutter for the delete button */}
-        <div className='grid grid-cols-[64px,1fr,48px] gap-3 items-stretch'>
-          {/* Thumbs rail (inside grey, top-aligned) */}
+    <div className="w-full">
+      {/* GREY CARD: EXACT 472 × 432 */}
+      <div className="relative bg-gray-100 px-3 w-[472px] h-[432px]">
+        {/* EXACT GRID: 49 | 25.5 | 324 | 25.5 | 48 */}
+        <div className="grid grid-cols-[49px,324px,48px] gap-x-[25.5px] items-stretch h-full">
+          {/* THUMB RAIL (49 × 432) */}
           <div
-    ref={listRef}
-    className="overflow-y-auto overscroll-contain max-h-[520px] py-0 my-0 pr-1
-               scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent no-scrollbar"
-    style={{ scrollBehavior: 'smooth',WebkitOverflowScrolling: 'touch' }}
-  >
-            <div className='flex flex-col gap-2'>
+            ref={listRef}
+            className="overflow-y-auto no-scrollbar h-[432px] w-[49px] py-0 my-0"
+            style={{ scrollBehavior: "smooth", WebkitOverflowScrolling: "touch" }}
+          >
+            <div className="flex flex-col items-center gap-2">
               {images.map((img, idx) => (
                 <button
                   key={idx}
                   data-idx={idx}
                   onClick={() => onIndexChange(idx)}
                   className={[
-                    'relative w-[56px] h-[72px] overflow-hidden border',
+                    "relative w-[43px] h-[57px] overflow-hidden border bg-white",
                     idx === currentIndex
-                      ? 'border-[3px] border-[#675BC5]'
-                      : 'border-gray-200 hover:border-gray-300',
-                  ].join(' ')}
+                      ? "border-[3px] border-violet-600"
+                      : "border-gray-200 hover:border-gray-300",
+                  ].join(" ")}
                   style={{ scrollMargin: 8 }}
                   aria-label={`Go to image ${idx + 1}`}
                 >
                   <OptimizedImage
                     src={img.url}
                     alt={`thumb-${idx}`}
-                    className='w-full h-full object-cover'
+                    className="w-full h-full object-cover"
                   />
                 </button>
               ))}
             </div>
           </div>
 
-          {/* Main image (no fixed height; max-height caps it; no extra grey top/bottom) */}
-          <div className='relative'>
+          {/* MAIN IMAGE (324 × 432) */}
+          <div className="relative w-[324px] h-[432px]">
             {loading && (
-              <div className='absolute inset-0 z-10 flex items-center justify-center bg-gray-100/80'>
-                <div className='w-10 h-10 border-2 border-blue-500 border-t-transparent rounded-full animate-spin' />
+              <div className="absolute inset-0 z-10 flex items-center justify-center bg-gray-100/80">
+                <div className="w-10 h-10 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
               </div>
             )}
 
             <ModalOptimizedImage
               key={`${currentIndex}-${images[currentIndex]?.url}`}
-              src={images[currentIndex]?.url || ''}
-              alt='Product'
-              className='block mx-auto w-auto max-h-[520px] object-contain'
+              src={images[currentIndex]?.url || ""}
+              alt="Product"
+              className="w-[324px] h-[432px] mx-auto"
               isVisible
               onLoadStart={() => setLoading(true)}
               onLoadComplete={() => setLoading(false)}
             />
           </div>
 
-          {/* Right gutter column — keeps button OUTSIDE the image but INSIDE grey */}
-          <div className='flex items-end justify-end'>
-            {onDeleteImage && (
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onDeleteImage(images[currentIndex].imageIndex);
-                }}
-                className='mb-3 p-2 rounded-full bg-white shadow-md hover:shadow-lg hover:bg-red-50 transition'
-                title='Delete this try-on'
-              >
-                <Trash2 className='w-5 h-5 text-red-500' />
-              </button>
-            )}
-          </div>
+          {/* RIGHT GUTTER (48 × 432) */}
+          <div className="relative h-[432px] w-[48px]">
+   {onDeleteImage && (
+     <button
+       type="button"
+       onClick={(e) => { e.stopPropagation(); onDeleteImage(images[currentIndex].imageIndex); }}
+       aria-label="Delete this try-on"
+       /* 32×32 button with safe, responsive inset */
+       className="
+         absolute
+         bottom-[clamp(12px,2.2vh,20px)]
+         right-[clamp(12px,1.8vw,20px)]
+         w-8 h-8
+         grid place-items-center
+         rounded-full bg-white
+         shadow-md/70 hover:shadow-lg
+         ring-1 ring-black/5 hover:ring-black/10
+         transition
+         touch-manipulation
+       "
+     >
+       <Trash2 className="w-[18px] h-[18px] text-red-500" />
+     </button>
+   )}
+ </div>
         </div>
       </div>
 
-      {/* Try-on date OUTSIDE the grey card */}
-      <p className='text-gray-500 text-sm mt-6 md:mt-8 text-center'>
-        Try-on date:{' '}
-        {new Date(images[currentIndex].timestamp).toLocaleDateString()}
+      {/* DATE BELOW CARD – unchanged */}
+      <p className="text-gray-500 text-sm mt-6 md:mt-8 text-center">
+        Try-on date: {new Date(images[currentIndex].timestamp).toLocaleDateString()}
       </p>
     </div>
   );
 };
+
 
 // Delete Confirmation Modal Component
 const DeleteConfirmationModal: React.FC<{
