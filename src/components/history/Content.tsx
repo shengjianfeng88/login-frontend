@@ -645,14 +645,6 @@ const ImageSlider: React.FC<{
   const [loading, setLoading] = useState(false);
   const listRef = useRef<HTMLDivElement>(null);
 
-useEffect(() => {
-  const onKey = (e: KeyboardEvent) => {
-    if (e.key === 'ArrowUp') onIndexChange(Math.max(0, currentIndex - 1));
-    if (e.key === 'ArrowDown') onIndexChange(Math.min(images.length - 1, currentIndex + 1));
-  };
-  window.addEventListener('keydown', onKey);
-  return () => window.removeEventListener('keydown', onKey);
-}, [currentIndex, images.length, onIndexChange]);
 
   useEffect(() => {
     const el = listRef.current?.querySelector<HTMLButtonElement>(`[data-idx="${currentIndex}"]`);
