@@ -57,7 +57,7 @@ axiosInstance.interceptors.response.use(
     const originalRequest = error.config;
 
     // 如果是401错误且不是刷新token的请求
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    if ((error.response?.status === 401 || error.response?.status === 500) && !originalRequest._retry) {
       // 如果正在刷新token，将请求加入队列
       if (isRefreshing) {
         return new Promise((resolve, reject) => {
@@ -118,7 +118,7 @@ axiosInstance.interceptors.response.use(
             const decoded = JSON.parse(atob(accessToken.split(".")[1]));
             const userEmail = email || decoded.email || "";
             const userPicture = decoded.picture || "";
-            
+
             // 只有当头像信息存在时才更新
             if (userPicture) {
               store.dispatch(
