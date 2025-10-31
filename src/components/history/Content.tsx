@@ -659,7 +659,7 @@ const ImageSlider: React.FC<{
           {/* THUMB RAIL (49 × 432) */}
           <div
             ref={listRef}
-            className="overflow-y-auto no-scrollbar h-[432px] w-[49px] py-0 my-0"
+            className="thumbs-rail overflow-y-auto no-scrollbar h-[432px] w-[49px] py-0 my-0"
             style={{ scrollBehavior: "smooth", WebkitOverflowScrolling: "touch" }}
           >
             <div className="flex flex-col items-center gap-2">

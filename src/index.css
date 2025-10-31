@@ -210,3 +210,30 @@
 .ant-carousel .slick-list {
   overflow: hidden !important;
 }
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  width: 0 !important;
+  height: 0 !important;
+  background: transparent !important;
+}
+
+.no-scrollbar::-webkit-scrollbar-button {
+  width: 0 !important;
+  height: 0 !important;
+  display: none !important;
+}
+
+.no-scrollbar::-webkit-scrollbar-thumb,
+.no-scrollbar::-webkit-scrollbar-track {
+  background: transparent !important;
+  border: none !important;
+}
+
+.no-scrollbar {
+  overscroll-behavior: contain;
+}
