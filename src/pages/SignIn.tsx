@@ -1,17 +1,18 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
-
 // import google from "@/public/auth/google.svg";
 // import linkedin from "@/public/auth/linkedin.svg";
 // import twitter from "@/public/auth/twitter.svg";
 // import axios from "axios";
 // import { jwtDecode } from "jwt-decode";
-import { z } from "zod";
+import { boolean, z } from "zod";
 import axiosInstance from "@/utils/axiosInstance";
 import { validateEmail } from "@/utils/validation";
 import { useGoogleLogin } from "@react-oauth/google";
 import { CredentialResponse } from "@react-oauth/google";
-import { Link, useNavigate } from "react-router-dom";
-import { useDispatch } from "react-redux";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { RootState } from "@/store/store";
+import { resetAuth, setAuthMethod, setAuthState, setError, setFormData, setLoading } from "@/store/features/authSlice";
+import { useSelector, useDispatch } from "react-redux";
 import { sendMessageToExtension } from "@/utils/utils";
 import { setUser } from "@/store/features/userSlice";
 import backgroundImage from "@/assets/Background.png";
@@ -19,20 +20,21 @@ import image1 from "@/assets/image_1.jpg";
 import image2 from "@/assets/image_2.jpg";
 import image3 from "@/assets/image_3.jpg";
 import googleLogo from "@/assets/g-logo.png";
+import SigninTabs from "@/components/auth/SigninTabs";
 
-const signInSchema = z.object({
-  email: z.string().email("Please enter a valid email address"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
-});
 
 const SignIn = () => {
-  const [error, setError] = useState("");
+  const { formData, authMode, authMethod, authState, error } = useSelector(
+      (state: RootState) => state.auth
+    );
+  const location = useLocation();
   const [emailError, setEmailError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
+    
   //Image carrousel
   const [activeSlide, setActiveSlide] = useState<number>(0);
   const images = [
@@ -43,6 +45,14 @@ const SignIn = () => {
   const carouselRef = useRef<HTMLDivElement>(null);
   const [isTransitioning, setIsTransitioning] = useState<boolean>(false);
   const [isPaused, setIsPaused] = useState<boolean>(false);
+  
+  //reset auth state and code based login
+  useEffect(() => {
+   if (!location.state?.fromSignupRedirect) {
+    dispatch(resetAuth());
+    dispatch(setAuthMethod("code"));
+  }
+  }, [dispatch]);
 
   const changeSlide = useCallback(
     (index: number) => {
@@ -66,7 +76,6 @@ const SignIn = () => {
         changeSlide((activeSlide + 1) % 3);
       }
     }, 3000);
-
     // Clean up the interval on component unmount
     return () => clearInterval(interval);
   }, [activeSlide, isTransitioning, isPaused, changeSlide]);
@@ -81,93 +90,100 @@ const SignIn = () => {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setError("");
-    setIsLoading(true);
-    const formData = new FormData(e.currentTarget);
-    const data = {
-      email: formData.get("email"),
-      password: formData.get("password"),
-      rememberMe: rememberMe,
-    };
+  const saveUserInfo=(res:any) =>{
+    
+    localStorage.setItem("accessToken", res.data.accessToken);
+    localStorage.setItem("refreshToken", res.data.refreshToken);
+    localStorage.setItem("userId", res.data.userId);
 
+    // Decode JWT to get user info including picture
+    let userEmail = res.data.email || '';
+    let userPicture = '';
     try {
-      const validatedData = signInSchema.parse(data);
-      // <<<<<<< HEAD
-      //       const apiUrl = "https://api-auth.faishion.ai";
+      const decoded = JSON.parse(atob(res.data.accessToken.split('.')[1]));
+      userEmail = decoded.email || res.data.email || '';
+      userPicture = decoded.picture || '';
+    } catch (error) {
+      console.error('Failed to decode JWT:', error);
+    }
 
-      //       // Call login API using axios
-      //       const response = await axios.post(
-      //         apiUrl + "/api/auth/login",
-      //         validatedData
-      //       );
+    // Update Redux store with complete user information
+    dispatch(setUser({
+      email: userEmail,
+      picture: userPicture
+    }));
 
-      //       if (response.data) {
-      //         const accessToken = response.data.accessToken;
-      //         // Store token in localStorage
-      //         localStorage.setItem("accessToken", accessToken);
+    sendMessageToExtension({
+      email: res.data.email,
+      picture: res.data.picture,
+      accessToken: res.data.accessToken,
+    });
 
-      //         // Decode token and log the contents
-      //         const decodedToken = jwtDecode(accessToken);
-      //         console.log("Decoded token:", decodedToken);
+  }
+  
+  const handleRequestCode = async (email: string) => {
+  try {
+    dispatch(setLoading(true));
+    alert("Sending login req")
+    console.log(authMethod)
+    await axiosInstance.post("/auth/request-auth", { email });
+    dispatch(setAuthState("sent"));
+  } catch (err: any) {
+    console.error("Error sending code:", err);
+    dispatch(setError("Please try again later"))
+  } finally {
+    dispatch(setLoading(false));
+  }
+};
 
-      //         sendMessageToExtension({
-      //           email: "",
-      //           picture: "",
-      //           accessToken: accessToken,
-      //         });
-
-      //         navigate("/done");
-      //       }
-      //     } catch (err) {
-      //       if (err instanceof z.ZodError) {
-      //         setError(err.errors[0].message);
-      //       } else if (axios.isAxiosError(err)) {
-      //         setError(err.response?.data?.message || "Invalid email or password");
-      //       } else {
-      //         setError("An error occurred. Please try again.");
-      // =======
-      const res = await axiosInstance.post("/auth/login", {
-        ...validatedData,
-        rememberMe,
+  const handleSubmitCode = async (email: string, code: string) => {
+    try {
+      setIsLoading(true);
+      const res = await axiosInstance.post("/auth/verify-code", {
+        email,
+        code,
       });
-      console.log("Full response data:", res.data);
-      localStorage.setItem("accessToken", res.data.accessToken);
-      localStorage.setItem("refreshToken", res.data.refreshToken);
-      localStorage.setItem("userId", res.data.userId);
+      //save user information
+      saveUserInfo(res);
+      navigate("/done");
+    } catch (err: any) {
+      console.error("Verification failed:", err);
+      dispatch(setError(err.response?.data?.message || "Invalid or expired code"));
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-      // Decode JWT to get user info including picture
-      let userEmail = res.data.email || '';
-      let userPicture = '';
-      try {
-        const decoded = JSON.parse(atob(res.data.accessToken.split('.')[1]));
-        userEmail = decoded.email || res.data.email || '';
-        userPicture = decoded.picture || '';
-      } catch (error) {
-        console.error('Failed to decode JWT:', error);
+  const handleSubmit = async () => {
+
+      dispatch(setLoading(true));
+      dispatch(setError(null));
+    try {
+      let endpoint = "";
+      const requestData: any = {
+        email: formData.email,
+      };
+      let rememberMe = true
+      if (authMethod === "password") {
+        endpoint = "/auth/login";
+        requestData.password = formData.password;
+        requestData.rememberMe = rememberMe
+      } else {
+        endpoint = "/auth/request-auth";
       }
+      const res = await axiosInstance.post(endpoint, requestData);
 
-      // Update Redux store with complete user information
-      dispatch(setUser({
-        email: userEmail,
-        picture: userPicture
-      }));
+      saveUserInfo(res)
 
-      sendMessageToExtension({
-        email: res.data.email,
-        picture: res.data.picture,
-        accessToken: res.data.accessToken,
-      });
       navigate("/done");
     } catch (err: any) {
       if (err instanceof z.ZodError) {
-        setError(err.errors[0].message);
+        dispatch(setError(err.errors[0].message));
       } else {
-        setError(err.response?.data?.message || "Login failed");
+        dispatch(setError(err.response?.data?.message || "Login failed"));
       }
     } finally {
-      setIsLoading(false);
+      dispatch(setLoading(false))
     }
   };
 
@@ -253,74 +269,14 @@ const SignIn = () => {
                   Choose one of the options to go.
                 </p>
               </div>
-
-              {error && (
+             {error && (
                 <div className="text-red-500 text-xs mb-3">{error}</div>
               )}
-
-              <form onSubmit={handleSubmit} className="w-full">
-                {/* Email input */}
-                <div className="mb-3">
-                  <input
-                    type="email"
-                    name="email"
-                    placeholder="Email"
-                    onChange={handleEmailChange}
-                    className={`w-full h-10 border rounded-lg px-4 text-sm ${
-                      emailError ? "border-red-500" : "border-[#DADCE0]"
-                      }`}
-                    autoComplete="email"
-                  />
-                  {emailError && (
-                    <p className="text-red-500 text-xs mt-1">{emailError}</p>
-                  )}
-                </div>
-
-                {/* Password input */}
-                <div className="mb-3">
-                  <input
-                    type="password"
-                    name="password"
-                    placeholder="Password"
-                    className="w-full h-10 border border-[#DADCE0] rounded-lg px-4 text-sm"
-                    autoComplete="current-password"
-                  />
-                </div>
-
-                {/* Remember me and Forgot password */}
-                <div className="relative mb-4 w-full">
-                  <div className="flex items-center">
-                    <input
-                      type="checkbox"
-                      id="remember"
-                      checked={rememberMe}
-                      onChange={() => setRememberMe(!rememberMe)}
-                      className="w-[14px] h-[14px] border-[0.5px] border-[#A6A6A6] rounded-[2px]"
-                    />
-                    <label
-                      htmlFor="remember"
-                      className="ml-2 text-xs font-medium text-[#A6A6A6]"
-                    >
-                      Remember me
-                    </label>
-                  </div>
-                  <Link
-                    to="/forgot-password"
-                    className="text-xs font-bold text-[#2F2F2F] underline absolute right-0 top-0"
-                  >
-                    Forgot your password?
-                  </Link>
-                </div>
-
-                {/* Login button */}
-                <button
-                  type="submit"
-                  disabled={isLoading}
-                  className="w-full h-10 bg-[#2F2F2F] rounded-lg text-white font-bold text-sm flex items-center justify-center"
-                >
-                  {isLoading ? "Signing in..." : "LOGIN"}
-                </button>
-              </form>
+              <SigninTabs
+                handleSubmit={handleSubmit}
+                handleRequestCode={handleRequestCode}
+                handleSubmitCode={handleSubmitCode}
+                />
 
               {/* Or divider */}
               <div className="flex items-center my-4 w-full">

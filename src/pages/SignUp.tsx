@@ -1,75 +1,48 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import axiosInstance from "@/utils/axiosInstance";
 import { getApiUrl } from "@/config/api";
-import {
-  validateEmail,
-  calculatePasswordStrength,
-  getPasswordStrengthColor,
-  getPasswordStrengthText,
-} from "@/utils/validation";
 import { z } from "zod";
 import { useGoogleLogin } from "@react-oauth/google";
 import { CredentialResponse } from "@react-oauth/google";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { useDispatch } from "react-redux";
 import { sendMessageToExtension } from "@/utils/utils";
+import { RootState } from "@/store/store";
+import { useDispatch, useSelector } from "react-redux";
+import { resetAuth, setAuthMethod,setLoading,setError,setAuthState, setFormData } from "@/store/features/authSlice";
 import { setUser } from "@/store/features/userSlice";
 import backgroundImage from "@/assets/Background.png";
 import image1 from "@/assets/image_1.jpg";
 import image2 from "@/assets/image_2.jpg";
 import image3 from "@/assets/image_3.jpg";
 import googleLogo from "@/assets/g-logo.png";
+import SignupTabs from "@/components/auth/SignupTabs";
 
-//This user schema does not include the confimPassword, I stick to the original userSchema
-// const signUpSchema = z.object({
-//   email: z.string().email("Please enter a valid email address"),
-//   password: z.string().min(6, "Password must be at least 6 characters"),
-// });
-
-const userSchema = z
-  .object({
-    email: z.string().email("Invalid email format"),
-    password: z.string().min(6, "Password must be at least 6 characters"),
-    confirmPassword: z.string(),
-    referralCode: z.string().optional(),
-  })
-  .refine((data) => data.password === data.confirmPassword, {
-    message: "Passwords don't match",
-    path: ["confirmPassword"],
-  });
 
 const SignUp = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const [searchParams] = useSearchParams();
-  const [error, setError] = useState("");
-  const [emailError, setEmailError] = useState("");
-  const [passwordStrength, setPasswordStrength] = useState(0);
-  const [isLoading, setIsLoading] = useState(false);
-  const [formData, setFormData] = useState({
-    email: "",
-    password: "",
-    confirmPassword: "",
-    referralCode: "",
-  });
-
-  const [errors, setErrors] = useState({
-    email: "",
-    password: "",
-    confirmPassword: "",
-    referralCode: "",
-  });
+  const { formData, authMode, authMethod, authState, error } = useSelector(
+    (state: RootState) => state.auth
+  );
+const [errors, setErrors] = useState({
+  email: "",
+  password: "",
+  confirmPassword: "",
+  referralCode: "",
+});
+  
+  useEffect(()=>{
+    dispatch(resetAuth());
+  },[useDispatch])
 
   // 从URL参数获取推荐码
   useEffect(() => {
     const refCode = searchParams.get("ref");
     if (refCode) {
-      setFormData((prev) => ({
-        ...prev,
-        referralCode: refCode,
-      }));
+      dispatch(setFormData({ referralCode: refCode }));
     }
-  }, [searchParams]);
+  }, [searchParams, useDispatch]);
 
   // Carousel state
   const [activeSlide, setActiveSlide] = useState<number>(0);
@@ -105,80 +78,38 @@ const SignUp = () => {
     return () => clearInterval(interval);
   }, [activeSlide, isPaused, isTransitioning, changeSlide]);
 
-  const validateForm = () => {
-    try {
-      userSchema.parse(formData);
-      setErrors({
-        email: "",
-        password: "",
-        confirmPassword: "",
-        referralCode: "",
-      });
-      setError("");
-      return true;
-    } catch (err) {
-      if (err instanceof z.ZodError) {
-        const newErrors = {
-          email: "",
-          password: "",
-          confirmPassword: "",
-          referralCode: "",
-        };
-        err.errors.forEach((e) => {
-          const field = e.path[0] as keyof typeof newErrors;
-          newErrors[field] = e.message;
-        });
-        setErrors(newErrors);
-      }
-      return false;
-    }
-  };
-
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    if (!validateForm()) return;
-    setIsLoading(true);
-
-    try {
+  const handleSubmit = async () => {
+    dispatch(setLoading(true));
+    dispatch(setError(null));
+   try {
+      let endpoint = "";
       const requestData: any = {
         email: formData.email,
-        password: formData.password,
       };
-
-      // 如果有推荐码，添加到请求中
-      if (formData.referralCode.trim()) {
-        requestData.referralCode = formData.referralCode.trim();
+      if (authMethod === "password") {
+        endpoint = "/auth/request-register";
+        requestData.password = formData.password;
+      } else {
+        endpoint = "/auth/request-auth";
       }
 
-      await axiosInstance.post("/auth/request-register", requestData);
-      alert("Verification email sent! Check your inbox.");
+      const res = await axiosInstance.post(endpoint, requestData);
+      const response = res.data;
+
+     if (response.action === "login") {
+      // 🟣 Existing user — switch to login
+      dispatch(setAuthMethod("code"));
+      navigate("/signin", { state: { fromSignupRedirect: true } });
+    } 
+
+    dispatch(setAuthState("sent"));
+
     } catch (_error) {
       console.error("Registration failed:", _error);
-      setError("Registration failed");
+      dispatch(setError("Registration failed"));
+      // dispatch(resetAuth())
     } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-
-    // Real-time email validation
-    if (name === "email") {
-      if (value && !validateEmail(value)) {
-        setEmailError("Please enter a valid email address");
-      } else {
-        setEmailError("");
-      }
-    }
-
-    // Real-time password strength calculation
-    if (name === "password") {
-      setPasswordStrength(calculatePasswordStrength(value));
+      dispatch(setLoading(false));
     }
   };
 
@@ -257,14 +188,14 @@ const SignUp = () => {
             to="https://www.faishion.ai/"
             className="flex items-center absolute top-8 left-8"
           >
-            <div className="w-9 h-9 rounded-full bg-blue-200 flex items-center justify-center"></div>
+           <div className="w-9 h-9 rounded-full bg-blue-200 flex items-center justify-center"></div>
             <span className="ml-3 font-bold text-xl text-gray-800">
               fAIshion.AI
             </span>
           </Link>
-
+          
           <div className="p-4 md:p-6 lg:p-8 flex flex-col w-full h-full justify-center pt-16">
-            {/* Form content */}
+            
             <div className="w-full max-w-[90%] mx-auto">
               {/* Welcome text */}
               <div className="mb-5">
@@ -279,97 +210,11 @@ const SignUp = () => {
                   </p>
                 </div>
               </div>
-
               {error && (
                 <div className="text-red-500 text-xs mb-3 w-full">{error}</div>
               )}
-
-              <form onSubmit={handleSubmit} className="w-full">
-                {/* Email input */}
-                <div className="mb-3">
-                  <input
-                    type="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleChange}
-                    placeholder="Email"
-                    className={`w-full h-10 border rounded-lg px-4 text-sm ${emailError || errors.email
-                      ? "border-red-500"
-                      : "border-[#DADCE0]"
-                      }`}
-                    autoComplete="email"
-                  />
-                  {(emailError || errors.email) && (
-                    <p className="text-red-500 text-xs mt-1 text-left">
-                      {emailError || errors.email}
-                    </p>
-                  )}
-                </div>
-
-                {/* Password input */}
-                <div className="mb-3">
-                  <input
-                    type="password"
-                    name="password"
-                    value={formData.password}
-                    onChange={handleChange}
-                    placeholder="Password"
-                    className="w-full h-10 border border-[#DADCE0] rounded-lg px-4 text-sm"
-                    autoComplete="new-password"
-                  />
-                  {formData.password && (
-                    <div className="mt-2">
-                      <div className="flex space-x-1">
-                        {[...Array(5)].map((_, i) => (
-                          <div
-                            key={i}
-                            className={`h-2 w-full rounded transition-colors duration-200 ${i < passwordStrength
-                              ? getPasswordStrengthColor(passwordStrength)
-                              : "bg-gray-200"
-                              }`}
-                          />
-                        ))}
-                      </div>
-                      <p className="text-xs text-gray-600 mt-1">
-                        Password Strength:{" "}
-                        {getPasswordStrengthText(passwordStrength)}
-                      </p>
-                    </div>
-                  )}
-                  {errors.password && (
-                    <p className="text-red-500 text-xs mt-1 text-left">
-                      {errors.password}
-                    </p>
-                  )}
-                </div>
-
-                {/* Confirm Password input */}
-                <div className="mb-4">
-                  <input
-                    type="password"
-                    name="confirmPassword"
-                    value={formData.confirmPassword}
-                    onChange={handleChange}
-                    placeholder="Confirm Password"
-                    className="w-full h-10 border border-[#DADCE0] rounded-lg px-4 text-sm"
-                    autoComplete="new-password"
-                  />
-                  {errors.confirmPassword && (
-                    <p className="text-red-500 text-xs mt-1 text-left">
-                      {errors.confirmPassword}
-                    </p>
-                  )}
-                </div>
-
-                {/* Sign Up button */}
-                <button
-                  type="submit"
-                  disabled={isLoading}
-                  className="w-full h-10 bg-[#2F2F2F] rounded-lg text-white font-bold text-sm flex items-center justify-center"
-                >
-                  {isLoading ? "Signing up..." : "SIGN UP"}
-                </button>
-              </form>
+              {/*Sign up Tabs Form content */}
+              <SignupTabs handleSubmit={handleSubmit} />
 
               {/* Or divider */}
               <div className="flex items-center my-4 w-full">
@@ -395,9 +240,12 @@ const SignUp = () => {
               <div className="w-full flex justify-center">
                 <p className="text-xs text-[#A6A6A6]">
                   Already have an account?{" "}
-                  <Link to="/signin" className="font-bold text-[#2F2F2F]">
-                    LOGIN
-                  </Link>
+                  <button
+                  onClick={() => navigate("/signin", { state: { fromUserClick: true } })}
+                  className="font-bold text-[#2F2F2F] hover:underline"
+                >
+                  LOGIN
+                </button>
                 </p>
               </div>
             </div>

@@ -1,11 +1,85 @@
-import React, { useEffect, useState, Fragment, useCallback, useRef } from 'react';
-import { Camera, Heart, ChevronDown, X, Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
+import React, {
+  useEffect,
+  useState,
+  Fragment,
+  useCallback,
+  useRef,
+} from 'react';
+import {
+  Camera,
+  Heart,
+  ChevronDown,
+  X,
+  Trash2,
+  ChevronLeft,
+  ChevronRight,
+} from 'lucide-react';
 import { Menu, Transition } from '@headlessui/react';
 import empty from '/empty.png';
 import axios from 'axios';
 import { tryonApi } from '../../api/tryon';
 import { getApiUrl } from '../../config/api';
 import { getAccessToken } from '../../utils/auth';
+
+import { Carousel } from 'antd';
+import 'antd/dist/reset.css';
+
+const items = [
+  {
+    brand: 'GARAGE',
+    name: 'Romantic Lace Midi...',
+    price: 11944.0,
+    oldPrice: 14900.0,
+    discount: '20% OFF',
+    img: 'https://encrypted-tbn0.gstatic.com/shopping?q=tbn:ANd9GcQmmzp-_kftvTFdH_kuXOQuESvgNvrmdnDFR3FWThEEOHjsbbpUE9pqrr_rjlIDsA7g4O1K2gybieFwiNbTgSeroTiNgySvfuOBV309CjMPnpSIGU4xWruI&usqp=CAc',
+  },
+  {
+    brand: 'H&M',
+    name: 'Elegant Summer Midi',
+    price: 59.99,
+    oldPrice: 79.99,
+    discount: '20% OFF',
+    img: 'https://encrypted-tbn0.gstatic.com/shopping?q=tbn:ANd9GcTdF5e6eZdypM0O3a1Pe0e-ts6BCLAMPFeJ0ygJQDJqF7P-tDCVkQO1Gzd-6n_BXqH7Efgb5otMNy0j_AL-3YprTNdyePXfJfbOs0pYfVTZfqwszRhCystIkA&usqp=CAc',
+  },
+  {
+    brand: 'FASHION NOVA',
+    name: 'Trina Mini Dress',
+    price: 10.0,
+    oldPrice: 24.99,
+    discount: '20% OFF',
+    img: 'https://encrypted-tbn3.gstatic.com/shopping?q=tbn:ANd9GcSAkAsOHUEgR2VTJD162yU-MOYbRO1uD9C1FuxbUBkhXwIbI_sTH5I2rmnvMHndX_Z2V-nRbLWZVrcZHDK2w6GeaHbKHkj8A-z9ouyQHHRZ8MylFGYlSwr-&usqp=CAc',
+  },
+  {
+    brand: 'FASHION NOVA',
+    name: 'Trina Mini Dress',
+    price: 10.0,
+    oldPrice: 24.99,
+    discount: '20% OFF',
+    img: 'https://images.urbndata.com/is/image/UrbanOutfitters/92036334_060_b?$xlarge$&fit=constrain&fmt=webp&qlt=80&wid=960',
+  },
+  {
+    brand: 'FASHION NOVA',
+    name: 'Trina Mini Dress',
+    price: 10.0,
+    oldPrice: 24.99,
+    discount: '20% OFF',
+    img: 'https://images.urbndata.com/is/image/UrbanOutfitters/92036334_060_b?$xlarge$&fit=constrain&fmt=webp&qlt=80&wid=960',
+  },
+];
+
+// const SimpleAntdCarousel = () => {
+//   return (
+//     <div style={{ width: '600px', margin: '20px auto' }}>
+//       <h3 style={{ fontWeight: 600, marginBottom: '10px' }}>You May Also Like</h3>
+
+//       <Carousel arrows slidesToShow={3} autoplay>
+//         <div><img src="https://images.urbndata.com/is/image/UrbanOutfitters/92036334_060_b?$xlarge$&fit=constrain&fmt=webp&qlt=80&wid=960" style={{ width: '180px', height: '250px', objectFit: 'cover' }} /></div>
+//         <div><img src="https://images.urbndata.com/is/image/UrbanOutfitters/92036334_060_b?$xlarge$&fit=constrain&fmt=webp&qlt=80&wid=960" style={{ width: '180px', height: '250px', objectFit: 'cover' }} /></div>
+//         <div><img src="https://images.urbndata.com/is/image/UrbanOutfitters/92036334_060_b?$xlarge$&fit=constrain&fmt=webp&qlt=80&wid=960" style={{ width: '180px', height: '250px', objectFit: 'cover' }} /></div>
+//       </Carousel>
+//     </div>
+//   );
+// };
 
 // Add DNS prefetch for image domain
 const addDnsPrefetch = () => {
@@ -21,12 +95,15 @@ const addDnsPrefetch = () => {
 addDnsPrefetch();
 
 // Image URL optimization utility
-const getOptimizedImageUrl = (src: string, size: 'thumbnail' | 'medium' | 'large' = 'thumbnail') => {
+const getOptimizedImageUrl = (
+  src: string,
+  size: 'thumbnail' | 'medium' | 'large' = 'thumbnail'
+) => {
   if (!src.includes('faishionai.s3.amazonaws.com')) {
     return src; // Return original URL for non-S3 images
   }
 
-  // If S3 doesn't support image optimization parameters, 
+  // If S3 doesn't support image optimization parameters,
   // we can disable URL optimization and rely on CSS + lazy loading
   const USE_URL_OPTIMIZATION = false; // Set to true if your S3 supports image transformation
 
@@ -37,19 +114,24 @@ const getOptimizedImageUrl = (src: string, size: 'thumbnail' | 'medium' | 'large
   }
 
   const sizeConfig = {
-    thumbnail: { w: 150, h: 150, q: 60 },  // For product cards - more reasonable size
-    medium: { w: 400, h: 400, q: 70 },     // For modal previews - more compressed
-    large: { w: 800, h: 800, q: 80 }       // For full resolution (if needed)
+    thumbnail: { w: 150, h: 150, q: 60 }, // For product cards - more reasonable size
+    medium: { w: 400, h: 400, q: 70 }, // For modal previews - more compressed
+    large: { w: 800, h: 800, q: 80 }, // For full resolution (if needed)
   };
 
   const config = sizeConfig[size];
 
   // Try AWS/CloudFront style parameters
   let params = `w=${config.w}&h=${config.h}&q=${config.q}&f=webp`;
-  let optimizedUrl = src.includes('?') ? `${src}&${params}` : `${src}?${params}`;
+  let optimizedUrl = src.includes('?')
+    ? `${src}&${params}`
+    : `${src}?${params}`;
 
   // Debug log to check generated URLs
-  if (typeof window !== 'undefined' && window.location.hostname.includes('localhost')) {
+  if (
+    typeof window !== 'undefined' &&
+    window.location.hostname.includes('localhost')
+  ) {
     console.log(`🖼️ Image optimization attempt:`);
     console.log(`Original: ${src}`);
     console.log(`Optimized (${size}): ${optimizedUrl}`);
@@ -60,7 +142,9 @@ const getOptimizedImageUrl = (src: string, size: 'thumbnail' | 'medium' | 'large
 
 // Smart image preloading hook for modal carousel
 const useSmartImagePreloader = (images: string[], currentIndex: number) => {
-  const [preloadedImages, setPreloadedImages] = useState<Set<string>>(new Set());
+  const [preloadedImages, setPreloadedImages] = useState<Set<string>>(
+    new Set()
+  );
 
   useEffect(() => {
     const preloadImage = (src: string) => {
@@ -83,15 +167,22 @@ const useSmartImagePreloader = (images: string[], currentIndex: number) => {
 
       // Next image only (most likely to be viewed next)
       if (images.length > 1) {
-        const nextIndex = currentIndex === images.length - 1 ? 0 : currentIndex + 1;
+        const nextIndex =
+          currentIndex === images.length - 1 ? 0 : currentIndex + 1;
         indicesToPreload.push(nextIndex);
       }
 
       // Get unique images to preload (use medium size for modal)
-      const imagesToPreload = [...new Set(indicesToPreload.map(i => getOptimizedImageUrl(images[i], 'medium')))];
+      const imagesToPreload = [
+        ...new Set(
+          indicesToPreload.map((i) => getOptimizedImageUrl(images[i], 'medium'))
+        ),
+      ];
 
       // Only preload images that haven't been preloaded yet
-      const newImages = imagesToPreload.filter(src => !preloadedImages.has(src));
+      const newImages = imagesToPreload.filter(
+        (src) => !preloadedImages.has(src)
+      );
 
       if (newImages.length === 0) return;
 
@@ -99,7 +190,7 @@ const useSmartImagePreloader = (images: string[], currentIndex: number) => {
       for (const src of newImages) {
         try {
           await preloadImage(src);
-          setPreloadedImages(prev => new Set([...prev, src]));
+          setPreloadedImages((prev) => new Set([...prev, src]));
         } catch (error) {
           console.warn('Image failed to preload:', src);
         }
@@ -120,7 +211,14 @@ const ModalOptimizedImage: React.FC<{
   isVisible?: boolean; // Whether this image should load immediately
   onLoadStart?: () => void; // Callback when loading starts
   onLoadComplete?: () => void; // Callback when loading completes
-}> = ({ src, alt, className = '', isVisible = true, onLoadStart, onLoadComplete }) => {
+}> = ({
+  src,
+  alt,
+  className = '',
+  isVisible = true,
+  onLoadStart,
+  onLoadComplete,
+}) => {
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
   const [imageSrc, setImageSrc] = useState('');
@@ -155,8 +253,10 @@ const ModalOptimizedImage: React.FC<{
 
   if (!isVisible) {
     return (
-      <div className={`flex items-center justify-center bg-gray-100 ${className}`}>
-        <div className="w-8 h-8 bg-gray-200 rounded"></div>
+      <div
+        className={`flex items-center justify-center bg-gray-100 ${className}`}
+      >
+        <div className='w-8 h-8 bg-gray-200 rounded'></div>
       </div>
     );
   }
@@ -164,18 +264,18 @@ const ModalOptimizedImage: React.FC<{
   return (
     <div className={`relative overflow-hidden bg-gray-100 ${className}`}>
       {isLoading && (
-        <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
-          <div className="animate-pulse">
-            <div className="w-12 h-12 bg-gray-300 rounded animate-pulse"></div>
+        <div className='absolute inset-0 flex items-center justify-center bg-gray-100'>
+          <div className='animate-pulse'>
+            <div className='w-12 h-12 bg-gray-300 rounded animate-pulse'></div>
           </div>
         </div>
       )}
 
       {hasError ? (
-        <div className="absolute inset-0 flex items-center justify-center bg-gray-100 text-gray-400">
-          <div className="text-center">
-            <div className="w-12 h-12 mx-auto mb-2 bg-gray-300 rounded"></div>
-            <span className="text-sm">Failed to load</span>
+        <div className='absolute inset-0 flex items-center justify-center bg-gray-100 text-gray-400'>
+          <div className='text-center'>
+            <div className='w-12 h-12 mx-auto mb-2 bg-gray-300 rounded'></div>
+            <span className='text-sm'>Failed to load</span>
           </div>
         </div>
       ) : (
@@ -183,11 +283,13 @@ const ModalOptimizedImage: React.FC<{
           <img
             src={imageSrc}
             alt={alt}
-            className={`transition-opacity duration-200 ${isLoading ? 'opacity-0' : 'opacity-100'} ${className}`}
+            className={`transition-opacity duration-200 ${
+              isLoading ? 'opacity-0' : 'opacity-100'
+            } ${className}`}
             onLoad={handleLoad}
             onError={handleError}
-            loading="eager" // Load immediately for modal images
-            decoding="async"
+            loading='eager' // Load immediately for modal images
+            decoding='async'
             style={{
               willChange: 'opacity',
               backfaceVisibility: 'hidden',
@@ -224,7 +326,7 @@ const OptimizedImage: React.FC<{
       },
       {
         threshold: 0.1,
-        rootMargin: '50px' // Reduce from 100px to 50px for tighter control
+        rootMargin: '50px', // Reduce from 100px to 50px for tighter control
       }
     );
 
@@ -260,19 +362,26 @@ const OptimizedImage: React.FC<{
   };
 
   return (
-    <div ref={imgRef} className={`relative overflow-hidden bg-gray-100 ${className}`}>
+    <div
+      ref={imgRef}
+      className={`relative overflow-hidden bg-gray-100 ${className}`}
+    >
       {!shouldLoad || isLoading ? (
-        <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
+        <div className='absolute inset-0 flex items-center justify-center bg-gray-100'>
           {!shouldLoad ? (
             // Show placeholder when not yet in viewport
-            <div className="w-8 h-8 bg-gray-200 rounded"></div>
+            <div className='w-8 h-8 bg-gray-200 rounded'></div>
           ) : (
             // Show loading animation when loading
-            <div className="animate-pulse">
+            <div className='animate-pulse'>
               {placeholder ? (
-                <img src={placeholder} alt="Loading" className="w-8 h-8 opacity-50" />
+                <img
+                  src={placeholder}
+                  alt='Loading'
+                  className='w-8 h-8 opacity-50'
+                />
               ) : (
-                <div className="w-8 h-8 bg-gray-300 rounded animate-pulse"></div>
+                <div className='w-8 h-8 bg-gray-300 rounded animate-pulse'></div>
               )}
             </div>
           )}
@@ -280,22 +389,25 @@ const OptimizedImage: React.FC<{
       ) : null}
 
       {hasError ? (
-        <div className="absolute inset-0 flex items-center justify-center bg-gray-100 text-gray-400">
-          <div className="text-center">
-            <div className="w-8 h-8 mx-auto mb-2 bg-gray-300 rounded"></div>
-            <span className="text-xs">Failed to load</span>
+        <div className='absolute inset-0 flex items-center justify-center bg-gray-100 text-gray-400'>
+          <div className='text-center'>
+            <div className='w-8 h-8 mx-auto mb-2 bg-gray-300 rounded'></div>
+            <span className='text-xs'>Failed to load</span>
           </div>
         </div>
       ) : (
-        shouldLoad && imageSrc && (
+        shouldLoad &&
+        imageSrc && (
           <img
             src={imageSrc}
             alt={alt}
-            className={`transition-opacity duration-200 ${isLoading ? 'opacity-0' : 'opacity-100'} ${className}`}
+            className={`transition-opacity duration-200 ${
+              isLoading ? 'opacity-0' : 'opacity-100'
+            } ${className}`}
             onLoad={handleLoad}
             onError={handleError}
-            loading="lazy"
-            decoding="async"
+            loading='lazy'
+            decoding='async'
             style={{
               willChange: 'opacity',
               backfaceVisibility: 'hidden',
@@ -313,55 +425,71 @@ const TryOnSubHeader: React.FC<{
   onSortChange: (order: 'low-to-high' | 'high-to-low') => void;
 }> = ({ onSortChange }) => {
   return (
-    <div className="flex items-center justify-between px-10 mt-4 mb-8 border-b pb-4">
-      <div className="flex items-center gap-2 text-2xl font-bold text-gray-800">
-        <Camera className="w-6 h-6" />
+    <div className='flex items-center justify-between px-10 mt-4 mb-8 pb-4'>
+      <div className='flex items-center gap-2 text-2xl font-bold text-gray-800'>
+        <Camera className='w-6 h-6' />
         <span>Try-on History</span>
 
+        <span
+          className='h-12 w-[1px] bg-gray-400 mx-4 inline-block rounded'
+          aria-hidden='true'
+        ></span>
+        {/* <span className="flex items-center px-3 py-2 text-blackrounded-lg">
+         Deals For You
+        </span> */}
         {/* Chatbot button */}
         <a
-          href="https://udify.app/chat/q1Kt8Quqatr4MWdS"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex items-center px-3 py-2 text-gray-600 hover:text-gray-800 hover:bg-white rounded-lg transition-colors shadow-sm border border-gray-200"
-          title="Open Chatbot in New Tab"
+          href='https://udify.app/chat/q1Kt8Quqatr4MWdS'
+          target='_blank'
+          rel='noopener noreferrer'
+          className='flex items-center px-3 py-2 text-gray-600 hover:text-gray-800 hover:bg-white rounded-lg transition-colors shadow-sm border border-gray-200'
+          title='Open Chatbot in New Tab'
         >
           💬 fAIshion Chatbot
         </a>
-
       </div>
-      <div className="flex items-center gap-4">
+      <div className='flex items-center gap-4'>
         <button
-          onClick={() => window.location.href = '/tryon-history/favorites'}
-          className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition"
+          onClick={() => (window.location.href = '/tryon-history/favorites')}
+          className='inline-flex items-center gap-2 px-6 py-1
+      rounded-md bg-white
+      ring-1 ring-gray-200 shadow-sm
+      text-gray-800 text-sm font-medium
+      hover:ring-gray-300'
         >
-          <Heart className="w-4 h-4" />
+          <Heart className='w-4 h-4' />
           Favorites
         </button>
 
-        <Menu as="div" className="relative inline-block text-left">
-          <Menu.Button className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition">
-            Sort By
-            <ChevronDown className="w-4 h-4" />
+        <Menu as='div' className='relative inline-block text-left'>
+          <Menu.Button
+            className='inline-flex items-center gap-2 px-6 py-1
+        rounded-md bg-white
+        ring-1 ring-gray-200 shadow-sm
+        text-gray-800 text-sm font-medium
+        hover:ring-gray-300'
+          >
+            Sort by
+            <ChevronDown className='w-4 h-4' />
           </Menu.Button>
           <Transition
             as={Fragment}
-            enter="transition ease-out duration-100"
-            enterFrom="transform opacity-0 scale-95"
-            enterTo="transform opacity-100 scale-100"
-            leave="transition ease-in duration-75"
-            leaveFrom="transform opacity-100 scale-100"
-            leaveTo="transform opacity-0 scale-95"
+            enter='transition ease-out duration-100'
+            enterFrom='transform opacity-0 scale-95'
+            enterTo='transform opacity-100 scale-100'
+            leave='transition ease-in duration-75'
+            leaveFrom='transform opacity-100 scale-100'
+            leaveTo='transform opacity-0 scale-95'
           >
-            <Menu.Items className="absolute right-0 z-[9999] mt-2 w-48 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
-
-              <div className="py-1">
+            <Menu.Items className='absolute right-0 z-[9999] mt-2 w-48 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none'>
+              <div className='py-1'>
                 <Menu.Item>
                   {({ active }) => (
                     <button
                       onClick={() => onSortChange('low-to-high')}
-                      className={`${active ? 'bg-gray-100 text-gray-900' : 'text-gray-700'
-                        } block px-4 py-2 text-sm w-full text-left`}
+                      className={`${
+                        active ? 'bg-gray-100 text-gray-900' : 'text-gray-700'
+                      } block px-4 py-2 text-sm w-full text-left`}
                     >
                       Price: Low to High
                     </button>
@@ -371,8 +499,9 @@ const TryOnSubHeader: React.FC<{
                   {({ active }) => (
                     <button
                       onClick={() => onSortChange('high-to-low')}
-                      className={`${active ? 'bg-gray-100 text-gray-900' : 'text-gray-700'
-                        } block px-4 py-2 text-sm w-full text-left`}
+                      className={`${
+                        active ? 'bg-gray-100 text-gray-900' : 'text-gray-700'
+                      } block px-4 py-2 text-sm w-full text-left`}
                     >
                       Price: High to Low
                     </button>
@@ -411,22 +540,31 @@ const ProductCard: React.FC<ProductProps> = ({
   isFavorite,
   onToggleFavorite,
   onDelete,
-  imageCount
+  imageCount,
 }) => (
-  <div className="relative bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition cursor-pointer flex flex-col h-full">
+  <div
+    className='relative bg-white overflow-hidden rounded-none
+    ring-1 ring-gray-200
+    shadow-[0_2px_10px_rgba(0,0,0,0.06)] 
+    transition-none cursor-pointer flex flex-col h-full'
+  >
     {/* Favorite Button */}
-    <div
-      onClick={async (e) => {
-        e.stopPropagation();
-        await onToggleFavorite();
-      }}
-      className="absolute top-2 right-2 z-10 cursor-pointer p-1 rounded-full bg-white shadow hover:bg-gray-100"
-    >
-      <Heart className={`w-5 h-5 ${isFavorite ? 'fill-red-500 text-red-500' : 'text-gray-400'}`} />
+
+    <div className='absolute top-2 right-2 z-10'>
+      <span
+        className='
+        inline-flex items-center px-3 py-1 p-1 rounded-full
+        text-[10px] font-semibold uppercase tracking-wide text-white
+        shadow
+        bg-gradient-to-r from-violet-500 to-blue-500
+      '
+      >
+        NEW IN
+      </span>
     </div>
 
     {/* Delete Button */}
-    <div
+    {/* <div
       onClick={(e) => {
         e.stopPropagation();
         onDelete();
@@ -434,35 +572,69 @@ const ProductCard: React.FC<ProductProps> = ({
       className="absolute bottom-2 right-2 z-10 cursor-pointer p-1 hover:bg-red-50 rounded transition-colors"
     >
       <Trash2 className="w-5 h-5 text-red-500 hover:text-red-600" />
-    </div>
+    </div> */}
 
     {/* Timestamp Badge */}
-    <div className="absolute top-2 left-2 bg-gray-100 text-xs px-2 py-1 rounded z-10 text-gray-600">
+    {/* <div className="absolute top-2 left-2 bg-gray-100 text-xs px-2 py-1 rounded z-10 text-gray-600">
       {new Date(timestamp).toLocaleDateString()}
-    </div>
+    </div> */}
 
     {/* Image Count Badge */}
-    {imageCount > 1 && (
+    {/* {imageCount > 1 && (
       <div className="absolute top-10 left-2 bg-blue-500 text-white text-xs px-2 py-1 rounded z-10 font-medium">
         {imageCount} try-ons
       </div>
-    )}
+    )} */}
 
     {/* Optimized Image */}
-    <div className="w-full h-72 bg-white flex items-center justify-center rounded-t-2xl">
+    <div className='w-full h-[360px] overflow-hidden'>
       <OptimizedImage
         src={image}
-        alt="Product"
-        className="h-full object-contain"
+        alt='Product'
+        className='w-full h-full object-[right_bottom]'
       />
     </div>
 
-    {/* Product Details */}
-    <div className="p-4 flex flex-col justify-between flex-grow">
-      <p className="text-gray-500 text-xs uppercase tracking-wide font-medium mb-1">{brand}</p>
-      <p className="text-lg font-semibold text-gray-900 truncate">{name}</p>
-      <div className="flex items-center gap-2 mt-2">
-        <span className="text-lg font-bold text-black">{currency}{price}</span>
+    <div className='p-4 flex flex-col gap-1 flex-grow'>
+      <div className='flex items-center justify-between'>
+        <span className='text-gray-500 text-xs uppercase font-medium leading-tight'>
+          {brand}
+        </span>
+        <button
+          onClick={async (e) => {
+            e.stopPropagation();
+            await onToggleFavorite();
+          }}
+          aria-label='Toggle favorite'
+          className='p-1 m-0 bg-transparent rounded-none shadow-none ring-0 outline-none shrink-0'
+        >
+          <Heart
+            className={`w-4 h-4 ${
+              isFavorite ? 'text-red-500 fill-red-500' : 'text-black'
+            }`}
+          />
+        </button>
+      </div>
+
+      <p className='text-base font-semibold text-gray-900 leading-tight truncate'>
+        {name}
+      </p>
+
+      <div className='flex items-baseline gap-2'>
+        <span className='text-xs font-bold text-black leading-none'>
+          {currency}
+          {price}
+        </span>
+        <span className='text-xs text-gray-400 line-through leading-none'>
+          {currency}100.00
+        </span>
+        <span
+          className='ml-1 inline-flex items-center px-2 py-0.5 rounded-md
+               text-xs font-semibold uppercase tracking-wide whitespace-nowrap'
+          style={{ backgroundColor: 'rgba(255,165,0,0.38)', color: '#C97217' }}
+        >
+          30% OFF
+        </span>
       </div>
     </div>
   </div>
@@ -470,130 +642,99 @@ const ProductCard: React.FC<ProductProps> = ({
 
 // Image Slider Component
 const ImageSlider: React.FC<{
-  images: { url: string; timestamp: string; imageIndex: number; recordId?: string }[];
+  images: {
+    url: string;
+    timestamp: string;
+    imageIndex: number;
+    recordId?: string;
+  }[];
   currentIndex: number;
   onIndexChange: (index: number) => void;
   onDeleteImage?: (imageIndex: number) => void;
 }> = ({ images, currentIndex, onIndexChange, onDeleteImage }) => {
-  const [carouselLoading, setCarouselLoading] = useState(false);
-  const [currentImageSrc, setCurrentImageSrc] = useState('');
+  const [loading, setLoading] = useState(false);
+  const listRef = useRef<HTMLDivElement>(null);
 
-  // Track when the current image changes
   useEffect(() => {
-    const newImageSrc = images[currentIndex]?.url;
-    if (newImageSrc && newImageSrc !== currentImageSrc) {
-      setCarouselLoading(true);
-      setCurrentImageSrc(newImageSrc);
-    }
-  }, [currentIndex, images, currentImageSrc]);
-
-  const goToPrevious = () => {
-    onIndexChange(currentIndex === 0 ? images.length - 1 : currentIndex - 1);
-  };
-
-  const goToNext = () => {
-    onIndexChange(currentIndex === images.length - 1 ? 0 : currentIndex + 1);
-  };
-
-  const handleLoadStart = () => {
-    setCarouselLoading(true);
-  };
-
-  const handleLoadComplete = () => {
-    setCarouselLoading(false);
-  };
+    const el = listRef.current?.querySelector<HTMLButtonElement>(
+      `[data-idx="${currentIndex}"]`
+    );
+    if (el && listRef.current) el.scrollIntoView({ block: 'nearest' });
+  }, [currentIndex]);
 
   return (
-    <div className="relative">
-      <div className="w-full h-96 bg-gray-100 rounded-xl flex items-center justify-center overflow-hidden relative">
-        {/* Carousel Loading Overlay */}
-        {carouselLoading && (
-          <div className="absolute inset-0 bg-gray-100 bg-opacity-90 flex items-center justify-center z-20 rounded-xl">
-            <div className="flex flex-col items-center gap-3">
-              <div
-                className="w-10 h-10 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"
-                style={{ borderWidth: '3px' }}
-              ></div>
-              <span className="text-gray-600 text-sm font-medium">Loading image...</span>
+    <div className='w-full'>
+      {/* One grey card for thumbs + image + button gutter (no vertical padding) */}
+      <div className='relative bg-gray-100 px-3'>
+        {/* 64px thumbs | auto image | 48px gutter for the delete button */}
+        <div className='grid grid-cols-[64px,1fr,48px] gap-3 items-stretch'>
+          {/* Thumbs rail (inside grey, top-aligned) */}
+          <div ref={listRef} className='overflow-auto max-h-[520px] py-0 my-0'>
+            <div className='flex flex-col gap-2'>
+              {images.map((img, idx) => (
+                <button
+                  key={idx}
+                  data-idx={idx}
+                  onClick={() => onIndexChange(idx)}
+                  className={[
+                    'relative w-[56px] h-[72px] overflow-hidden border',
+                    idx === currentIndex
+                      ? 'border-[3px] border-violet-600'
+                      : 'border-gray-200 hover:border-gray-300',
+                  ].join(' ')}
+                  aria-label={`Go to image ${idx + 1}`}
+                >
+                  <OptimizedImage
+                    src={img.url}
+                    alt={`thumb-${idx}`}
+                    className='w-full h-full object-cover'
+                  />
+                </button>
+              ))}
             </div>
           </div>
-        )}
 
-        <ModalOptimizedImage
-          key={`${currentIndex}-${images[currentIndex]?.url}`} // Force re-render on image change
-          src={images[currentIndex]?.url || ''}
-          alt="Product"
-          className="w-full h-full object-contain"
-          isVisible={true}
-          onLoadStart={handleLoadStart}
-          onLoadComplete={handleLoadComplete}
-        />
+          {/* Main image (no fixed height; max-height caps it; no extra grey top/bottom) */}
+          <div className='relative'>
+            {loading && (
+              <div className='absolute inset-0 z-10 flex items-center justify-center bg-gray-100/80'>
+                <div className='w-10 h-10 border-2 border-blue-500 border-t-transparent rounded-full animate-spin' />
+              </div>
+            )}
 
-        {/* Delete Button for Individual Image */}
-        {onDeleteImage && (
-          <div
-            onClick={(e) => {
-              e.stopPropagation();
-              onDeleteImage(images[currentIndex].imageIndex);
-            }}
-            className="absolute bottom-4 right-4 z-10 cursor-pointer p-2 hover:bg-red-50 rounded-full bg-white shadow-lg hover:shadow-xl transition-all"
-          >
-            <Trash2 className="w-5 h-5 text-red-500 hover:text-red-600" />
+            <ModalOptimizedImage
+              key={`${currentIndex}-${images[currentIndex]?.url}`}
+              src={images[currentIndex]?.url || ''}
+              alt='Product'
+              className='block mx-auto w-auto max-h-[520px] object-contain'
+              isVisible
+              onLoadStart={() => setLoading(true)}
+              onLoadComplete={() => setLoading(false)}
+            />
           </div>
-        )}
-      </div>
 
-      {images.length > 1 && (
-        <>
-          {/* Navigation Arrows */}
-          <button
-            onClick={goToPrevious}
-            className={`absolute left-2 top-1/2 transform -translate-y-1/2 bg-white rounded-full p-2 shadow-lg hover:bg-gray-100 transition ${carouselLoading ? 'opacity-70' : ''}`}
-            disabled={false} // Keep buttons enabled during loading for better UX
-          >
-            <ChevronLeft className="w-5 h-5 text-gray-600" />
-          </button>
-          <button
-            onClick={goToNext}
-            className={`absolute right-2 top-1/2 transform -translate-y-1/2 bg-white rounded-full p-2 shadow-lg hover:bg-gray-100 transition ${carouselLoading ? 'opacity-70' : ''}`}
-            disabled={false} // Keep buttons enabled during loading for better UX
-          >
-            <ChevronRight className="w-5 h-5 text-gray-600" />
-          </button>
-
-          {/* Dots Indicator */}
-          <div className="flex justify-center mt-4 gap-2">
-            {images.map((_, index) => (
+          {/* Right gutter column — keeps button OUTSIDE the image but INSIDE grey */}
+          <div className='flex items-end justify-end'>
+            {onDeleteImage && (
               <button
-                key={index}
-                onClick={() => onIndexChange(index)}
-                className={`w-2 h-2 rounded-full transition ${index === currentIndex
-                  ? carouselLoading
-                    ? 'bg-blue-400 animate-pulse'
-                    : 'bg-blue-500'
-                  : 'bg-gray-300'
-                  }`}
-              />
-            ))}
-          </div>
-
-          {/* Image Counter */}
-          <div className={`absolute top-2 right-2 bg-black bg-opacity-60 text-white text-xs px-2 py-1 rounded transition ${carouselLoading ? 'opacity-70' : ''}`}>
-            {carouselLoading ? (
-              <span className="flex items-center gap-1">
-                <div className="w-2 h-2 bg-white rounded-full animate-bounce"></div>
-                {currentIndex + 1} / {images.length}
-              </span>
-            ) : (
-              <span>{currentIndex + 1} / {images.length}</span>
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDeleteImage(images[currentIndex].imageIndex);
+                }}
+                className='mb-3 p-2 rounded-full bg-white shadow-md hover:shadow-lg hover:bg-red-50 transition'
+                title='Delete this try-on'
+              >
+                <Trash2 className='w-5 h-5 text-red-500' />
+              </button>
             )}
           </div>
-        </>
-      )}
+        </div>
+      </div>
 
-      {/* Timestamp for current image */}
-      <p className="text-gray-500 text-sm mt-2 text-center">
-        Try-on date: {new Date(images[currentIndex].timestamp).toLocaleDateString()}
+      {/* Try-on date OUTSIDE the grey card */}
+      <p className='text-gray-500 text-sm mt-6 md:mt-8 text-center'>
+        Try-on date:{' '}
+        {new Date(images[currentIndex].timestamp).toLocaleDateString()}
       </p>
     </div>
   );
@@ -608,42 +749,51 @@ const DeleteConfirmationModal: React.FC<{
   isDeleting: boolean;
   deleteAll: boolean;
   imageCount: number;
-}> = ({ isOpen, onClose, onConfirm, productName, isDeleting, deleteAll, imageCount }) => {
+}> = ({
+  isOpen,
+  onClose,
+  onConfirm,
+  productName,
+  isDeleting,
+  deleteAll,
+  imageCount,
+}) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black bg-opacity-50">
-      <div className="bg-white rounded-2xl p-6 max-w-md w-full mx-4 shadow-xl">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="p-2 bg-red-100 rounded-full">
-            <Trash2 className="w-6 h-6 text-red-600" />
+    <div className='fixed inset-0 z-[9999] flex items-center justify-center bg-black bg-opacity-50'>
+      <div className='bg-white rounded-2xl p-6 max-w-md w-full mx-4 shadow-xl'>
+        <div className='flex items-center gap-3 mb-4'>
+          <div className='p-2 bg-red-100 rounded-full'>
+            <Trash2 className='w-6 h-6 text-red-600' />
           </div>
-          <h3 className="text-lg font-semibold text-gray-900">Delete Try-on</h3>
+          <h3 className='text-lg font-semibold text-gray-900'>Delete Try-on</h3>
         </div>
 
-        <p className="text-gray-600 mb-6">
+        <p className='text-gray-600 mb-6'>
           {deleteAll
-            ? `Are you sure you want to delete all ${imageCount} try-on${imageCount > 1 ? 's' : ''} for "${productName}"? This action cannot be undone.`
-            : `Are you sure you want to delete "${productName}" from your try-on history? This action cannot be undone.`
-          }
+            ? `Are you sure you want to delete all ${imageCount} try-on${
+                imageCount > 1 ? 's' : ''
+              } for "${productName}"? This action cannot be undone.`
+            : `Are you sure you want to delete "${productName}" from your try-on history? This action cannot be undone.`}
         </p>
 
-        <div className="flex gap-3 justify-end">
+        <div className='flex gap-3 justify-end'>
           <button
             onClick={onClose}
             disabled={isDeleting}
-            className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition disabled:opacity-50"
+            className='px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition disabled:opacity-50'
           >
             Cancel
           </button>
           <button
             onClick={onConfirm}
             disabled={isDeleting}
-            className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition disabled:opacity-50 flex items-center gap-2"
+            className='px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition disabled:opacity-50 flex items-center gap-2'
           >
             {isDeleting ? (
               <>
-                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                <div className='w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin' />
                 Deleting...
               </>
             ) : (
@@ -694,10 +844,14 @@ interface ContentProps {
 const Content: React.FC<ContentProps> = ({ searchQuery }) => {
   const [products, setProducts] = useState<ProductItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedProduct, setSelectedProduct] = useState<GroupedProduct | null>(null);
+  const [selectedProduct, setSelectedProduct] = useState<GroupedProduct | null>(
+    null
+  );
   const [showModal, setShowModal] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const [sortOrder, setSortOrder] = useState<'low-to-high' | 'high-to-low' | null>(null);
+  const [sortOrder, setSortOrder] = useState<
+    'low-to-high' | 'high-to-low' | null
+  >(null);
   const [deleteModal, setDeleteModal] = useState<{
     isOpen: boolean;
     product: GroupedProduct | null;
@@ -705,7 +859,7 @@ const Content: React.FC<ContentProps> = ({ searchQuery }) => {
   }>({
     isOpen: false,
     product: null,
-    isDeleting: false
+    isDeleting: false,
   });
 
   const [deleteImageModal, setDeleteImageModal] = useState<{
@@ -715,13 +869,13 @@ const Content: React.FC<ContentProps> = ({ searchQuery }) => {
   }>({
     isOpen: false,
     imageIndex: null,
-    isDeleting: false
+    isDeleting: false,
   });
 
   const hasFetchedInitialData = useRef(false);
 
   // Smart preload modal images based on current index
-  const modalImages = selectedProduct?.images.map(img => img.url) || [];
+  const modalImages = selectedProduct?.images.map((img) => img.url) || [];
   useSmartImagePreloader(modalImages, currentImageIndex); // Remove unused variable
 
   // Pagination state
@@ -731,9 +885,12 @@ const Content: React.FC<ContentProps> = ({ searchQuery }) => {
 
   // Infinite scroll handler
   const handleScroll = useCallback(() => {
-    if (window.innerHeight + document.documentElement.scrollTop >= document.documentElement.offsetHeight - 100) {
+    if (
+      window.innerHeight + document.documentElement.scrollTop >=
+      document.documentElement.offsetHeight - 100
+    ) {
       if (hasMore && !loading) {
-        setCurrentPage(prev => prev + 1);
+        setCurrentPage((prev) => prev + 1);
       }
     }
   }, [hasMore, loading]);
@@ -748,15 +905,20 @@ const Content: React.FC<ContentProps> = ({ searchQuery }) => {
   const fetchHistory = async (page: number, append = false) => {
     try {
       const skip = (page - 1) * pageSize;
-      const url = getApiUrl('HISTORY_API', `/history?limit=${pageSize}&skip=${skip}`);
+      const url = getApiUrl(
+        'HISTORY_API',
+        `/history?limit=${pageSize}&skip=${skip}`
+      );
       const res = await axios.get<{ data: ProductItem[] }>(url, {
         headers: {
           Authorization: `Bearer ${getAccessToken()}`,
         },
       });
-      console.log("res", res.data);
-      const filtered = res.data.data.filter(p => p.productInfo && p.productInfo.product_name);
-      console.log("filtered", filtered);
+      console.log('res', res.data);
+      const filtered = res.data.data.filter(
+        (p) => p.productInfo && p.productInfo.product_name
+      );
+      console.log('filtered', filtered);
 
       // const filtered = [
       //     {
@@ -922,10 +1084,10 @@ const Content: React.FC<ContentProps> = ({ searchQuery }) => {
       // ]
 
       // Add 2-second delay to show loader
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      await new Promise((resolve) => setTimeout(resolve, 1500));
 
       if (append) {
-        setProducts(prev => [...prev, ...filtered]);
+        setProducts((prev) => [...prev, ...filtered]);
       } else {
         setProducts(filtered);
       }
@@ -966,8 +1128,11 @@ const Content: React.FC<ContentProps> = ({ searchQuery }) => {
   const groupedProducts = React.useMemo(() => {
     const grouped = new Map<string, GroupedProduct>();
 
-    products.forEach(product => {
-      const productUrl = product.productInfo?.product_url || product.productInfo?.url || 'unknown';
+    products.forEach((product) => {
+      const productUrl =
+        product.productInfo?.product_url ||
+        product.productInfo?.url ||
+        'unknown';
 
       if (grouped.has(productUrl)) {
         const existing = grouped.get(productUrl)!;
@@ -975,7 +1140,9 @@ const Content: React.FC<ContentProps> = ({ searchQuery }) => {
         product.tryOnImages.forEach((img, index) => {
           const isObj = typeof img === 'object' && img !== null;
           const url = isObj ? (img as { url: string }).url : (img as string);
-          const recordId = isObj ? (img as { recordId?: string }).recordId : undefined;
+          const recordId = isObj
+            ? (img as { recordId?: string }).recordId
+            : undefined;
           existing.images.push({
             url,
             timestamp: product.latestTryOnDate,
@@ -984,18 +1151,25 @@ const Content: React.FC<ContentProps> = ({ searchQuery }) => {
           });
         });
         // Update latest timestamp if this one is newer
-        if (new Date(product.latestTryOnDate) > new Date(existing.latestTimestamp)) {
+        if (
+          new Date(product.latestTryOnDate) > new Date(existing.latestTimestamp)
+        ) {
           existing.latestTimestamp = product.latestTryOnDate;
         }
         // Update total try-ons
-        existing.totalTryOns = Math.max(existing.totalTryOns, product.totalTryOns);
+        existing.totalTryOns = Math.max(
+          existing.totalTryOns,
+          product.totalTryOns
+        );
         // Update favorite status
         existing.isFavorite = product.isFavorite || existing.isFavorite;
       } else {
         const images = product.tryOnImages.map((img, index) => {
           const isObj = typeof img === 'object' && img !== null;
           const url = isObj ? (img as { url: string }).url : (img as string);
-          const recordId = isObj ? (img as { recordId?: string }).recordId : undefined;
+          const recordId = isObj
+            ? (img as { recordId?: string }).recordId
+            : undefined;
           return {
             url,
             timestamp: product.latestTryOnDate,
@@ -1010,14 +1184,17 @@ const Content: React.FC<ContentProps> = ({ searchQuery }) => {
           images,
           latestTimestamp: product.latestTryOnDate,
           totalTryOns: product.totalTryOns,
-          isFavorite: product.isFavorite || false
+          isFavorite: product.isFavorite || false,
         });
       }
     });
 
     // Sort images within each group by timestamp (newest first)
-    grouped.forEach(group => {
-      group.images.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+    grouped.forEach((group) => {
+      group.images.sort(
+        (a, b) =>
+          new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+      );
     });
 
     return Array.from(grouped.values());
@@ -1026,8 +1203,9 @@ const Content: React.FC<ContentProps> = ({ searchQuery }) => {
   const toggleFavorite = async (productUrl: string) => {
     try {
       // 找到对应的产品
-      const product = products.find(p => {
-        const url = p.productInfo?.product_url || p.productInfo?.url || 'unknown';
+      const product = products.find((p) => {
+        const url =
+          p.productInfo?.product_url || p.productInfo?.url || 'unknown';
         return url === productUrl;
       });
 
@@ -1044,13 +1222,16 @@ const Content: React.FC<ContentProps> = ({ searchQuery }) => {
       }
 
       // 更新本地状态
-      setProducts(prev => prev.map(p => {
-        const url = p.productInfo?.product_url || p.productInfo?.url || 'unknown';
-        if (url === productUrl) {
-          return { ...p, isFavorite: !isFavorite };
-        }
-        return p;
-      }));
+      setProducts((prev) =>
+        prev.map((p) => {
+          const url =
+            p.productInfo?.product_url || p.productInfo?.url || 'unknown';
+          if (url === productUrl) {
+            return { ...p, isFavorite: !isFavorite };
+          }
+          return p;
+        })
+      );
     } catch (error) {
       console.error('收藏操作失败:', error);
     }
@@ -1060,14 +1241,14 @@ const Content: React.FC<ContentProps> = ({ searchQuery }) => {
     setDeleteModal({
       isOpen: true,
       product,
-      isDeleting: false
+      isDeleting: false,
     });
   };
 
   const handleDeleteConfirm = async () => {
     if (!deleteModal.product) return;
 
-    setDeleteModal(prev => ({ ...prev, isDeleting: true }));
+    setDeleteModal((prev) => ({ ...prev, isDeleting: true }));
 
     try {
       // 调用后端删除接口，按商品 URL 删除该商品的所有试穿历史
@@ -1077,21 +1258,23 @@ const Content: React.FC<ContentProps> = ({ searchQuery }) => {
       }
 
       // Remove all deleted records from the local state
-      setProducts(prev => prev.filter(p => {
-        const productUrl = p.productInfo?.product_url || p.productInfo?.url || 'unknown';
-        return productUrl !== deleteModal.product!.productUrl;
-      }));
+      setProducts((prev) =>
+        prev.filter((p) => {
+          const productUrl =
+            p.productInfo?.product_url || p.productInfo?.url || 'unknown';
+          return productUrl !== deleteModal.product!.productUrl;
+        })
+      );
 
       // Close the modal
       setDeleteModal({
         isOpen: false,
         product: null,
-        isDeleting: false
+        isDeleting: false,
       });
-
     } catch (error) {
       console.error('Error deleting product:', error);
-      setDeleteModal(prev => ({ ...prev, isDeleting: false }));
+      setDeleteModal((prev) => ({ ...prev, isDeleting: false }));
     }
   };
 
@@ -1099,7 +1282,7 @@ const Content: React.FC<ContentProps> = ({ searchQuery }) => {
     setDeleteModal({
       isOpen: false,
       product: null,
-      isDeleting: false
+      isDeleting: false,
     });
   };
 
@@ -1107,44 +1290,53 @@ const Content: React.FC<ContentProps> = ({ searchQuery }) => {
     setDeleteImageModal({
       isOpen: true,
       imageIndex,
-      isDeleting: false
+      isDeleting: false,
     });
   };
 
   const handleDeleteImageConfirm = async () => {
     if (deleteImageModal.imageIndex === null) return;
 
-    setDeleteImageModal(prev => ({ ...prev, isDeleting: true }));
+    setDeleteImageModal((prev) => ({ ...prev, isDeleting: true }));
 
     try {
       // 尝试调用后端根据 recordId 删除单条记录（新数据结构支持）
-      const recordId = selectedProduct?.images[deleteImageModal.imageIndex]?.recordId;
+      const recordId =
+        selectedProduct?.images[deleteImageModal.imageIndex]?.recordId;
       if (recordId) {
         try {
           await (tryonApi as any).deleteHistoryRecord(recordId);
         } catch (e) {
-          console.warn('Delete record by recordId failed, fallback to local removal:', e);
+          console.warn(
+            'Delete record by recordId failed, fallback to local removal:',
+            e
+          );
         }
       }
 
       // Update the selected product's images if it's currently open
       if (selectedProduct) {
-        const updatedImages = selectedProduct.images.filter((_, index) => index !== deleteImageModal.imageIndex);
+        const updatedImages = selectedProduct.images.filter(
+          (_, index) => index !== deleteImageModal.imageIndex
+        );
         if (updatedImages.length === 0) {
           // If no images left, close the modal and remove the entire card
           setShowModal(false);
           setSelectedProduct(null);
 
           // Remove the entire product from the products list
-          setProducts(prev => prev.filter(p => {
-            const productUrl = p.productInfo?.product_url || p.productInfo?.url || 'unknown';
-            return productUrl !== selectedProduct.productUrl;
-          }));
+          setProducts((prev) =>
+            prev.filter((p) => {
+              const productUrl =
+                p.productInfo?.product_url || p.productInfo?.url || 'unknown';
+              return productUrl !== selectedProduct.productUrl;
+            })
+          );
         } else {
           // Update the selected product with remaining images
           setSelectedProduct({
             ...selectedProduct,
-            images: updatedImages
+            images: updatedImages,
           });
           // Adjust current image index if needed
           if (currentImageIndex >= updatedImages.length) {
@@ -1157,12 +1349,11 @@ const Content: React.FC<ContentProps> = ({ searchQuery }) => {
       setDeleteImageModal({
         isOpen: false,
         imageIndex: null,
-        isDeleting: false
+        isDeleting: false,
       });
-
     } catch (error) {
       console.error('Error deleting image:', error);
-      setDeleteImageModal(prev => ({ ...prev, isDeleting: false }));
+      setDeleteImageModal((prev) => ({ ...prev, isDeleting: false }));
     }
   };
 
@@ -1170,7 +1361,7 @@ const Content: React.FC<ContentProps> = ({ searchQuery }) => {
     setDeleteImageModal({
       isOpen: false,
       imageIndex: null,
-      isDeleting: false
+      isDeleting: false,
     });
   };
 
@@ -1188,7 +1379,9 @@ const Content: React.FC<ContentProps> = ({ searchQuery }) => {
 
   const sortedProducts = [...filteredProducts].sort((a, b) => {
     // Helper function to extract numeric price value
-    const extractPriceValue = (priceStr: string | number | undefined): number => {
+    const extractPriceValue = (
+      priceStr: string | number | undefined
+    ): number => {
       if (!priceStr) return 0;
 
       const price = priceStr.toString();
@@ -1219,20 +1412,18 @@ const Content: React.FC<ContentProps> = ({ searchQuery }) => {
   });
 
   return (
-    <section className="px-10 py-6 min-h-[calc(100vh-150px)] bg-gray-50 mx-auto rounded-md flex flex-col items-center gap-6">
-      <div className="max-w-[1280px] w-full">
+    <section className='px-10 py-6 min-h-[calc(100vh-150px)] bg-gray-50 mx-auto rounded-md flex flex-col items-center gap-6'>
+      <div className='max-w-[1280px] w-full'>
         {NoHistory ? (
-          <div className="flex flex-col items-center justify-center gap-2 mt-20">
-            <img src={empty} alt="empty" className="w-24 h-24" />
-            <p className="text-gray-600 text-sm">No try-on history found</p>
+          <div className='flex flex-col items-center justify-center gap-2 mt-20'>
+            <img src={empty} alt='empty' className='w-24 h-24' />
+            <p className='text-gray-600 text-sm'>No try-on history found</p>
           </div>
         ) : (
           <>
-            <TryOnSubHeader
-              onSortChange={setSortOrder}
-            />
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8 w-full">
-              {sortedProducts.map(item => (
+            <TryOnSubHeader onSortChange={setSortOrder} />
+            <div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8 w-full'>
+              {sortedProducts.map((item) => (
                 <div
                   key={item.productUrl || 'unknown'}
                   onClick={() => {
@@ -1244,13 +1435,23 @@ const Content: React.FC<ContentProps> = ({ searchQuery }) => {
                   <ProductCard
                     image={item.images[0]?.url || ''} // Show the latest image
                     brand={item.productInfo?.brand_name || 'Unknown Brand'}
-                    name={item.productInfo?.product_name || item.productInfo?.name || 'Unknown Product'}
+                    name={
+                      item.productInfo?.product_name ||
+                      item.productInfo?.name ||
+                      'Unknown Product'
+                    }
                     price={item.productInfo?.price || 'N/A'}
                     currency={item.productInfo?.currency || ''}
                     timestamp={item.latestTimestamp || new Date().toISOString()}
-                    url={item.productInfo?.product_url || item.productInfo?.url || ''}
+                    url={
+                      item.productInfo?.product_url ||
+                      item.productInfo?.url ||
+                      ''
+                    }
                     isFavorite={item.isFavorite || false}
-                    onToggleFavorite={() => toggleFavorite(item.productUrl || '')}
+                    onToggleFavorite={() =>
+                      toggleFavorite(item.productUrl || '')
+                    }
                     onDelete={() => handleDeleteClick(item)}
                     imageCount={item.totalTryOns || item.images.length}
                   />
@@ -1261,10 +1462,10 @@ const Content: React.FC<ContentProps> = ({ searchQuery }) => {
         )}
         {/* Loading indicator for infinite scroll */}
         {loading && products.length > 0 && (
-          <div className="flex justify-center items-center mt-8 py-4">
-            <div className="flex items-center gap-3">
-              <div className="w-6 h-6 border-2 border-[#6C5DD3] border-t-transparent rounded-full animate-spin" />
-              <span className="text-gray-600">Loading more items...</span>
+          <div className='flex justify-center items-center mt-8 py-4'>
+            <div className='flex items-center gap-3'>
+              <div className='w-6 h-6 border-2 border-[#6C5DD3] border-t-transparent rounded-full animate-spin' />
+              <span className='text-gray-600'>Loading more items...</span>
             </div>
           </div>
         )}
@@ -1275,7 +1476,11 @@ const Content: React.FC<ContentProps> = ({ searchQuery }) => {
         isOpen={deleteModal.isOpen}
         onClose={handleDeleteCancel}
         onConfirm={handleDeleteConfirm}
-        productName={deleteModal.product?.productInfo?.product_name || deleteModal.product?.productInfo?.name || 'this item'}
+        productName={
+          deleteModal.product?.productInfo?.product_name ||
+          deleteModal.product?.productInfo?.name ||
+          'this item'
+        }
         isDeleting={deleteModal.isDeleting}
         deleteAll={true}
         imageCount={deleteModal.product?.images.length || 0}
@@ -1286,22 +1491,26 @@ const Content: React.FC<ContentProps> = ({ searchQuery }) => {
         isOpen={deleteImageModal.isOpen}
         onClose={handleDeleteImageCancel}
         onConfirm={handleDeleteImageConfirm}
-        productName={selectedProduct?.productInfo?.product_name || selectedProduct?.productInfo?.name || 'this try-on image'}
+        productName={
+          selectedProduct?.productInfo?.product_name ||
+          selectedProduct?.productInfo?.name ||
+          'this try-on image'
+        }
         isDeleting={deleteImageModal.isDeleting}
         deleteAll={false}
         imageCount={1}
       />
 
       {showModal && selectedProduct && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white rounded-2xl p-8 max-w-5xl w-full flex gap-8 relative shadow-xl">
+        <div className='fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50'>
+          <div className='bg-white rounded-2xl p-8 max-w-5xl w-full flex gap-8 relative shadow-xl'>
             <button
-              className="absolute top-4 right-4 text-gray-500 hover:text-black text-xl"
+              className='absolute top-4 right-4 text-gray-500 hover:text-black text-xl'
               onClick={() => setShowModal(false)}
             >
-              <X className="w-6 h-6" />
+              <X className='w-6 h-6' />
             </button>
-            <div className="w-1/2">
+            <div className='w-1/2'>
               <ImageSlider
                 images={selectedProduct.images}
                 currentIndex={currentImageIndex}
@@ -1309,29 +1518,75 @@ const Content: React.FC<ContentProps> = ({ searchQuery }) => {
                 onDeleteImage={handleDeleteImage}
               />
             </div>
-            <div className="w-1/2 flex flex-col justify-center gap-4">
-              <h2 className="text-2xl font-bold text-gray-900">
+            <div className='w-1/2 flex flex-col justify-center gap-4'>
+              <h2 className='text-2xl font-bold text-gray-900'>
                 {selectedProduct.productInfo?.brand_name || 'Brand'} -{' '}
-                {selectedProduct.productInfo?.product_name || selectedProduct.productInfo?.name || 'Product Name'}
+                {selectedProduct.productInfo?.product_name ||
+                  selectedProduct.productInfo?.name ||
+                  'Product Name'}
               </h2>
-              <div className="flex items-center gap-3">
-                <span className="text-2xl font-bold text-black">
-                  {selectedProduct.productInfo?.currency}{selectedProduct.productInfo?.price}
+              <div className='flex items-center gap-3'>
+                <span className='text-2xl font-bold text-black'>
+                  {selectedProduct.productInfo?.currency}
+                  {selectedProduct.productInfo?.price}
                 </span>
               </div>
               {selectedProduct.images.length > 1 && (
-                <p className="text-blue-600 text-sm font-medium">
+                <p className='text-violet-500 text-sm font-medium'>
                   {selectedProduct.totalTryOns} try-ons available
                 </p>
               )}
               <a
                 href={selectedProduct.productUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="mt-3 bg-black text-white px-6 py-3 rounded-lg hover:bg-gray-800 text-center w-fit"
+                target='_blank'
+                rel='noopener noreferrer'
+                className='mt-3 bg-violet-500 text-white px-12 py-2.5 rounded-lg hover:bg-violet-600 text-center w-fit text-[15px] font-medium transition-all'
               >
                 Shop Now
               </a>
+              <div className='recommendation-wrapper'>
+                <h3 className='recommendation-title'>You May Also Like</h3>
+                <div
+                  style={{
+                    backgroundColor:
+                      'rgb(243 244 246 / var(--tw-bg-opacity, 1))',
+                  }}
+                >
+                  <Carousel
+                    arrows
+                    slidesToShow={3}
+                    slidesToScroll={1}
+                    infinite={false}
+                    dots={false}
+                  >
+                    {items.map((item, i) => (
+                      <div key={i} className='recommendation-card'>
+                        <div className='reco-img-wrap'>
+                          <img
+                            src={item.img}
+                            alt={item.name}
+                            className='recommendation-img'
+                          />
+                        </div>
+
+                        <div className='recommendation-info'>
+                          <p className='brand'>{item.brand}</p>
+                          <p className='name'>{item.name}</p>
+                          <div className='price-row'>
+                            <span className='price'>
+                              ${item.price.toFixed(2)}
+                            </span>
+                            <span className='old-price'>
+                              ${item.oldPrice.toFixed(2)}
+                            </span>
+                            <span className='discount'>{item.discount}</span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </Carousel>
+                </div>
+              </div>
             </div>
           </div>
         </div>

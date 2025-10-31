@@ -24,7 +24,8 @@ import CreditsReceived from './pages/CreditsReceived';
 import Register from './pages/Register';
 import SubscriptionSuccess from './pages/SubscriptionSuccess';
 import SubscriptionCancel from './pages/SubscriptionCancel';
-console.log('environment', 'staging.........');
+import ConfirmSignup from './pages/ConfirmSignup';
+
 
 function App() {
   const googleClientId =
@@ -51,6 +52,7 @@ function App() {
               <Route path='/verify-email' element={<VerifyEmail />} />
               <Route path='*' element={<PageNotFound />} />
               <Route path='/confirm-register' element={<ConfirmRegister />} />
+              <Route path='/confirm-signup' element={<ConfirmSignup/>} />
               <Route path='/auto-test/*' element={<AutoTest />} />
               <Route path='/faishion-chatbot' element={<ChatWidget />} />
               <Route path='/chat' element={<ChatWidget />} />
