@@ -150,8 +150,8 @@
   display: inline-block;
   padding: 2px 10px; /* inner space */
   border-radius: 9999px; /* fully rounded */
-  background: #f0d6b3; /* soft peach */
-  color: #ea7706; /* rich orange text */
+  background: #fbe7cc; /* soft peach */
+  color: #d37a00; /* rich orange text */
   font-weight: 700; /* bold like the mock */
   font-size: 12px;
   line-height: 1.2;
@@ -209,4 +209,12 @@
 
 .ant-carousel .slick-list {
   overflow: hidden !important;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
