@@ -4,6 +4,126 @@ import { Heart, X, Trash2, ChevronLeft, ChevronRight, ArrowLeft } from 'lucide-r
 import Header from '@/components/history/Header';
 import { tryonApi } from '../api/tryon';
 
+const NO_SCROLLBAR_CSS = `
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+`;
+
+type RecItem = {
+  image: string;
+  brand?: string;
+  name?: string;
+  price?: number | string;
+  currency?: string;
+  url?: string;
+};
+
+const MiniRecCard: React.FC<{ item: RecItem }> = ({ item }) => (
+  <a
+    href={item.url || '#'}
+    target="_blank"
+    rel="noopener noreferrer"
+    className="block flex-none w-[140px] h-[241px] bg-white border border-gray-200 hover:shadow transition overflow-hidden rounded-lg"
+  >
+    <div className="w-full h-[172px] bg-gray-100 flex items-center justify-center">
+      <img
+        src={item.image}
+        alt={item.name || 'Recommended'}
+        className="max-h-full max-w-full object-contain"
+        loading="lazy"
+        decoding="async"
+      />
+    </div>
+    <div className="p-3 h-[88px] flex flex-col">
+      <p className="text-[8px] text-gray-600 font-semibold uppercase tracking-wide mb-0.5 line-clamp-1">
+        {item.brand || '—'}
+      </p>
+      <p className="text-[12px] font-sans text-gray-900 leading-tight line-clamp-1">
+        {item.name || 'Product'}
+      </p>
+      <div className="text-[10px] font-semibold">
+        {item.currency}{item.price}
+      </div>
+    </div>
+  </a>
+);
+
+const RecommendedCarousel: React.FC<{ items: RecItem[]; arrowColor?: string }> = ({ items }) => {
+  const scrollerRef = React.useRef<HTMLDivElement>(null);
+  const [atStart, setAtStart] = React.useState(true);
+  const [atEnd, setAtEnd] = React.useState(false);
+
+  const updateEnds = React.useCallback(() => {
+    const el = scrollerRef.current;
+    if (!el) return;
+    setAtStart(el.scrollLeft <= 2);
+    setAtEnd(el.scrollLeft + el.clientWidth >= el.scrollWidth - 2);
+  }, []);
+
+  React.useEffect(() => {
+    const el = scrollerRef.current;
+    if (!el) return;
+    updateEnds();
+    el.addEventListener('scroll', updateEnds, { passive: true });
+    window.addEventListener('resize', updateEnds);
+    return () => {
+      el.removeEventListener('scroll', updateEnds);
+      window.removeEventListener('resize', updateEnds);
+    };
+  }, [updateEnds]);
+
+   const scrollByPage = (dir: 1 | -1) => {
+    const el = scrollerRef.current;
+    if (!el) return;
+    el.scrollBy({ left: el.clientWidth * dir, behavior: 'smooth' });
+  };
+const ArrowBtn: React.FC<{ side: 'left' | 'right'; onClick: () => void; disabled?: boolean }> = ({ side, onClick, disabled }) => (
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      className={`
+        absolute ${side === 'left' ? 'left-1.5' : 'right-1.5'} top-1/2 -translate-y-1/2 z-10
+        rounded-full p-2 shadow-md transition
+        ${disabled ? 'bg-[#CBCDCF] cursor-not-allowed' : 'bg-black hover:shadow-lg'}
+      `}
+      aria-label={side === 'left' ? 'Previous' : 'Next'}
+    >
+      {side === 'left' ? <ChevronLeft className={`w-4 h-4 ${disabled ? 'text-[#758094]' : 'text-white'}`} /> : <ChevronRight className={`w-4 h-4 ${disabled ? 'text-[#758094]' : 'text-white'}`} />}
+    </button>
+  );
+
+  return (
+    <div className="mt-6 w-[140px] sm:w-[292px] md:w-[444px]">
+      <h3 className="text-[16px] font-semibold text-gray-800 mb-2">You May Also Like</h3>
+
+      <div className="relative">
+        <div
+          ref={scrollerRef}
+          className="
+            flex gap-3 overflow-x-auto scroll-smooth
+            snap-x snap-mandatory px-0 pb-1
+            [-ms-overflow-style:none] [scrollbar-width:none]
+          "
+        >
+          {items.map((it, i) => (
+            <div key={i} className="snap-start">
+              <MiniRecCard item={it} />
+            </div>
+          ))}
+        </div>
+
+      
+        <ArrowBtn side="left" onClick={() => scrollByPage(-1)} disabled={atStart} />
+        <ArrowBtn side="right" onClick={() => scrollByPage(1)} disabled={atEnd} />
+      </div>
+
+      <style>{`.hide-scrollbar::-webkit-scrollbar{display:none}`}</style>
+    </div>
+  );
+};
+
+
+
 interface FavoriteItem {
   product_url?: string;
   url?: string;
@@ -330,6 +450,56 @@ const OptimizedImage: React.FC<{
   );
 };
 
+const ThumbnailRail: React.FC<{
+  images: { url: string; timestamp: string; imageIndex: number; recordId?: string }[];
+  currentIndex: number;
+  onIndexChange: (i: number) => void;
+}> = ({ images, currentIndex, onIndexChange }) => {
+  const refs = React.useRef<(HTMLButtonElement | null)[]>([]);
+
+  useEffect(() => {
+    const el = refs.current[currentIndex];
+    if (el) el.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+  }, [currentIndex]);
+
+  return (
+    <div className="flex flex-col items-center">
+      <div
+        className="
+          no-scrollbar overflow-y-auto
+          h-96 w-[52px] rounded-lg bg-white/40
+        "
+        style={{ scrollBehavior: 'smooth' }}
+      >
+        <div className="flex flex-col gap-2 p-1">
+          {images.map((img, i) => (
+            <button
+              key={`${img.url}-${i}`}
+              ref={(el) => (refs.current[i] = el)}
+              onClick={(e) => { e.stopPropagation(); onIndexChange(i); }}
+              className={`
+                relative w-full h-full overflow-hidden  
+                ring-2 transition
+                ${i === currentIndex ? 'ring-[#675BC5]' : 'ring-transparent hover:ring-gray-300'}
+              `}
+              title={new Date(img.timestamp).toLocaleDateString()}
+            >
+              <img
+                src={img.url}
+                alt={`Try-on ${i + 1}`}
+                className="h-full w-full object-cover"
+                loading="lazy"
+                decoding="async"
+              />
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+
 interface ProductProps {
   image: string;
   brand: string;
@@ -355,11 +525,11 @@ const ProductCard: React.FC<ProductProps> = ({
   isFavorite,
   onToggleFavorite,
   onDelete,
-  imageCount
+  imageCount,
 }) => (
-  <div className="relative bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition cursor-pointer flex flex-col h-full">
+  <div className="relative bg-white overflow-hidden shadow-lg hover:shadow-xl transition cursor-pointer flex flex-col h-full rounded-2xl">
     {/* Favorite Button */}
-    <div
+    {/* <div
       onClick={async (e) => {
         e.stopPropagation();
         await onToggleFavorite();
@@ -367,10 +537,11 @@ const ProductCard: React.FC<ProductProps> = ({
       className="absolute top-2 right-2 z-10 cursor-pointer p-1 rounded-full bg-white shadow hover:bg-gray-100"
     >
       <Heart className={`w-5 h-5 ${isFavorite ? 'fill-red-500 text-red-500' : 'text-gray-400'}`} />
-    </div>
+    </div> */}
+  
 
     {/* Delete Button */}
-    <div
+    {/* <div
       onClick={(e) => {
         e.stopPropagation();
         onDelete();
@@ -378,22 +549,22 @@ const ProductCard: React.FC<ProductProps> = ({
       className="absolute bottom-2 right-2 z-10 cursor-pointer p-1 hover:bg-red-50 rounded transition-colors"
     >
       <Trash2 className="w-5 h-5 text-red-500 hover:text-red-600" />
-    </div>
+    </div> */}
 
     {/* Timestamp Badge */}
-    <div className="absolute top-2 left-2 bg-gray-100 text-xs px-2 py-1 rounded z-10 text-gray-600">
+    {/* <div className="absolute top-2 left-2 bg-gray-100 text-xs px-2 py-1 rounded z-10 text-gray-600">
       {new Date(timestamp).toLocaleDateString()}
-    </div>
+    </div> */}
 
     {/* Image Count Badge */}
-    {imageCount > 1 && (
+    {/* {imageCount > 1 && (
       <div className="absolute top-10 left-2 bg-blue-500 text-white text-xs px-2 py-1 rounded z-10 font-medium">
         {imageCount} try-ons
       </div>
-    )}
+    )} */}
 
     {/* Optimized Image */}
-    <div className="w-full h-72 bg-white flex items-center justify-center rounded-t-2xl">
+    <div className="w-full h-72 bg-white flex items-center justify-center">
       <OptimizedImage
         src={image}
         alt="Product"
@@ -403,12 +574,28 @@ const ProductCard: React.FC<ProductProps> = ({
 
     {/* Product Details */}
     <div className="p-4 flex flex-col justify-between flex-grow">
-      <p className="text-gray-500 text-xs uppercase tracking-wide font-medium mb-1">{brand}</p>
-      <p className="text-lg font-semibold text-gray-900 truncate">{name}</p>
-      <div className="flex items-center gap-2 mt-2">
-        <span className="text-lg font-bold text-black">{currency}{price}</span>
-      </div>
+  <div className="flex items-center justify-between mb-1">
+    <p className="text-gray-500 text-xs uppercase tracking-wide font-medium">
+      {brand}
+    </p>
+
+    {/* Favorite Button (moved + reused) */}
+    <div
+      onClick={async (e) => {
+        e.stopPropagation();
+        await onToggleFavorite();
+      }}
+      className="cursor-pointer p-1 rounded-full"
+    >
+      <Heart className={`w-5 h-5 ${isFavorite ? 'fill-red-500 text-red-500' : 'text-gray-400'}`} />
     </div>
+  </div>
+
+  <p className="text-lg font-semibold text-gray-900 truncate">{name}</p>
+  <div className="flex items-center gap-2 mt-2">
+    <span className="text-lg font-bold text-black">{currency}{price}</span>
+  </div>
+</div>
   </div>
 );
 
@@ -431,14 +618,6 @@ const ImageSlider: React.FC<{
     }
   }, [currentIndex, images, currentImageSrc]);
 
-  const goToPrevious = () => {
-    onIndexChange(currentIndex === 0 ? images.length - 1 : currentIndex - 1);
-  };
-
-  const goToNext = () => {
-    onIndexChange(currentIndex === images.length - 1 ? 0 : currentIndex + 1);
-  };
-
   const handleLoadStart = () => {
     setCarouselLoading(true);
   };
@@ -449,7 +628,7 @@ const ImageSlider: React.FC<{
 
   return (
     <div className="relative">
-      <div className="w-full h-96 bg-gray-100 rounded-xl flex items-center justify-center overflow-hidden relative">
+      <div className="w-full h-96 bg-gray-100 flex items-center justify-center overflow-hidden relative">
         {/* Carousel Loading Overlay */}
         {carouselLoading && (
           <div className="absolute inset-0 bg-gray-100 bg-opacity-90 flex items-center justify-center z-20 rounded-xl">
@@ -487,53 +666,7 @@ const ImageSlider: React.FC<{
         )}
       </div>
 
-      {images.length > 1 && (
-        <>
-          {/* Navigation Arrows */}
-          <button
-            onClick={goToPrevious}
-            className={`absolute left-2 top-1/2 transform -translate-y-1/2 bg-white rounded-full p-2 shadow-lg hover:bg-gray-100 transition ${carouselLoading ? 'opacity-70' : ''}`}
-            disabled={false} // Keep buttons enabled during loading for better UX
-          >
-            <ChevronLeft className="w-5 h-5 text-gray-600" />
-          </button>
-          <button
-            onClick={goToNext}
-            className={`absolute right-2 top-1/2 transform -translate-y-1/2 bg-white rounded-full p-2 shadow-lg hover:bg-gray-100 transition ${carouselLoading ? 'opacity-70' : ''}`}
-            disabled={false} // Keep buttons enabled during loading for better UX
-          >
-            <ChevronRight className="w-5 h-5 text-gray-600" />
-          </button>
-
-          {/* Dots Indicator */}
-          <div className="flex justify-center mt-4 gap-2">
-            {images.map((_, index) => (
-              <button
-                key={index}
-                onClick={() => onIndexChange(index)}
-                className={`w-2 h-2 rounded-full transition ${index === currentIndex
-                  ? carouselLoading
-                    ? 'bg-blue-400 animate-pulse'
-                    : 'bg-blue-500'
-                  : 'bg-gray-300'
-                  }`}
-              />
-            ))}
-          </div>
-
-          {/* Image Counter */}
-          <div className={`absolute top-2 right-2 bg-black bg-opacity-60 text-white text-xs px-2 py-1 rounded transition ${carouselLoading ? 'opacity-70' : ''}`}>
-            {carouselLoading ? (
-              <span className="flex items-center gap-1">
-                <div className="w-2 h-2 bg-white rounded-full animate-bounce"></div>
-                {currentIndex + 1} / {images.length}
-              </span>
-            ) : (
-              <span>{currentIndex + 1} / {images.length}</span>
-            )}
-          </div>
-        </>
-      )}
+      
 
       {/* Timestamp for current image */}
       <p className="text-gray-500 text-sm mt-2 text-center">
@@ -561,6 +694,20 @@ const FavoritesPage: React.FC = () => {
     product: null,
     isDeleting: false,
   });
+
+  const alsoLike = React.useMemo<RecItem[]>(() => {
+  const img0 = selectedProduct?.images?.[0]?.url || '';
+  const img1 = selectedProduct?.images?.[1]?.url || img0;
+  const img2 = selectedProduct?.images?.[2]?.url || img0;
+  return [
+    { image: img0, brand: 'GARAGE', name: 'Romantic Lace Midi Dress', price: '119.00', currency: '$', url: selectedProduct?.productUrl || '#' },
+    { image: img1, brand: 'H&M', name: 'Elegant Summer Midi', price: '59.99', currency: '$', url: selectedProduct?.productUrl || '#' },
+    { image: img2, brand: 'FASHION NOVA', name: 'Trina Mini Dress', price: '10.00', currency: '$', url: selectedProduct?.productUrl || '#' },
+    { image: img0, brand: 'ZARA', name: 'Bohemian Floral Maxi', price: '89.90', currency: '$', url: selectedProduct?.productUrl || '#' },
+    { image: img1, brand: 'MANGO', name: 'Crepe Slip Dress', price: '69.90', currency: '$', url: selectedProduct?.productUrl || '#' },
+  ];
+}, [selectedProduct]);
+
 
   // Fetch favorites list
   const fetchFavorites = async () => {
@@ -846,48 +993,65 @@ const FavoritesPage: React.FC = () => {
 
         {/* Image preview modal (copied exactly from Content.tsx) */}
         {showModal && selectedProduct && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-            <div className="bg-white rounded-2xl p-8 max-w-5xl w-full flex gap-8 relative shadow-xl">
-              <button
-                className="absolute top-4 right-4 text-gray-500 hover:text-black text-xl"
-                onClick={() => setShowModal(false)}
-              >
-                <X className="w-6 h-6" />
-              </button>
-              <div className="w-1/2">
-                <ImageSlider
-                  images={selectedProduct.images}
-                  currentIndex={currentImageIndex}
-                  onIndexChange={setCurrentImageIndex}
-                />
-              </div>
-              <div className="w-1/2 flex flex-col justify-center gap-4">
-                <h2 className="text-2xl font-bold text-gray-900">
-                  {selectedProduct.productInfo?.brand_name || 'Brand'} -{' '}
-                  {selectedProduct.productInfo?.product_name || selectedProduct.productInfo?.name || 'Product Name'}
-                </h2>
-                <div className="flex items-center gap-3">
-                  <span className="text-2xl font-bold text-black">
-                    {selectedProduct.productInfo?.currency}{selectedProduct.productInfo?.price}
-                  </span>
-                </div>
-                {selectedProduct.images.length > 1 && (
-                  <p className="text-blue-600 text-sm font-medium">
-                    {selectedProduct.totalTryOns} try-ons available
-                  </p>
-                )}
-                <a
-                  href={selectedProduct.productUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="mt-3 bg-black text-white px-6 py-3 rounded-lg hover:bg-gray-800 text-center w-fit"
-                >
-                  Shop Now
-                </a>
-              </div>
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+                  <div className="bg-white p-8 max-w-5xl w-full flex gap-8 relative shadow-xl">
+                    <button
+                      className="absolute top-4 right-4 text-gray-500 hover:text-black text-xl"
+                      onClick={() => setShowModal(false)}
+                    >
+                      <X className="w-6 h-6" />
+                    </button>
+                    <div className="w-1/2">
+          
+          <style dangerouslySetInnerHTML={{ __html: NO_SCROLLBAR_CSS }} />
+          <div className="flex  items-start gap-3">
+            {/* Vertical thumbnails */}
+            <ThumbnailRail
+              images={selectedProduct.images}
+              currentIndex={currentImageIndex}
+              onIndexChange={setCurrentImageIndex}
+            />
+        
+            {/* Main image slider (unchanged) */}
+            <div className="flex-1">
+              <ImageSlider
+                images={selectedProduct.images}
+                currentIndex={currentImageIndex}
+                onIndexChange={setCurrentImageIndex}
+                
+              />
             </div>
           </div>
-        )}
+        </div>
+        
+                    <div className="w-1/2 flex flex-col justify-center gap-3">
+                      <h2 className="text-[20px] font-bold text-gray-900">
+                        {selectedProduct.productInfo?.brand_name || 'Brand'} -{' '}
+                        {selectedProduct.productInfo?.product_name || selectedProduct.productInfo?.name || 'Product Name'}
+                      </h2>
+                      <div className="flex items-center gap-1">
+                        <span className="text-[14px] font-bold text-black">
+                          {selectedProduct.productInfo?.currency}{selectedProduct.productInfo?.price}
+                        </span>
+                      </div>
+                      {selectedProduct.images.length > 1 && (
+                        <p className="text-[#675BC5] text-sm font-medium">
+                          {selectedProduct.totalTryOns} try-ons available
+                        </p>
+                      )}
+                      <a
+                        href={selectedProduct.productUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="mt-3 bg-[#675BC5] text-white px-9 py-2 text-[14px] rounded-lg hover:bg-gray-800 text-center w-fit"
+                      >
+                        Shop Now
+                      </a>
+                      <RecommendedCarousel items={alsoLike} arrowColor="#675BC5" />
+                    </div>
+                  </div>
+                </div>
+              )}
 
         {/* Delete Confirmation Modal */}
         <DeleteConfirmationModal
